@@ -169,9 +169,32 @@ o pico da distribuidora é o mês anterior:
 
 | Arquivo | Para que serve |
 |---|---|
-| `roteiro-genie.md` | As perguntas prontas para o bloco do Genie, com o que esperar |
+| `roteiro-genie-e-dashboard.md` | O bloco sem código: perguntas do Genie e o dashboard, com o que esperar |
+| `dashboard-receita.lvdash.json` | O AI/BI dashboard da noite, versionado — 13 widgets |
 | `receita-sem-databricks.py` | Receita por mês lendo o CSV local — o plano B se o workspace cair |
 | `aula-01-imersao-agosto.pptx` | Os slides da noite |
+
+### 📊 O dashboard
+
+Já está publicado no workspace. Para recriar:
+
+```bash
+databricks lakeview create \
+  --display-name "Rota do Perfume · Noite 1" \
+  --warehouse-id SEU-WAREHOUSE \
+  --dataset-catalog rota_perfume --dataset-schema gold \
+  --serialized-dashboard "$(cat aulas/aula-01-databricks-sql/dashboard-receita.lvdash.json)" \
+  --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
+```
+
+Três coisas que valem mostrar ao vivo: ele é **um JSON no Git** (não algo que
+alguém montou clicando), **clicar numa marca filtra tudo** (os widgets
+compartilham o dataset), e as **métricas são declaradas uma vez** com
+`MEASURE()`, então nenhuma tela mostra número diferente.
+
+> O dashboard lê da **gold**. Aponte-o para a bronze e ele quebra: lá `receita`
+> é texto e `data_pedido` tem dois formatos. O dashboard bonito depende da
+> camada da noite 2.
 
 ```bash
 python3 aulas/aula-01-databricks-sql/receita-sem-databricks.py

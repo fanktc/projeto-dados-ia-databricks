@@ -1,0 +1,124 @@
+# O projeto inteiro, de ponta a ponta, uma vez por dia.
+#
+# A ordem não é sugestão: cada camada lê a anterior. Se a silver falhar, a
+# gold não roda — e é isso que impede o dashboard de mostrar meio dado.
+#
+#   bronze ─→ silver ─→ gold ─→ features ─→ testes
+#
+# As tarefas SQL apontam para os arquivos das aulas 02 e 03. O material que o
+# aluno lê e o que roda em produção são o mesmo arquivo: se divergirem, a aula
+# está mentindo.
+
+resources:
+  jobs:
+    rota_perfume_pipeline:
+      name: rota_perfume_pipeline
+
+      trigger:
+        periodic:
+          interval: 1
+          unit: DAYS
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+
+      tasks:
+        # ── 1. bronze: os CSVs do volume viram Delta ──────────────────
+        - task_key: bronze
+          python_wheel_task:
+            package_name: perfumesarabe
+            entry_point: bronze
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+              - "--schema"
+              - "{{job.parameters.schema}}"
+          environment_key: default
+
+        # ── 2. silver: a limpeza ──────────────────────────────────────
+        - task_key: silver_clientes
+          depends_on: [{ task_key: bronze }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-01-silver-clientes.sql
+
+        - task_key: silver_pedidos
+          depends_on: [{ task_key: bronze }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-02-silver-pedidos.sql
+
+        - task_key: silver_itens_produtos
+          depends_on: [{ task_key: bronze }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-03-silver-itens-e-produtos.sql
+
+        - task_key: silver_crm_financeiro
+          depends_on: [{ task_key: bronze }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-04-silver-crm-e-financeiro.sql
+
+        # ── 3. gold: dimensões, fato e marts ──────────────────────────
+        - task_key: gold_dimensoes_e_fato
+          depends_on:
+            - { task_key: silver_clientes }
+            - { task_key: silver_pedidos }
+            - { task_key: silver_itens_produtos }
+            - { task_key: silver_crm_financeiro }
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-05-gold-dimensoes-e-fato.sql
+
+        - task_key: gold_data_marts
+          depends_on: [{ task_key: gold_dimensoes_e_fato }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-06-data-marts-por-diretoria.sql
+
+        # ── 4. features para o modelo ─────────────────────────────────
+        - task_key: features_cliente
+          depends_on: [{ task_key: gold_data_marts }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-03-ciencia-de-dados-e-agentes/exemplo-04-features-cliente.sql
+
+        # ── 5. os testes, por último e obrigatórios ───────────────────
+        # Se qualquer um falhar, o job falha. É melhor o alerta tocar do que
+        # o número errado chegar no dashboard.
+        - task_key: testes_de_qualidade
+          depends_on: [{ task_key: features_cliente }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../../../aula-02-engenharia-de-dados/exemplo-07-testes-de-qualidade.sql
+
+        - task_key: verificacao_bronze
+          depends_on: [{ task_key: features_cliente }]
+          python_wheel_task:
+            package_name: perfumesarabe
+            entry_point: verificar
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+              - "--schema"
+              - "{{job.parameters.schema}}"
+          environment_key: default
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl

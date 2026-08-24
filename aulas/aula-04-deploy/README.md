@@ -40,19 +40,52 @@ databricks bundle deploy   --target dev --profile SEU-PERFIL
 databricks bundle run rota_perfume_bronze --target dev --profile SEU-PERFIL
 ```
 
-### O que o job faz
+### Os dois jobs
 
-Duas tarefas em serverless, e a ordem importa:
+**`rota_perfume_bronze`** — só a ingestão e a verificação. É o job mínimo, bom
+para entender a estrutura.
+
+**`rota_perfume_pipeline`** — o projeto inteiro, de ponta a ponta:
 
 ```
-  bronze  ─────→  verificacao
-  (ingere)        (confere, e falha se o número mudou)
+  bronze ─┬─→ silver_clientes ────────┬─→ gold_dimensoes_e_fato ─→ gold_data_marts
+          ├─→ silver_pedidos ─────────┤                                   │
+          ├─→ silver_itens_produtos ──┤                                   ▼
+          └─→ silver_crm_financeiro ──┘                          features_cliente
+                                                                          │
+                                                    ┌─────────────────────┴──────┐
+                                                    ▼                            ▼
+                                          testes_de_qualidade         verificacao_bronze
 ```
 
-| Tarefa | O que roda | Falha quando |
+Nove tarefas, 13,4 minutos, tudo em serverless. Os quatro silvers rodam **em
+paralelo** — não dependem uns dos outros, só do bronze.
+
+| Tarefa | Tipo | Falha quando |
 |---|---|---|
-| `bronze` | Lê os 10 CSVs do volume e grava Delta | a volumetria diverge do esperado |
-| `verificacao` | 9 checagens de negócio e de sujeira | receita, ticket ou sujeira mudaram |
+| `bronze` | wheel | a volumetria diverge do esperado |
+| `silver_*` (4) | SQL | o CREATE TABLE quebra |
+| `gold_dimensoes_e_fato` | SQL | a receita não reconcilia com a silver |
+| `gold_data_marts` | SQL | uma view não compila |
+| `features_cliente` | SQL | falta a gold |
+| `testes_de_qualidade` | SQL | qualquer uma das 9 assertivas |
+| `verificacao_bronze` | wheel | receita, ticket ou sujeira mudaram |
+
+### 🔗 O material da aula é o que roda em produção
+
+As tarefas SQL apontam para os arquivos das aulas 02 e 03 — não há cópia:
+
+```yaml
+sync:
+  paths: [., ../../aula-02-engenharia-de-dados, ../../aula-03-ciencia-de-dados-e-agentes]
+```
+
+```yaml
+sql_task:
+  file: { path: ../../../aula-02-engenharia-de-dados/exemplo-01-silver-clientes.sql }
+```
+
+Se o SQL da aula divergir do que está no ar, a aula está mentindo. Assim não dá.
 
 **O job falha de propósito.** Queda silenciosa de ingestão é o pior cenário: o
 pipeline "passa", o dashboard mostra menos venda, e alguém descobre três

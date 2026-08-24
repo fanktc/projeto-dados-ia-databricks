@@ -62,29 +62,43 @@ Se uma query der resultado muito diferente disso, o erro está na query.
 
 ## As três perguntas da diretoria
 
-Antes de treinar qualquer modelo, vale medir se o dado sustenta a pergunta.
-Um explorer por pergunta, todos rodando local, sem Databricks:
+Tudo em SQL, sobre a bronze, rodando no warehouse:
 
 ```bash
-cd notebooks
-python3 n3_explorer_propensao.py   # Quem vai comprar?
-python3 n3_explorer_churn.py       # Quem está sumindo?
-python3 n3_explorer_previsao.py    # Quanto vamos vender?
+python3 scripts/run_sql.py sql/n3_01_quem_vai_comprar.sql
+python3 scripts/run_sql.py sql/n3_02_quem_esta_sumindo.sql
+python3 scripts/run_sql.py sql/n3_03_quanto_vamos_vender.sql
 ```
 
-| Pergunta | Resposta medida |
-|---|---|
-| Quem vai comprar? | **Sim.** 2.816 clientes com histórico, 93% com ritmo mensurável. Use janela de 30 dias (41% de eventos) — com 90 dias, 81% compram e não há o que aprender |
-| Quem está sumindo? | **Sim, mas a definição é sua.** Não existe coluna de churn: 170 clientes (6,5%) estão atrasados em relação ao próprio ritmo. Corte relativo, não fixo |
-| Quanto vamos vender? | **Sim, com ressalvas.** O mês explica 87% da variação, mas são só 2 ciclos anuais e não há tendência de crescimento para extrapolar |
+Nenhum modelo de machine learning. Cada cliente tem um ritmo de compra, e é
+disso que saem as três respostas — com a régua testada antes de virar lista.
+
+**Quem vai comprar?** 896 clientes entram na janela de compra nos próximos
+30 dias, somando **R$ 3.515.297** esperados. A régua foi validada voltando a
+31/07 e conferindo agosto: **acertou 72,7%**, contra 42,3% de quem ligasse
+para a base inteira — 1,7x melhor que não ter régua nenhuma.
+
+**Quem está sumindo?** 69 clientes (2,6%) estão atrasados frente ao próprio
+ritmo e ainda dá para recuperar: **R$ 648.694 por trimestre** em risco. Outros
+100 já estão parados há mais de um ano — esses são perda, não risco.
+
+O corte fixo de "90 dias sem comprar" acusaria 401 clientes. **231 deles estão
+apenas no ritmo deles** — quem compra de trimestre em trimestre não sumiu.
+
+**Quanto vamos vender?** Outubro/2026 deve fazer **R$ 7,4 milhões** (índice
+sazonal 1,68), contra R$ 4,3 mi em setembro e R$ 5,4 mi em novembro. O método
+foi testado prevendo agosto sem olhar para ele: **errou 1,2%**.
+
+A margem de ±15% não vem desse erro — vem de outubro só ter sido observado
+duas vezes em toda a base.
 
 ## Estrutura
 
 ```
 dados/         dataset gerado (não versionado — reproduza com o comando acima)
 files/         PRD, gerador do dataset, slides, zip de referência
-sql/           n1_00_setup · n1_01_bronze · n1_02..04 análises · n1_99 verificação
-notebooks/     n1_receita.py e os explorers das 3 perguntas (n3_explorer_*)
+sql/           n1_* noite 1 (setup, bronze, análises) · n3_* as 3 perguntas
+notebooks/     n1_receita.py — receita por mês sem Databricks
 scripts/       run_sql.py — roda um .sql statement por statement
 perfumesarabe/ bundle de deploy (DABs) — entra pra valer na noite 4
 ```

@@ -95,35 +95,35 @@ acontece.
 
 ## 🔗 Da dinâmica para o código (slide 26)
 
-O slide que fecha o bloco. Cada "como poderíamos" da dinâmica 1 aponta para a
-query que responde — e para a noite em que ela aparece.
+O slide que fecha o bloco. **As cinco linhas são exatamente as cinco perguntas
+da dinâmica 1, na mesma ordem** — a turma vê a própria lista voltando, agora
+com o caminho de cada uma.
 
-| A pergunta da turma | A query | Onde |
-|---|---|---|
-| Quem vai comprar? | Última compra + ritmo do cliente | noite 3 · `exemplo-01-quem-vai-comprar-sem-modelo.sql` |
-| Quem está sumindo? | Recência contra o ritmo dele | noite 3 · `exemplo-02-quem-esta-sumindo-sem-modelo.sql` |
-| Quanto vamos vender? | Índice sazonal por mês do ano | noite 3 · `exemplo-03-quanto-vamos-vender-sem-modelo.sql` |
-| Vender mais dá lucro? | Margem por categoria | **hoje** · `exemplo-06-margem-marca-e-sazonalidade.sql` |
-| Onde a receita concentra? | Curva ABC de marca | **hoje** · `exemplo-06-margem-marca-e-sazonalidade.sql` |
-| Evitar visita com cliente ausente? | A lista priorizada por propensão | noite 3 · `exemplo-01` |
+| # | A pergunta que a turma escreveu | A query | Quando |
+|---|---|---|---|
+| 1 | Quem vai comprar? | Última compra + ritmo do cliente | noite 3 |
+| 2 | Quem está sumindo? | Recência comparada ao ritmo dele | noite 3 |
+| 3 | Evitar a visita perdida? | É a mesma lista, priorizada | noite 3 |
+| 4 | Quanto vamos vender? | Índice sazonal por mês do ano | noite 3 |
+| 5 | Vender mais dá lucro? | Margem por categoria | **hoje** |
 
-**O que dizer ao mostrar este slide:**
+**O que dizer:**
 
-> Duas das cinco a gente responde hoje, com SQL puro. As outras três precisam
-> do dado limpo — e é exatamente por isso que existe a noite 2.
+> Das cinco que vocês perguntaram, hoje eu respondo uma. As outras quatro
+> dependem de dado limpo — e é exatamente por isso que existe a noite 2.
 
-É a transição natural do bloco de dinâmica para o bloco de código: a turma
-acabou de escrever as perguntas, e agora vê onde cada uma vira query.
+Responder só uma de cinco não é fraqueza do roteiro: é o argumento. A turma
+acabou de escrever cinco perguntas boas e descobre que quatro delas travam no
+mesmo lugar — o dado sujo. A noite 2 deixa de ser "mais um dia de aula" e vira
+a resposta a um problema que eles mesmos levantaram.
 
-### Rodando ao vivo
-
-As duas de hoje:
+### Rodando ao vivo a que dá para responder hoje
 
 ```bash
 python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-06-margem-marca-e-sazonalidade.sql
 ```
 
-A da noite 3, se quiser dar o gostinho (roda em 25 segundos):
+Se quiser dar o gostinho da noite 3 (roda em 25 segundos):
 
 ```bash
 python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-01-quem-vai-comprar-sem-modelo.sql
@@ -144,6 +144,10 @@ saber se a ideia presta.
 
 **Protótipo que leva uma semana não é protótipo.** Se a ideia for ruim, você
 quer descobrir hoje, não depois de a equipe já ter construído.
+
+**A deixa para o próximo slide:** *"agora pegue as cinco perguntas da dinâmica
+1 — qual delas dá para prototipar hoje, com uma query?"* Deixe a turma tentar
+responder antes de avançar.
 
 Para rodar ao vivo (25 segundos):
 

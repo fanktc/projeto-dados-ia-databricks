@@ -45,7 +45,7 @@ comparação: 3.024 CNPJs distintos sem normalizar contra 3.000 normalizando.
 **Ele acertou.** Mas repare *por quê*: porque a pergunta já continha o aviso.
 Faça a mesma pergunta sem a segunda frase e veja o que sai.
 
-É o fecho da noite: o Genie foi o ambiente mais confortável dos quatro, e mesmo
+É o fecho da noite: o Genie foi o ambiente mais confortável dos três, e mesmo
 assim só chegou no número certo porque quem perguntou sabia que o CNPJ vinha em
 três formatos. Ele não descobre a sujeira — contorna, quando avisado.
 

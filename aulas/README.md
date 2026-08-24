@@ -5,7 +5,7 @@ que for preciso para rodar.
 
 | Noite | Tema | Entregável | Gravação |
 |---|---|---|---|
-| [**01**](aula-01-databricks-sql) · seg 24/08 | Databricks & SQL | Ambiente de pé, dado no catálogo, primeira análise | [assistir](https://youtube.com/live/plG6mF-ib_w) |
+| [**01**](aula-01-databricks-sql) · seg 24/08 | Databricks & SQL | Ambiente de pé, dado no catálogo, análise em 3 ambientes | [assistir](https://youtube.com/live/plG6mF-ib_w) |
 | [**02**](aula-02-engenharia-de-dados) · ter 25/08 | Engenharia de dados | Silver, gold, pipeline e testes | — |
 | [**03**](aula-03-ciencia-de-dados-e-agentes) · qua 26/08 | Ciência de dados e agentes | Score de propensão e agente comercial | — |
 | [**04**](aula-04-deploy) · qui 27/08 | Deploy | Job no ar, agendado e monitorado | — |

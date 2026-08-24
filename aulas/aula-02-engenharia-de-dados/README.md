@@ -161,6 +161,53 @@ Quem quer cada número tem como pedir, e os dois reconciliam.
 
 ---
 
+## 🤖 O quarto ambiente: Claude Code
+
+Na noite 1 a pergunta foi respondida em três ambientes — Claude Web, SQL e
+Genie. Os três **respondem**. O Claude Code é diferente: ele **constrói**.
+
+Por isso ele fica para hoje. Ontem não havia pipeline para escrever; hoje há.
+
+| | Claude Web | SQL | Genie | **Claude Code** |
+|---|---|---|---|---|
+| Escala | ○ | ● | ● | ● |
+| Reproduz | ○ | ● | ◐ | ● |
+| Governado | ○ | ● | ● | ● |
+| **Constrói** | ○ | ○ | ○ | **●** |
+
+### O que mostrar ao vivo
+
+Abra o terminal na raiz do repositório e peça o próximo passo real do projeto:
+
+```bash
+claude
+```
+
+```
+> A silver de clientes está pronta em rota_perfume.silver.clientes.
+> Escreva a silver de pedidos resolvendo os dois formatos de data,
+> rode no warehouse e confira que a receita continua R$ 102.303.828,05.
+```
+
+Três coisas ficam visíveis, e é isso que separa o Claude Code dos outros três:
+
+1. **Ele escreve o arquivo** — `exemplo-02-silver-pedidos.sql` aparece no disco,
+   versionado no Git, não numa janela de chat que some.
+2. **Ele roda** — executa no warehouse e lê o resultado de volta.
+3. **Ele confere** — se a receita não bater, ele vê o erro e corrige, em vez de
+   entregar um número errado com confiança.
+
+> O Genie responde "qual foi a receita". O Claude Code entrega a tabela que
+> passa a responder isso todo dia, sozinha.
+
+### O aviso honesto
+
+Ele erra igual aos outros quando o dado está bagunçado — a diferença é que o
+erro aparece: a query quebra, o teste falha, e você vê. Foi assim que este
+próprio repositório achou que `to_date` aborta em ANSI mode.
+
+---
+
 ## ➡️ Amanhã
 
 Com a `gold.fato_vendas` de pé, as três perguntas da diretoria deixam de ser

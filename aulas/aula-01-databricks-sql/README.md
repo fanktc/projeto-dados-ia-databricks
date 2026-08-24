@@ -15,9 +15,14 @@ ferramentas diferentes.
 
 ## 🧠 Antes de tudo: por que SQL, se existe IA?
 
-Você vai responder a mesma pergunta em quatro ambientes hoje, e vai ver os quatro
-errarem de jeitos diferentes. O ponto da noite não é escolher um vencedor — é
-entender que **nenhum deles funciona sobre dado bagunçado**.
+Você vai responder a mesma pergunta em três ambientes hoje — Claude Web, SQL e
+Genie — e vai ver os três errarem de jeitos diferentes. O ponto da noite não é
+escolher um vencedor: é entender que **nenhum deles funciona sobre dado
+bagunçado**.
+
+O quarto ambiente, o Claude Code, fica para a [noite 2](../aula-02-engenharia-de-dados).
+Ele não responde pergunta — ele constrói — e só faz sentido quando já existe
+pipeline para construir.
 
 O Genie responde em português e parece mágica. Ele só acerta porque o Unity
 Catalog sabe o schema, e porque quem perguntou sabia o que perguntar.

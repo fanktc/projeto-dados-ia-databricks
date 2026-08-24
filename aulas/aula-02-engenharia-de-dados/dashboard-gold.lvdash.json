@@ -63,7 +63,7 @@
         {
           "widget": {
             "name": "titulo",
-            "textbox_spec": "# Rota do Perfume · a pergunta da noite 1\n\nQual foi nossa receita e quem são os melhores clientes? O pico **não** é dezembro: o varejo compra **antes** da data, então o mês forte da distribuidora é o anterior — abril, junho e outubro."
+            "textbox_spec": "# Rota do Perfume · o mesmo dashboard, agora sobre a gold\n\nCompare com o da noite 1: as queries encolheram. Sem `CAST`, sem `try_to_date`, sem `JOIN` de três tabelas para achar a margem — a camada gold já entrega `receita`, `margem` e `categoria` prontos."
           },
           "position": {
             "x": 0,

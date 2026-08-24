@@ -1,0 +1,688 @@
+{
+  "datasets": [
+    {
+      "name": "ds_pedidos",
+      "displayName": "Pedidos (bronze)",
+      "queryLines": [
+        "-- Tudo na bronze é texto. Todo acesso começa com CAST e com o coalesce\n",
+        "-- de data: é o imposto que a camada silver vai eliminar na noite 2.\n",
+        "SELECT pedido_id,\n",
+        "       date_trunc('MONTH', coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),\n                    try_to_date(data_pedido, 'dd/MM/yyyy'))) AS mes,\n",
+        "       canal,\n",
+        "       CAST(valor_total AS DECIMAL(18,2)) AS valor\n",
+        "FROM pedidos\n",
+        "WHERE status <> 'Cancelado'"
+      ]
+    },
+    {
+      "name": "ds_margem",
+      "displayName": "Margem global",
+      "queryLines": [
+        "SELECT SUM(CAST(i.valor_bruto AS DECIMAL(18,2))\n",
+        "         - CAST(i.quantidade AS INT) * CAST(p.custo_unitario AS DECIMAL(18,2)))\n",
+        "     / SUM(CAST(i.valor_bruto AS DECIMAL(18,2))) AS margem_pct\n",
+        "FROM itens_pedido i\n",
+        "JOIN produtos p  ON p.sku = i.sku\n",
+        "JOIN pedidos  pe ON pe.pedido_id = i.pedido_id AND pe.status <> 'Cancelado'\n",
+        "WHERE CAST(i.quantidade AS INT) > 0\n"
+      ]
+    },
+    {
+      "name": "ds_marca",
+      "displayName": "Receita por marca",
+      "queryLines": [
+        "SELECT p.marca, SUM(CAST(i.valor_bruto AS DECIMAL(18,2))) AS receita\n",
+        "FROM itens_pedido i\n",
+        "JOIN produtos p  ON p.sku = i.sku\n",
+        "JOIN pedidos  pe ON pe.pedido_id = i.pedido_id AND pe.status <> 'Cancelado'\n",
+        "WHERE CAST(i.quantidade AS INT) > 0\n",
+        "GROUP BY 1 ORDER BY receita DESC"
+      ]
+    },
+    {
+      "name": "ds_categoria",
+      "displayName": "Margem por categoria",
+      "queryLines": [
+        "SELECT p.categoria,\n",
+        "       SUM(CAST(i.valor_bruto AS DECIMAL(18,2))\n",
+        "           - CAST(i.quantidade AS INT) * CAST(p.custo_unitario AS DECIMAL(18,2)))\n",
+        "         / SUM(CAST(i.valor_bruto AS DECIMAL(18,2))) AS margem_pct\n",
+        "FROM itens_pedido i\n",
+        "JOIN produtos p  ON p.sku = i.sku\n",
+        "JOIN pedidos  pe ON pe.pedido_id = i.pedido_id AND pe.status <> 'Cancelado'\n",
+        "WHERE CAST(i.quantidade AS INT) > 0\n",
+        "GROUP BY 1 ORDER BY margem_pct DESC"
+      ]
+    },
+    {
+      "name": "ds_clientes",
+      "displayName": "Melhores clientes",
+      "queryLines": [
+        "SELECT initcap(trim(c.razao_social)) AS cliente, c.segmento, c.cidade,\n",
+        "       COUNT(DISTINCT p.pedido_id)              AS pedidos,\n",
+        "       SUM(CAST(p.valor_total AS DECIMAL(18,2))) AS receita\n",
+        "FROM pedidos p\n",
+        "JOIN clientes c ON CAST(c.cliente_id AS INT) = CAST(p.cliente_id AS INT)\n",
+        "WHERE p.status <> 'Cancelado'\n",
+        "GROUP BY 1, 2, 3 ORDER BY receita DESC LIMIT 15"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "noite1",
+      "displayName": "Receita e clientes",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "titulo",
+            "textbox_spec": "# Rota do Perfume · a pergunta da noite 1\n\nQual foi nossa receita e quem são os melhores clientes? Tudo aqui lê a camada **bronze** — o dado como veio, ainda sem limpeza. Repare no SQL de cada dataset: `CAST` em toda coluna e `try_to_date` em toda data."
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-receita",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(valor)",
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Receita no período"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-pedidos",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "count(pedido_id)",
+                      "expression": "COUNT(`pedido_id`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(pedido_id)",
+                  "displayName": "Pedidos",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Pedidos faturados"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-ticket",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "avg(valor)",
+                      "expression": "AVG(`valor`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(valor)",
+                  "displayName": "Ticket médio",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ticket médio por pedido"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-margem",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_margem",
+                  "fields": [
+                    {
+                      "name": "margem_pct",
+                      "expression": "`margem_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "margem_pct",
+                  "displayName": "Margem",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Margem sobre receita"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "secao-tempo",
+            "textbox_spec": "## A receita no tempo\n\nO pico é outubro, não dezembro: o varejo compra **antes** da data."
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "receita-mensal",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    },
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(mes)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Mês"
+                },
+                "y": {
+                  "fieldName": "sum(valor)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por mês"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 8,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "receita-canal",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "canal",
+                      "expression": "`canal`"
+                    },
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(valor)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita"
+                },
+                "color": {
+                  "fieldName": "canal",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Canal"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por canal"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 8,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "secao-mix",
+            "textbox_spec": "## Onde a receita se concentra\n\nLayali faz 3,6x o que Attar Real faz. Kit Presente vende muito, com a pior margem."
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "receita-marca",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_marca",
+                  "fields": [
+                    {
+                      "name": "marca",
+                      "expression": "`marca`"
+                    },
+                    {
+                      "name": "sum(receita)",
+                      "expression": "SUM(`receita`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "y": {
+                  "fieldName": "marca",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Marca"
+                },
+                "x": {
+                  "fieldName": "sum(receita)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por marca"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "margem-categoria",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_categoria",
+                  "fields": [
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "margem_pct",
+                      "expression": "`margem_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "y": {
+                  "fieldName": "categoria",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Categoria"
+                },
+                "x": {
+                  "fieldName": "margem_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Margem",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Margem por categoria"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 15,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "secao-clientes",
+            "textbox_spec": "## Quem são os melhores clientes\n\n⚠️ Agrupado por nome: os 40 CNPJs duplicados ainda contam em dobro. A noite 2 resolve."
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "top-clientes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_clientes",
+                  "fields": [
+                    {
+                      "name": "cliente",
+                      "expression": "`cliente`"
+                    },
+                    {
+                      "name": "segmento",
+                      "expression": "`segmento`"
+                    },
+                    {
+                      "name": "cidade",
+                      "expression": "`cidade`"
+                    },
+                    {
+                      "name": "pedidos",
+                      "expression": "`pedidos`"
+                    },
+                    {
+                      "name": "receita",
+                      "expression": "`receita`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "cliente",
+                    "displayName": "Cliente"
+                  },
+                  {
+                    "fieldName": "segmento",
+                    "displayName": "Segmento"
+                  },
+                  {
+                    "fieldName": "cidade",
+                    "displayName": "Cidade"
+                  },
+                  {
+                    "fieldName": "pedidos",
+                    "displayName": "Pedidos"
+                  },
+                  {
+                    "fieldName": "receita",
+                    "displayName": "Receita"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Top 15 clientes por receita"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 12,
+            "height": 7
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#8C4A6B",
+        "dark": "#E8A0BF"
+      },
+      "visualizationColors": [
+        "#8C4A6B",
+        "#C97B9A",
+        "#E0A96D",
+        "#B8860B",
+        "#6B4E71",
+        "#3D5A6C",
+        "#7FB3A3"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "widgetCornerRadius": 8
+    }
+  }
+}

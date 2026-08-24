@@ -161,6 +161,30 @@ Quem quer cada número tem como pedir, e os dois reconciliam.
 
 ---
 
+## 📊 O mesmo dashboard, agora sobre a gold
+
+`dashboard-gold.lvdash.json` responde exatamente as mesmas perguntas do
+dashboard da noite 1 — mas compare o SQL dos datasets:
+
+| | Noite 1 (bronze) | Noite 2 (gold) |
+|---|---|---|
+| Receita | `CAST(valor_total AS DECIMAL(18,2))` | `receita` |
+| Data | `coalesce(try_to_date(...), try_to_date(...))` | `data_pedido` |
+| Margem | `JOIN` de 3 tabelas para achar o custo | `margem` |
+
+```bash
+databricks lakeview create \
+  --display-name "Rota do Perfume · Noite 2 (gold)" \
+  --warehouse-id SEU-WAREHOUSE \
+  --dataset-catalog rota_perfume --dataset-schema gold \
+  --serialized-dashboard "$(cat aulas/aula-02-engenharia-de-dados/dashboard-gold.lvdash.json)" \
+  --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
+```
+
+É a prova visual do que a camada silver comprou: mesmo resultado, metade do SQL.
+
+---
+
 ## 🤖 O quarto ambiente: Claude Code
 
 Na noite 1 a pergunta foi respondida em três ambientes — Claude Web, SQL e

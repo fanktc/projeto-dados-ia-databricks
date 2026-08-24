@@ -45,6 +45,36 @@ python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-01-primeiro-sele
 
 ---
 
+## 🎬 Dar a aula sem destruir o que já está pronto
+
+O catálogo `rota_perfume` tem os schemas definitivos (`bronze`, `silver`,
+`gold`) já construídos. Para reconstruir tudo ao vivo sem sobrescrevê-los,
+passe `--sufixo _aovivo`:
+
+```bash
+python3 scripts/run_sql.py aulas/aula-01-databricks-sql/00-setup-catalogo.sql --sufixo _aovivo
+python3 scripts/run_sql.py aulas/aula-01-databricks-sql/01-ingestao-bronze.sql --sufixo _aovivo
+```
+
+O runner reescreve `bronze` → `bronze_aovivo` nas tabelas **e** no caminho do
+volume, na hora de executar. **Os arquivos `.sql` seguem limpos** — nenhum
+sufixo escrito neles, então o material continua legível.
+
+| | Ambiente pronto | Aula ao vivo |
+|---|---|---|
+| Schemas | `bronze` · `silver` · `gold` | `bronze_aovivo` · `silver_aovivo` · `gold_aovivo` |
+| Volume | `/Volumes/rota_perfume/bronze/raw` | `/Volumes/rota_perfume/bronze_aovivo/raw` |
+| Comando | sem flag | `--sufixo _aovivo` |
+| Bundle | `--target dev` | `--target aovivo` |
+
+Os notebooks em branco começam com `USE SCHEMA bronze_aovivo` — trocar de
+ambiente é editar uma linha.
+
+> **Uma ressalva:** o job `rota_perfume_pipeline` (aula 04) tem tarefas SQL que
+> apontam para arquivos com os schemas fixos, então ele roda sempre no ambiente
+> definitivo. O `--target aovivo` afeta o job `rota_perfume_bronze`, que recebe
+> catálogo e schema por parâmetro.
+
 ## 🗄️ O dataset
 
 Gerado por `material/gerar_dataset.py`, ~14 MB, período de setembro/2024 a agosto/2026.

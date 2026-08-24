@@ -191,7 +191,7 @@ o pico da distribuidora é o mês anterior:
 | Arquivo | Para que serve |
 |---|---|
 | `roteiro-genie-e-dashboard.md` | O bloco sem código: perguntas do Genie e o dashboard, com o que esperar |
-| `dashboard-receita.lvdash.json` | O AI/BI dashboard da noite, versionado — 13 widgets |
+| `dashboard-bronze.lvdash.json` | O AI/BI dashboard da noite, sobre a **bronze** — 13 widgets |
 | `receita-sem-databricks.py` | Receita por mês lendo o CSV local — o plano B se o workspace cair |
 | `aula-01-imersao-agosto.pptx` | Os slides da noite |
 
@@ -203,8 +203,8 @@ Já está publicado no workspace. Para recriar:
 databricks lakeview create \
   --display-name "Rota do Perfume · Noite 1" \
   --warehouse-id SEU-WAREHOUSE \
-  --dataset-catalog rota_perfume --dataset-schema gold \
-  --serialized-dashboard "$(cat aulas/aula-01-databricks-sql/dashboard-receita.lvdash.json)" \
+  --dataset-catalog rota_perfume --dataset-schema bronze \
+  --serialized-dashboard "$(cat aulas/aula-01-databricks-sql/dashboard-bronze.lvdash.json)" \
   --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
 ```
 
@@ -213,9 +213,8 @@ alguém montou clicando), **clicar numa marca filtra tudo** (os widgets
 compartilham o dataset), e as **métricas são declaradas uma vez** com
 `MEASURE()`, então nenhuma tela mostra número diferente.
 
-> O dashboard lê da **gold**. Aponte-o para a bronze e ele quebra: lá `receita`
-> é texto e `data_pedido` tem dois formatos. O dashboard bonito depende da
-> camada da noite 2.
+> Ele lê a **bronze**, então cada dataset carrega `CAST` e `try_to_date`. Na
+> noite 2 o mesmo dashboard é refeito sobre a gold, com metade do SQL.
 
 ```bash
 python3 aulas/aula-01-databricks-sql/receita-sem-databricks.py

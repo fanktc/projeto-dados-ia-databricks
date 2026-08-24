@@ -21,7 +21,10 @@ escreveu, não só a resposta.
 ### Pergunta 1 — a pergunta da noite (funciona)
 
 > Qual foi a receita total dos pedidos não cancelados na tabela
-> rota_perfume.gold.fato_vendas?
+> rota_perfume.bronze.pedidos?
+
+⚠️ **Na noite 1 só existe a bronze.** A gold nasce amanhã — não peça
+`gold.fato_vendas` hoje, ela não está lá.
 
 Resposta obtida: **R$ 102.303.828,05** — o mesmo número do SQL escrito à mão e
 do script Python local. Três ferramentas, um número.
@@ -67,7 +70,7 @@ Crie pela interface (a API exige um `serialized_space` que só se obtém
 exportando um espaço existente):
 
 1. Menu lateral → **Genie** → **New**
-2. Tabelas: `rota_perfume.gold.fato_vendas`, `gold.dim_cliente`, `gold.dim_produto`
+2. Tabelas: `rota_perfume.bronze.pedidos`, `bronze.clientes`, `bronze.itens_pedido`, `bronze.produtos`
 3. Warehouse: o Serverless Starter
 4. Em **Instructions**, cole:
 
@@ -75,10 +78,11 @@ exportando um espaço existente):
 Você responde perguntas comerciais da Rota do Perfume, distribuidora B2B de
 perfumaria árabe.
 
-- Receita é SUM(receita) em gold.fato_vendas. Ela já exclui pedido cancelado.
-- Devolução tem receita negativa e a flag `devolucao`. Para receita bruta,
-  filtre NOT devolucao.
-- Margem é SUM(margem) / SUM(receita).
+- Tudo em bronze é TEXTO. Some com CAST(valor_total AS DECIMAL(18,2)).
+- Receita são os pedidos com status <> 'Cancelado'.
+- A data vem em dois formatos: use
+  coalesce(try_to_date(c,'yyyy-MM-dd'), try_to_date(c,'dd/MM/yyyy')).
+- O CNPJ vem em três formatos: normalize com regexp_replace(trim(cnpj),'[^0-9]','').
 - O pico de vendas é o mês ANTERIOR à data comemorativa: abril (Dia das Mães),
   junho (Namorados) e outubro (Black Friday). Dezembro e janeiro são vale.
 - Nunca estime. Se o dado não responder, diga que não responde.
@@ -91,8 +95,11 @@ contrário, igual a um analista novo.
 
 ## 📊 Parte 2 · AI/BI Dashboard
 
-O dashboard **já está criado e publicado** neste workspace, a partir de
-`dashboard-receita.lvdash.json`.
+O dashboard da noite 1 lê a **bronze** — é `dashboard-bronze.lvdash.json`, já
+publicado como *Rota do Perfume · Noite 1 (bronze)*.
+
+A versão sobre a gold é da [noite 2](../aula-02-engenharia-de-dados), e serve
+justamente para comparar: o mesmo dashboard, com queries muito mais curtas.
 
 ### Como recriar do zero
 
@@ -101,8 +108,8 @@ databricks lakeview create \
   --display-name "Rota do Perfume · Noite 1" \
   --warehouse-id SEU-WAREHOUSE \
   --dataset-catalog rota_perfume \
-  --dataset-schema gold \
-  --serialized-dashboard "$(cat dashboard-receita.lvdash.json)" \
+  --dataset-schema bronze \
+  --serialized-dashboard "$(cat dashboard-bronze.lvdash.json)" \
   --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' \
   --profile SEU-PERFIL
 
@@ -159,8 +166,15 @@ trivial no SQL do dataset.
 
 ### O gancho para a noite 2
 
-Este dashboard lê da **gold**, que ainda não existia no começo da noite. Tente
-apontá-lo para a bronze e ele quebra: `receita` lá é texto, e `data_pedido` tem
-dois formatos.
+Abra o SQL de qualquer dataset deste dashboard. Todo acesso paga o mesmo
+imposto:
 
-O dashboard bonito depende da camada que a gente vai construir amanhã.
+```sql
+CAST(valor_total AS DECIMAL(18,2))
+coalesce(try_to_date(data_pedido,'yyyy-MM-dd'), try_to_date(data_pedido,'dd/MM/yyyy'))
+JOIN produtos p ON p.sku = i.sku   -- só para achar o custo e calcular margem
+```
+
+O dashboard funciona, mas cada widget reescreve a mesma limpeza. Amanhã a
+camada silver paga isso uma vez, e o dashboard da noite 2 fica com metade do
+SQL para o mesmo resultado.

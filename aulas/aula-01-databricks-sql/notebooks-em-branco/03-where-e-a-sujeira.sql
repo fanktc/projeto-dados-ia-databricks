@@ -14,6 +14,21 @@
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ### Antes de começar: escolha o schema
+-- MAGIC
+-- MAGIC Rode a célula abaixo. Depois disso as queries podem ser escritas sem
+-- MAGIC prefixo — `FROM pedidos` em vez de `FROM rota_perfume.bronze_aovivo.pedidos`.
+-- MAGIC
+-- MAGIC Para trabalhar no ambiente já pronto, troque `bronze_aovivo` por `bronze`.
+
+-- COMMAND ----------
+
+USE CATALOG rota_perfume;
+USE SCHEMA bronze_aovivo;
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ### 1. Quantos pedidos são cancelados?
 -- MAGIC
 -- MAGIC > Resultado esperado: **957**

@@ -1,0 +1,8 @@
+# Dataset gerado por files/gerar_dataset.py (seed 42 reproduz byte a byte).
+# A cópia de referência versionada é files/dados-rota-do-perfume.zip.
+dados/
+
+# Saídas de análise
+*.png
+__pycache__/
+.venv/

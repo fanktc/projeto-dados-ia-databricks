@@ -1,0 +1,57 @@
+# Pipeline diário da Rota do Perfume.
+#
+# Ordem importa: ingerir primeiro, verificar depois. Se a verificação falhar,
+# o job falha — é melhor o alerta tocar do que o dashboard mentir.
+#
+# As duas tarefas rodam em serverless (nenhuma configuração de cluster) e
+# recebem catálogo e schema das variáveis do bundle, então o mesmo código
+# roda em dev e em prod sem edição.
+
+resources:
+  jobs:
+    rota_perfume_bronze:
+      name: rota_perfume_bronze
+
+      trigger:
+        # Uma vez por dia. Em dev o agendamento nasce pausado (mode: development).
+        periodic:
+          interval: 1
+          unit: DAYS
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+
+      tasks:
+        - task_key: bronze
+          python_wheel_task:
+            package_name: perfumesarabe
+            entry_point: bronze
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+              - "--schema"
+              - "{{job.parameters.schema}}"
+          environment_key: default
+
+        - task_key: verificacao
+          depends_on:
+            - task_key: bronze
+          python_wheel_task:
+            package_name: perfumesarabe
+            entry_point: verificar
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+              - "--schema"
+              - "{{job.parameters.schema}}"
+          environment_key: default
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - ../dist/*.whl

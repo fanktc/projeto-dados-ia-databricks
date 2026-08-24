@@ -1,6 +1,7 @@
 # 🏗️ Dia 2: Engenharia de dados | Imersão Jornada de Dados
 
-> **Status:** construído ao vivo na terça, 25/08. Este README é o mapa da noite.
+> **Status:** os 7 exemplos estão prontos e **rodados no workspace**. A silver,
+> a gold e os três marts existem. Os 9 testes passam.
 
 Ontem a query quebrou por causa das datas em dois formatos, e a gente resolveu
 no braço com um `try_to_date` dentro do `SELECT`. Funcionou — para uma query.
@@ -68,12 +69,45 @@ Cada item aqui foi **medido** na aula 1, não estimado:
 
 | # | Arquivo | O que faz |
 |---|---|---|
-| 01 | `exemplo-01-silver-clientes.sql` | CNPJ normalizado, razão social padronizada, dedup |
+| 01 | `exemplo-01-silver-clientes.sql` | CNPJ normalizado, razão social padronizada, dedup por CNPJ |
 | 02 | `exemplo-02-silver-pedidos.sql` | Data resolvida, tipos certos, flag de cancelado |
-| 03 | `exemplo-03-silver-itens.sql` | Devolução sinalizada, SKU descontinuado marcado |
-| 04 | `exemplo-04-gold-fato-vendas.sql` | Uma linha por item, com marca, categoria, receita, custo e margem |
-| 05 | `exemplo-05-pipeline-declarativo.py` | As mesmas transformações como pipeline, uma tabela por arquivo |
-| 06 | `exemplo-06-testes-de-qualidade.sql` | O teste que quebra antes do dashboard |
+| 03 | `exemplo-03-silver-itens-e-produtos.sql` | Devolução sinalizada, SKU descontinuado marcado |
+| 04 | `exemplo-04-silver-crm-e-financeiro.sql` | Vendedores, carteira, visitas, funil e pagamentos |
+| 05 | `exemplo-05-gold-dimensoes-e-fato.sql` | 4 dimensões conformadas + `fato_vendas` |
+| 06 | `exemplo-06-data-marts-por-diretoria.sql` | Vendas, produto e financeiro sobre o mesmo fato |
+| 07 | `exemplo-07-testes-de-qualidade.sql` | Os 9 testes que quebram antes do dashboard |
+
+## 🏛️ Data marts: um por diretoria, um fato só
+
+O erro clássico é criar um **fato por área** — `fato_vendas_comercial` e
+`fato_vendas_produto`. Em três meses eles divergem e ninguém sabe qual está certo.
+
+O que separa um mart do outro é a **dimensão dominante** e as **métricas**, não
+a tabela base:
+
+```
+gold/
+├── dim_cliente · dim_produto · dim_vendedor · dim_calendario   (conformadas)
+├── fato_vendas          grão: item de pedido não cancelado
+│
+├── mart_vendas_por_vendedor      vendedor  → meta, carteira, produtividade
+├── mart_vendas_funil             origem    → conversão, ciclo, motivo de perda
+├── mart_produto_performance      SKU       → mix, margem, curva ABC
+└── mart_financeiro_recebimento   vencimento→ caixa, atraso, custo de taxa
+```
+
+| Diretoria | O que só ela pergunta | Coluna que só ela usa |
+|---|---|---|
+| **Vendas** | "qual vendedor está abaixo da meta?" | `meta_mensal`, `etapa` |
+| **Produto** | "vendo o dobro e ganho menos — mudo o mix?" | `custo_unitario` |
+| **Financeiro** | "quanto entra em caixa em 30 dias?" | `data_vencimento`, `taxa_pct` |
+
+As três somam **o mesmo R$ 102.303.828,05**. É isso que "conformado" significa.
+
+> **E supply?** Parece natural, mas o dado não sustenta: cada SKU aparece em
+> só 28,8 das 105 semanas de snapshot (27,4% de cobertura). Dá para taxa de
+> ruptura agregada, não para giro por produto. É um bom exemplo de quando a
+> resposta honesta para a diretoria é "com esse dado, não".
 
 ---
 
@@ -92,17 +126,38 @@ você converte de propósito, sabendo o que está fazendo.
 
 ## 🔢 Os testes que precisam passar
 
-| Teste | Esperado |
-|---|---|
-| CNPJ único na silver | 0 duplicados (eram 40) |
-| Nenhuma data nula | 0 (os 3.443 do formato BR foram convertidos) |
-| Nenhuma receita negativa na gold | 0 (as 2.327 devoluções ficaram de fora) |
-| Volume da `fato_vendas` | entre 150.000 e 260.000 linhas |
-| Nenhum pedido órfão | todo pedido da gold existe na silver |
-| Receita total preservada | R$ 102.303.828,05, igual à da noite 1 |
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Receita preservada da bronze até a gold | R$ 102.303.828,05 ✓ |
+| 2 | CNPJ único na silver | 0 duplicados (eram 40) ✓ |
+| 3 | Nenhuma data nula em pedidos | 0 (3.443 convertidos) ✓ |
+| 4 | Receita negativa só em devolução | 0 fora de devolução ✓ |
+| 5 | Volume da `fato_vendas` | 191.080 linhas ✓ |
+| 6 | Nenhum pedido órfão no fato | 0 ✓ |
+| 7 | Nenhum cliente órfão no fato | 0 ✓ |
+| 8 | Mart de produto bate com o fato | R$ 102.303.828,05 ✓ |
+| 9 | Todo CNPJ com 14 dígitos | 0 malformados ✓ |
 
-O último é o mais importante: **limpeza não pode mudar o faturamento**. Se
+O primeiro é o que mais importa: **limpeza não pode mudar o faturamento**. Se
 mudou, você jogou dado fora sem querer.
+
+### 🔍 A armadilha que quase passou
+
+A primeira versão do `fato_vendas` deixava a devolução **de fora** — parecia
+certo, "receita é o que vendeu". O resultado: a gold mostrava R$ 103,6 mi e a
+silver R$ 102,3 mi.
+
+R$ 1,26 milhão de diferença entre duas camadas do mesmo pipeline. Um dia alguém
+compara os relatórios e a discussão vira sobre qual sistema está certo.
+
+A devolução ficou **dentro do fato**, com flag e valor negativo:
+
+```sql
+SUM(receita)                                  -- R$ 102,3 mi, igual à silver
+SUM(receita) FILTER (WHERE NOT devolucao)     -- R$ 103,6 mi, o bruto vendido
+```
+
+Quem quer cada número tem como pedir, e os dois reconciliam.
 
 ---
 

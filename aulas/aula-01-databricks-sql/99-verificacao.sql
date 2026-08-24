@@ -12,7 +12,7 @@ WITH p AS (
       coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
                try_to_date(data_pedido, 'dd/MM/yyyy')) AS data_pedido,
       CAST(valor_total AS DECIMAL(18,2))               AS valor_total
-  FROM rota_perfume.bronze.pedidos
+  FROM lakehouse_rotaperfume.bronze.pedidos
   WHERE status <> 'Cancelado'
 ),
 m AS (
@@ -41,34 +41,34 @@ SELECT 'receita janeiro/2026', CAST(jan_2026 AS STRING), '~2.500.000',
        jan_2026 BETWEEN 2.3e6 AND 2.7e6 FROM m
 UNION ALL
 SELECT 'datas em dd/MM/yyyy (12%)',
-       CAST((SELECT COUNT(*) FROM rota_perfume.bronze.pedidos WHERE data_pedido LIKE '%/%') AS STRING),
+       CAST((SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.pedidos WHERE data_pedido LIKE '%/%') AS STRING),
        '3.443',
-       (SELECT COUNT(*) FROM rota_perfume.bronze.pedidos WHERE data_pedido LIKE '%/%') = 3443
+       (SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.pedidos WHERE data_pedido LIKE '%/%') = 3443
 UNION ALL
 SELECT 'CNPJ com espaço em volta',
-       CAST((SELECT COUNT(*) FROM rota_perfume.bronze.clientes WHERE cnpj <> trim(cnpj)) AS STRING),
+       CAST((SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.clientes WHERE cnpj <> trim(cnpj)) AS STRING),
        '223',
-       (SELECT COUNT(*) FROM rota_perfume.bronze.clientes WHERE cnpj <> trim(cnpj)) = 223
+       (SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.clientes WHERE cnpj <> trim(cnpj)) = 223
 UNION ALL
 SELECT 'itens de devolução (qtd negativa)',
-       CAST((SELECT COUNT(*) FROM rota_perfume.bronze.itens_pedido WHERE CAST(quantidade AS INT) < 0) AS STRING),
+       CAST((SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.itens_pedido WHERE CAST(quantidade AS INT) < 0) AS STRING),
        '2.327',
-       (SELECT COUNT(*) FROM rota_perfume.bronze.itens_pedido WHERE CAST(quantidade AS INT) < 0) = 2327
+       (SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.itens_pedido WHERE CAST(quantidade AS INT) < 0) = 2327
 UNION ALL
 SELECT 'clientes com CNPJ duplicado',
        CAST((SELECT COUNT(*) FROM (SELECT regexp_replace(trim(cnpj), '[^0-9]', '') c
-                                   FROM rota_perfume.bronze.clientes
+                                   FROM lakehouse_rotaperfume.bronze.clientes
                                    GROUP BY 1 HAVING COUNT(*) > 1)) AS STRING),
        '40',
        (SELECT COUNT(*) FROM (SELECT regexp_replace(trim(cnpj), '[^0-9]', '') c
-                              FROM rota_perfume.bronze.clientes
+                              FROM lakehouse_rotaperfume.bronze.clientes
                               GROUP BY 1 HAVING COUNT(*) > 1)) = 40
 UNION ALL
 SELECT 'carteiras vigentes com vendedor desligado',
-       CAST((SELECT COUNT(*) FROM rota_perfume.bronze.carteira ca
-             JOIN rota_perfume.bronze.vendedores v ON v.vendedor_id = ca.vendedor_id
+       CAST((SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.carteira ca
+             JOIN lakehouse_rotaperfume.bronze.vendedores v ON v.vendedor_id = ca.vendedor_id
              WHERE ca.data_fim IS NULL AND v.data_desligamento IS NOT NULL) AS STRING),
        '> 0 (sujeira nº 9)',
-       (SELECT COUNT(*) FROM rota_perfume.bronze.carteira ca
-        JOIN rota_perfume.bronze.vendedores v ON v.vendedor_id = ca.vendedor_id
+       (SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.carteira ca
+        JOIN lakehouse_rotaperfume.bronze.vendedores v ON v.vendedor_id = ca.vendedor_id
         WHERE ca.data_fim IS NULL AND v.data_desligamento IS NOT NULL) > 0;

@@ -13,7 +13,7 @@
 -- Rode com:
 --   python3 scripts/run_sql.py aulas/aula-02-engenharia-de-dados/exemplo-03-silver-itens-e-produtos.sql
 
-CREATE OR REPLACE TABLE rota_perfume.silver.produtos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.produtos AS
 SELECT
     sku,
     descricao, categoria, marca, nota_olfativa, unidade,
@@ -26,10 +26,10 @@ SELECT
     coalesce(try_to_date(data_lancamento, 'yyyy-MM-dd'),
              try_to_date(data_lancamento, 'dd/MM/yyyy')) IS NOT NULL AS lancamento,
     _ingerido_em, _arquivo_origem
-FROM rota_perfume.bronze.produtos;
+FROM lakehouse_rotaperfume.bronze.produtos;
 
 
-CREATE OR REPLACE TABLE rota_perfume.silver.itens_pedido AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.itens_pedido AS
 SELECT
     CAST(i.item_id AS INT)                                  AS item_id,
     CAST(i.pedido_id AS INT)                                AS pedido_id,
@@ -44,14 +44,14 @@ SELECT
     -- é ruptura de processo. Marcar deixa o problema visível para o comercial.
     NOT p.ativo                                             AS sku_descontinuado,
     i._ingerido_em, i._arquivo_origem
-FROM rota_perfume.bronze.itens_pedido i
-LEFT JOIN rota_perfume.silver.produtos p ON p.sku = i.sku;
+FROM lakehouse_rotaperfume.bronze.itens_pedido i
+LEFT JOIN lakehouse_rotaperfume.silver.produtos p ON p.sku = i.sku;
 
 
 -- ----------------------------------------------------------------------------
 SELECT
-    (SELECT COUNT(*) FROM rota_perfume.silver.produtos)                            AS produtos,
-    (SELECT COUNT(*) FROM rota_perfume.silver.produtos WHERE lancamento)           AS lancamentos,
-    (SELECT COUNT(*) FROM rota_perfume.silver.itens_pedido)                        AS itens,
-    (SELECT COUNT(*) FROM rota_perfume.silver.itens_pedido WHERE devolucao)        AS devolucoes,
-    (SELECT COUNT(*) FROM rota_perfume.silver.itens_pedido WHERE sku_descontinuado) AS itens_de_sku_morto;
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.produtos)                            AS produtos,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.produtos WHERE lancamento)           AS lancamentos,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.itens_pedido)                        AS itens,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.itens_pedido WHERE devolucao)        AS devolucoes,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.itens_pedido WHERE sku_descontinuado) AS itens_de_sku_morto;

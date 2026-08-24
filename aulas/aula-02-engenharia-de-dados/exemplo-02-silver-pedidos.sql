@@ -10,7 +10,7 @@
 -- Rode com:
 --   python3 scripts/run_sql.py aulas/aula-02-engenharia-de-dados/exemplo-02-silver-pedidos.sql
 
-CREATE OR REPLACE TABLE rota_perfume.silver.pedidos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.pedidos AS
 SELECT
     CAST(pedido_id AS INT)                                  AS pedido_id,
     CAST(cliente_id AS INT)                                 AS cliente_id,
@@ -35,7 +35,7 @@ SELECT
          ELSE CAST(valor_total AS DECIMAL(18,2)) END        AS valor_liquido,
 
     _ingerido_em, _arquivo_origem
-FROM rota_perfume.bronze.pedidos;
+FROM lakehouse_rotaperfume.bronze.pedidos;
 
 
 -- ----------------------------------------------------------------------------
@@ -43,8 +43,8 @@ FROM rota_perfume.bronze.pedidos;
 -- ----------------------------------------------------------------------------
 
 SELECT
-    (SELECT COUNT(*) FROM rota_perfume.silver.pedidos)                          AS linhas,
-    (SELECT COUNT(*) FROM rota_perfume.silver.pedidos WHERE data_pedido IS NULL) AS datas_perdidas,
-    (SELECT COUNT(*) FROM rota_perfume.silver.pedidos WHERE cancelado)          AS cancelados,
-    (SELECT ROUND(SUM(valor_liquido), 2) FROM rota_perfume.silver.pedidos)      AS receita_silver,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.pedidos)                          AS linhas,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.pedidos WHERE data_pedido IS NULL) AS datas_perdidas,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.pedidos WHERE cancelado)          AS cancelados,
+    (SELECT ROUND(SUM(valor_liquido), 2) FROM lakehouse_rotaperfume.silver.pedidos)      AS receita_silver,
     102303828.05                                                                AS receita_esperada;

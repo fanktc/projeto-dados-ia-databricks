@@ -20,64 +20,64 @@
 
 -- ---------- ERP: o que foi vendido ----------
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.produtos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.produtos AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/erp/produtos.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/erp/produtos.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.pedidos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.pedidos AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/erp/pedidos.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/erp/pedidos.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.itens_pedido AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.itens_pedido AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/erp/itens_pedido.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/erp/itens_pedido.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.pagamentos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.pagamentos AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/erp/pagamentos.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/erp/pagamentos.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.estoque AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.estoque AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/erp/estoque.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/erp/estoque.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
 -- ---------- CRM: para quem vendemos ----------
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.clientes AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.clientes AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/crm/clientes.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/clientes.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.vendedores AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.vendedores AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/crm/vendedores.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/vendedores.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.carteira AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.carteira AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/crm/carteira.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/carteira.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.oportunidades AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.oportunidades AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/crm/oportunidades.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/oportunidades.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);
 
-CREATE OR REPLACE TABLE rota_perfume.bronze.visitas AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.bronze.visitas AS
 SELECT * EXCEPT (_rescued_data), current_timestamp() AS _ingerido_em, _metadata.file_path AS _arquivo_origem
-FROM read_files('/Volumes/rota_perfume/bronze/raw/crm/visitas.csv',
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/visitas.csv',
                 format => 'csv', header => true,
                 inferColumnTypes => false);

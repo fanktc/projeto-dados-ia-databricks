@@ -1,32 +1,13 @@
 #!/usr/bin/env python3
 """Executa um arquivo .sql no Databricks, uma statement por vez.
 
-Com `--sufixo`, reescreve os schemas na hora de executar: `bronze` vira
-`bronze_aovivo`, e o volume acompanha. Serve para dar a aula sem sobrescrever
-o catálogo que já está pronto — os arquivos .sql seguem limpos, sem sufixo
-nenhum escrito neles.
-
 A CLI (`databricks experimental aitools tools query`) aceita só uma statement
 por chamada. Este runner divide o arquivo em `;` (respeitando aspas e
 comentários) e dispara uma chamada por statement.
 
 Uso:  python3 scripts/run_sql.py aulas/aula-01-databricks-sql/00-setup-catalogo.sql [--profile projeto-dados-ia] [--quiet]
 """
-import argparse, re, subprocess, sys
-
-SCHEMAS = ("bronze", "silver", "gold")
-
-
-def aplicar_sufixo(sql: str, sufixo: str) -> str:
-    """Acrescenta o sufixo aos schemas, em tabelas e no caminho do volume."""
-    if not sufixo:
-        return sql
-    for schema in SCHEMAS:
-        # catalogo.schema.tabela e catalogo.schema (CREATE SCHEMA)
-        sql = re.sub(rf"(\w+)\.{schema}\b", rf"\1.{schema}{sufixo}", sql)
-        # /Volumes/catalogo/schema/...
-        sql = re.sub(rf"(/Volumes/\w+)/{schema}/", rf"\1/{schema}{sufixo}/", sql)
-    return sql
+import argparse, subprocess, sys
 
 
 def dividir(sql: str) -> list[str]:
@@ -60,18 +41,13 @@ def main() -> int:
     ap.add_argument("arquivo")
     ap.add_argument("--profile", default="projeto-dados-ia")
     ap.add_argument("--quiet", action="store_true", help="não imprime o resultado, só o status")
-    ap.add_argument("--sufixo", default="",
-                    help="sufixo dos schemas (ex.: _aovivo). Reescreve bronze -> "
-                         "bronze_aovivo em tabelas e no caminho do volume")
     ap.add_argument("--continuar", action="store_true",
                     help="segue para a próxima statement mesmo se uma falhar "
                          "(alguns arquivos da aula têm query que quebra de propósito)")
     args = ap.parse_args()
 
-    stmts = dividir(aplicar_sufixo(open(args.arquivo, encoding="utf-8").read(),
-                                   args.sufixo))
-    alvo = f" · schemas com sufixo '{args.sufixo}'" if args.sufixo else ""
-    print(f"{args.arquivo}: {len(stmts)} statement(s){alvo}\n")
+    stmts = dividir(open(args.arquivo, encoding="utf-8").read())
+    print(f"{args.arquivo}: {len(stmts)} statement(s)\n")
 
     for n, stmt in enumerate(stmts, 1):
         # primeira linha não-comentário, só para identificar a statement no log

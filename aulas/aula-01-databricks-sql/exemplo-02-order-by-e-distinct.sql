@@ -14,7 +14,7 @@
 -- ('9' vem depois de '10' na ordem alfabética).
 
 SELECT pedido_id, data_pedido, canal, valor_total
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 ORDER BY CAST(valor_total AS DECIMAL(18,2)) DESC
 LIMIT 10;
 
@@ -26,7 +26,7 @@ LIMIT 10;
 -- com o dígito mais alto, não o de maior valor.
 
 SELECT pedido_id, valor_total
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 ORDER BY valor_total DESC
 LIMIT 10;
 
@@ -37,9 +37,9 @@ LIMIT 10;
 -- DISTINCT antes de filtrar. Você precisa saber o que tem para escrever o
 -- WHERE certo — e é assim que se descobre que existe 'Cancelado'.
 
-SELECT DISTINCT status FROM rota_perfume.bronze.pedidos;
+SELECT DISTINCT status FROM lakehouse_rotaperfume.bronze.pedidos;
 
-SELECT DISTINCT canal FROM rota_perfume.bronze.pedidos;
+SELECT DISTINCT canal FROM lakehouse_rotaperfume.bronze.pedidos;
 
 
 -- ============================================
@@ -48,6 +48,6 @@ SELECT DISTINCT canal FROM rota_perfume.bronze.pedidos;
 -- Melhor que DISTINCT puro: quantas vezes cada um aparece.
 
 SELECT status, COUNT(*) AS pedidos
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 GROUP BY status
 ORDER BY pedidos DESC;

@@ -28,7 +28,7 @@ SELECT
     date_trunc('month', data_pedido) AS mes,
     COUNT(*)                         AS pedidos,
     ROUND(SUM(valor_total), 2)       AS receita
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE status <> 'Cancelado'
 GROUP BY 1
 ORDER BY 1;
@@ -52,7 +52,7 @@ SELECT
                try_to_date(data_pedido, 'dd/MM/yyyy')))   AS mes,
     COUNT(*)                                              AS pedidos,
     ROUND(SUM(CAST(valor_total AS DECIMAL(18,2))), 2)     AS receita
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE status <> 'Cancelado'
 GROUP BY 1
 ORDER BY 1;

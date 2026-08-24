@@ -37,7 +37,7 @@ SELECT
                    try_to_date(data_pedido, 'dd/MM/yyyy'))) AS mes_do_ano,
     COUNT(*)                                                AS pedidos,
     ROUND(SUM(CAST(valor_total AS DECIMAL(18,2))), 2)       AS receita
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE status <> 'Cancelado'
   AND coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
                try_to_date(data_pedido, 'dd/MM/yyyy'))
@@ -59,9 +59,9 @@ SELECT
     ROUND(SUM(CAST(i.valor_bruto AS DECIMAL(18,2))), 2)  AS receita,
     ROUND(100 * SUM(CAST(i.valor_bruto AS DECIMAL(18,2)))
               / SUM(SUM(CAST(i.valor_bruto AS DECIMAL(18,2)))) OVER (), 1) AS pct
-FROM rota_perfume.bronze.itens_pedido i
-JOIN rota_perfume.bronze.produtos pr ON pr.sku = i.sku
-JOIN rota_perfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
+FROM lakehouse_rotaperfume.bronze.itens_pedido i
+JOIN lakehouse_rotaperfume.bronze.produtos pr ON pr.sku = i.sku
+JOIN lakehouse_rotaperfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
 WHERE p.status <> 'Cancelado'
   AND CAST(i.quantidade AS INT) > 0        -- fora devolução
 GROUP BY 1
@@ -83,9 +83,9 @@ SELECT
     ROUND(100 * (SUM(CAST(i.valor_bruto AS DECIMAL(18,2)))
                  - SUM(CAST(i.quantidade AS INT) * CAST(pr.custo_unitario AS DECIMAL(18,2))))
               / SUM(CAST(i.valor_bruto AS DECIMAL(18,2))), 1) AS margem_pct
-FROM rota_perfume.bronze.itens_pedido i
-JOIN rota_perfume.bronze.produtos pr ON pr.sku = i.sku
-JOIN rota_perfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
+FROM lakehouse_rotaperfume.bronze.itens_pedido i
+JOIN lakehouse_rotaperfume.bronze.produtos pr ON pr.sku = i.sku
+JOIN lakehouse_rotaperfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
 WHERE p.status <> 'Cancelado'
   AND CAST(i.quantidade AS INT) > 0
 GROUP BY 1
@@ -105,9 +105,9 @@ SELECT
     ROUND(SUM(CAST(i.valor_bruto AS DECIMAL(18,2))), 2)  AS receita,
     ROUND(100 * SUM(CAST(i.valor_bruto AS DECIMAL(18,2)))
               / SUM(SUM(CAST(i.valor_bruto AS DECIMAL(18,2)))) OVER (), 1) AS pct_receita
-FROM rota_perfume.bronze.itens_pedido i
-JOIN rota_perfume.bronze.produtos pr ON pr.sku = i.sku
-JOIN rota_perfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
+FROM lakehouse_rotaperfume.bronze.itens_pedido i
+JOIN lakehouse_rotaperfume.bronze.produtos pr ON pr.sku = i.sku
+JOIN lakehouse_rotaperfume.bronze.pedidos  p  ON p.pedido_id = i.pedido_id
 WHERE p.status <> 'Cancelado'
   AND CAST(i.quantidade AS INT) > 0
 GROUP BY 1;
@@ -126,6 +126,6 @@ SELECT
     COUNT(DISTINCT i.pedido_id)                          AS pedidos_cancelados,
     COUNT(*)                                             AS itens_orfaos,
     ROUND(SUM(CAST(i.valor_bruto AS DECIMAL(18,2))), 2)  AS valor_que_some
-FROM rota_perfume.bronze.itens_pedido i
-JOIN rota_perfume.bronze.pedidos p ON p.pedido_id = i.pedido_id
+FROM lakehouse_rotaperfume.bronze.itens_pedido i
+JOIN lakehouse_rotaperfume.bronze.pedidos p ON p.pedido_id = i.pedido_id
 WHERE p.status = 'Cancelado';

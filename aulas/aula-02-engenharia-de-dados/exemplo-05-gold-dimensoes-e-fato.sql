@@ -14,38 +14,38 @@
 
 -- ---------------------------------------------------------------- dimensões
 
-CREATE OR REPLACE TABLE rota_perfume.gold.dim_cliente AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.dim_cliente AS
 SELECT
     c.cliente_id, c.cnpj, c.razao_social, c.segmento, c.cidade, c.uf, c.bairro,
     c.data_cadastro, c.ativo,
     -- o vendedor que atende hoje: a carteira tem histórico, aqui queremos o atual
     ca.vendedor_id                                          AS vendedor_atual_id,
     ca.orfa                                                 AS carteira_orfa
-FROM rota_perfume.silver.clientes c
+FROM lakehouse_rotaperfume.silver.clientes c
 LEFT JOIN (
     SELECT cliente_id, vendedor_id, orfa,
            ROW_NUMBER() OVER (PARTITION BY cliente_id ORDER BY data_inicio DESC) AS rn
-    FROM rota_perfume.silver.carteira WHERE vigente
+    FROM lakehouse_rotaperfume.silver.carteira WHERE vigente
 ) ca ON ca.cliente_id = c.cliente_id AND ca.rn = 1;
 
 
-CREATE OR REPLACE TABLE rota_perfume.gold.dim_produto AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.dim_produto AS
 SELECT sku, descricao, categoria, marca, nota_olfativa, unidade,
        preco_tabela, custo_unitario, ativo, data_lancamento, lancamento
-FROM rota_perfume.silver.produtos;
+FROM lakehouse_rotaperfume.silver.produtos;
 
 
-CREATE OR REPLACE TABLE rota_perfume.gold.dim_vendedor AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.dim_vendedor AS
 SELECT v.vendedor_id, v.nome, v.regiao, v.uf, v.data_admissao,
        v.data_desligamento, v.ativo, v.meta_mensal,
-       (SELECT COUNT(*) FROM rota_perfume.silver.carteira c
+       (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.carteira c
         WHERE c.vendedor_id = v.vendedor_id AND c.vigente)  AS clientes_na_carteira
-FROM rota_perfume.silver.vendedores v;
+FROM lakehouse_rotaperfume.silver.vendedores v;
 
 
 -- Calendário: parece bobo, mas é o que evita cada analista escrever a própria
 -- regra de "qual mês é pico" dentro da query dele.
-CREATE OR REPLACE TABLE rota_perfume.gold.dim_calendario AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.dim_calendario AS
 SELECT
     d                                                       AS data,
     year(d)                                                 AS ano,
@@ -77,7 +77,7 @@ FROM (SELECT explode(sequence(DATE'2024-09-01', DATE'2026-12-31', INTERVAL 1 DAY
 --
 -- Quem quer cada número tem como pedir, e os dois reconciliam.
 
-CREATE OR REPLACE TABLE rota_perfume.gold.fato_vendas AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.fato_vendas AS
 SELECT
     i.item_id,
     p.pedido_id,
@@ -100,23 +100,23 @@ SELECT
     i.valor_bruto - (i.quantidade * pr.custo_unitario)      AS margem,
     i.devolucao,
     i.sku_descontinuado
-FROM rota_perfume.silver.itens_pedido i
-JOIN rota_perfume.silver.pedidos  p  ON p.pedido_id = i.pedido_id AND NOT p.cancelado
-JOIN rota_perfume.silver.produtos pr ON pr.sku = i.sku;
+FROM lakehouse_rotaperfume.silver.itens_pedido i
+JOIN lakehouse_rotaperfume.silver.pedidos  p  ON p.pedido_id = i.pedido_id AND NOT p.cancelado
+JOIN lakehouse_rotaperfume.silver.produtos pr ON pr.sku = i.sku;
 
 
 -- ----------------------------------------------------------------------------
 SELECT
-    (SELECT COUNT(*) FROM rota_perfume.gold.dim_cliente)                  AS clientes,
-    (SELECT COUNT(*) FROM rota_perfume.gold.dim_produto)                  AS produtos,
-    (SELECT COUNT(*) FROM rota_perfume.gold.dim_vendedor)                 AS vendedores,
-    (SELECT COUNT(*) FROM rota_perfume.gold.fato_vendas)                  AS linhas_do_fato,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.dim_cliente)                  AS clientes,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.dim_produto)                  AS produtos,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.dim_vendedor)                 AS vendedores,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.fato_vendas)                  AS linhas_do_fato,
     -- este número tem de ser idêntico ao da silver.pedidos
-    (SELECT ROUND(SUM(receita), 2) FROM rota_perfume.gold.fato_vendas)    AS receita_liquida,
+    (SELECT ROUND(SUM(receita), 2) FROM lakehouse_rotaperfume.gold.fato_vendas)    AS receita_liquida,
     (SELECT ROUND(SUM(receita) FILTER (WHERE NOT devolucao), 2)
-       FROM rota_perfume.gold.fato_vendas)                                AS receita_bruta,
+       FROM lakehouse_rotaperfume.gold.fato_vendas)                                AS receita_bruta,
     (SELECT ROUND(SUM(receita) FILTER (WHERE devolucao), 2)
-       FROM rota_perfume.gold.fato_vendas)                                AS devolucoes,
+       FROM lakehouse_rotaperfume.gold.fato_vendas)                                AS devolucoes,
     (SELECT ROUND(100 * SUM(margem) / SUM(receita), 1)
-       FROM rota_perfume.gold.fato_vendas)                                AS margem_pct,
-    (SELECT ROUND(SUM(valor_liquido), 2) FROM rota_perfume.silver.pedidos) AS confere_com_a_silver;
+       FROM lakehouse_rotaperfume.gold.fato_vendas)                                AS margem_pct,
+    (SELECT ROUND(SUM(valor_liquido), 2) FROM lakehouse_rotaperfume.silver.pedidos) AS confere_com_a_silver;

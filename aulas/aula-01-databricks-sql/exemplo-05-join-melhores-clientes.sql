@@ -24,8 +24,8 @@ SELECT
     c.segmento,
     COUNT(DISTINCT p.pedido_id)                         AS pedidos,
     ROUND(SUM(CAST(p.valor_total AS DECIMAL(18,2))), 2) AS receita
-FROM rota_perfume.bronze.pedidos p
-JOIN rota_perfume.bronze.clientes c
+FROM lakehouse_rotaperfume.bronze.pedidos p
+JOIN lakehouse_rotaperfume.bronze.clientes c
   ON c.cliente_id = p.cliente_id
 WHERE p.status <> 'Cancelado'
 GROUP BY 1, 2
@@ -49,8 +49,8 @@ SELECT
     max(c.segmento)                                     AS segmento,
     COUNT(DISTINCT p.pedido_id)                         AS pedidos,
     ROUND(SUM(CAST(p.valor_total AS DECIMAL(18,2))), 2) AS receita
-FROM rota_perfume.bronze.pedidos p
-JOIN rota_perfume.bronze.clientes c
+FROM lakehouse_rotaperfume.bronze.pedidos p
+JOIN lakehouse_rotaperfume.bronze.clientes c
   ON c.cliente_id = p.cliente_id
 WHERE p.status <> 'Cancelado'
 GROUP BY 1
@@ -65,4 +65,4 @@ SELECT
     COUNT(DISTINCT cliente_id)   AS clientes_distintos,
     COUNT(DISTINCT razao_social) AS nomes_distintos,
     COUNT(DISTINCT cliente_id) - COUNT(DISTINCT razao_social) AS clientes_que_somem_ao_agrupar_por_nome
-FROM rota_perfume.bronze.clientes;
+FROM lakehouse_rotaperfume.bronze.clientes;

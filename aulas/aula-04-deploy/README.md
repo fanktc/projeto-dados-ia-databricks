@@ -103,10 +103,10 @@ Catálogo e schema vêm das variáveis do bundle, nunca do código:
 targets:
   dev:
     mode: development      # recursos ganham prefixo [dev seu_nome]
-    variables: { catalog: rota_perfume, schema: bronze }
+    variables: { catalog: lakehouse_rotaperfume, schema: bronze }
   prod:
     mode: production
-    variables: { catalog: rota_perfume, schema: bronze }
+    variables: { catalog: lakehouse_rotaperfume, schema: bronze }
 ```
 
 Em `dev` o agendamento nasce **pausado**. Em `prod` ele fica ativo — repare na

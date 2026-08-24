@@ -20,7 +20,7 @@
 -- "Qual vendedor está abaixo da meta? Onde o funil vaza?"
 -- ═══════════════════════════════════════════════════════════════════
 
-CREATE OR REPLACE VIEW rota_perfume.gold.mart_vendas_por_vendedor AS
+CREATE OR REPLACE VIEW lakehouse_rotaperfume.gold.mart_vendas_por_vendedor AS
 SELECT
     v.vendedor_id,
     v.nome                                              AS vendedor,
@@ -35,13 +35,13 @@ SELECT
     ROUND(SUM(f.margem), 2)                             AS margem,
     -- o número que a reunião de comercial quer ver
     ROUND(100 * SUM(f.receita) / v.meta_mensal, 1)      AS pct_da_meta
-FROM rota_perfume.gold.fato_vendas f
-JOIN rota_perfume.gold.dim_vendedor v ON v.vendedor_id = f.vendedor_id
+FROM lakehouse_rotaperfume.gold.fato_vendas f
+JOIN lakehouse_rotaperfume.gold.dim_vendedor v ON v.vendedor_id = f.vendedor_id
 GROUP BY v.vendedor_id, v.nome, v.regiao, v.ativo, v.meta_mensal,
          v.clientes_na_carteira, f.ano_mes;
 
 
-CREATE OR REPLACE VIEW rota_perfume.gold.mart_vendas_funil AS
+CREATE OR REPLACE VIEW lakehouse_rotaperfume.gold.mart_vendas_funil AS
 SELECT
     o.origem,
     o.etapa,
@@ -50,7 +50,7 @@ SELECT
     ROUND(AVG(o.ciclo_dias), 1)                         AS ciclo_medio_dias,
     ROUND(100.0 * COUNT(*) FILTER (WHERE o.ganha)
               / NULLIF(COUNT(*) FILTER (WHERE NOT o.aberta), 0), 1) AS taxa_conversao_pct
-FROM rota_perfume.silver.oportunidades o
+FROM lakehouse_rotaperfume.silver.oportunidades o
 GROUP BY o.origem, o.etapa;
 
 
@@ -60,7 +60,7 @@ GROUP BY o.origem, o.etapa;
 -- Repare: esta é a única área que olha custo_unitario.
 -- ═══════════════════════════════════════════════════════════════════
 
-CREATE OR REPLACE VIEW rota_perfume.gold.mart_produto_performance AS
+CREATE OR REPLACE VIEW lakehouse_rotaperfume.gold.mart_produto_performance AS
 SELECT
     p.sku,
     p.descricao,
@@ -76,8 +76,8 @@ SELECT
     -- participação na receita total: a curva ABC sai daqui
     ROUND(100 * SUM(f.receita) / SUM(SUM(f.receita)) OVER (), 2) AS pct_da_receita,
     ROUND(SUM(f.receita) FILTER (WHERE f.devolucao), 2) AS devolvido
-FROM rota_perfume.gold.fato_vendas f
-JOIN rota_perfume.gold.dim_produto p ON p.sku = f.sku
+FROM lakehouse_rotaperfume.gold.fato_vendas f
+JOIN lakehouse_rotaperfume.gold.dim_produto p ON p.sku = f.sku
 GROUP BY p.sku, p.descricao, p.categoria, p.marca, p.nota_olfativa,
          p.lancamento, p.ativo;
 
@@ -88,7 +88,7 @@ GROUP BY p.sku, p.descricao, p.categoria, p.marca, p.nota_olfativa,
 -- Esta é a única área que olha data_vencimento e taxa.
 -- ═══════════════════════════════════════════════════════════════════
 
-CREATE OR REPLACE VIEW rota_perfume.gold.mart_financeiro_recebimento AS
+CREATE OR REPLACE VIEW lakehouse_rotaperfume.gold.mart_financeiro_recebimento AS
 SELECT
     pg.forma_pagamento,
     date_format(pg.data_vencimento, 'yyyy-MM')          AS vencimento_mes,
@@ -101,7 +101,7 @@ SELECT
     ROUND(AVG(pg.taxa_pct), 2)                          AS taxa_media_pct,
     ROUND(AVG(pg.dias_de_atraso), 1)                    AS atraso_medio_dias,
     COUNT(*) FILTER (WHERE pg.em_aberto)                AS em_aberto
-FROM rota_perfume.silver.pagamentos pg
+FROM lakehouse_rotaperfume.silver.pagamentos pg
 GROUP BY pg.forma_pagamento, date_format(pg.data_vencimento, 'yyyy-MM'),
          pg.status_pagamento;
 
@@ -112,12 +112,12 @@ GROUP BY pg.forma_pagamento, date_format(pg.data_vencimento, 'yyyy-MM'),
 
 SELECT 'vendas · receita somada por vendedor' AS visao,
        ROUND(SUM(receita), 2)                 AS receita
-FROM rota_perfume.gold.mart_vendas_por_vendedor
+FROM lakehouse_rotaperfume.gold.mart_vendas_por_vendedor
 UNION ALL
 SELECT 'produto · receita somada por SKU',
        ROUND(SUM(receita), 2)
-FROM rota_perfume.gold.mart_produto_performance
+FROM lakehouse_rotaperfume.gold.mart_produto_performance
 UNION ALL
 SELECT 'a fonte única · gold.fato_vendas',
        ROUND(SUM(receita), 2)
-FROM rota_perfume.gold.fato_vendas;
+FROM lakehouse_rotaperfume.gold.fato_vendas;

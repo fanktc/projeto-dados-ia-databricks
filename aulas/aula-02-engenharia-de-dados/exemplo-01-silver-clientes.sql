@@ -11,7 +11,7 @@
 -- Rode com:
 --   python3 scripts/run_sql.py aulas/aula-02-engenharia-de-dados/exemplo-01-silver-clientes.sql
 
-CREATE OR REPLACE TABLE rota_perfume.silver.clientes AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.clientes AS
 WITH limpo AS (
     SELECT
         CAST(cliente_id AS INT)                                          AS cliente_id,
@@ -36,7 +36,7 @@ WITH limpo AS (
 
         ativo = 'S'                                                      AS ativo,
         _ingerido_em, _arquivo_origem
-    FROM rota_perfume.bronze.clientes
+    FROM lakehouse_rotaperfume.bronze.clientes
 ),
 numerado AS (
     SELECT
@@ -56,9 +56,9 @@ SELECT * EXCEPT (rn) FROM numerado WHERE rn = 1;
 -- ----------------------------------------------------------------------------
 
 SELECT
-    (SELECT COUNT(*) FROM rota_perfume.bronze.clientes)                    AS bronze_linhas,
-    (SELECT COUNT(*) FROM rota_perfume.silver.clientes)                    AS silver_clientes,
-    (SELECT COUNT(*) FROM rota_perfume.silver.clientes WHERE cnpj_duplicado) AS eram_duplicados,
-    (SELECT COUNT(DISTINCT cnpj) FROM rota_perfume.silver.clientes)        AS cnpj_unicos,
-    (SELECT COUNT(*) FROM rota_perfume.silver.clientes WHERE data_cadastro IS NULL) AS datas_perdidas,
-    (SELECT COUNT(*) FROM rota_perfume.silver.clientes WHERE length(cnpj) <> 14)    AS cnpj_mal_formado;
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.clientes)                    AS bronze_linhas,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.clientes)                    AS silver_clientes,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.clientes WHERE cnpj_duplicado) AS eram_duplicados,
+    (SELECT COUNT(DISTINCT cnpj) FROM lakehouse_rotaperfume.silver.clientes)        AS cnpj_unicos,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.clientes WHERE data_cadastro IS NULL) AS datas_perdidas,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.clientes WHERE length(cnpj) <> 14)    AS cnpj_mal_formado;

@@ -31,7 +31,7 @@ WITH ritmo AS (
     FROM (
         SELECT cliente_id, data_pedido, valor_liquido,
                lag(data_pedido) OVER (PARTITION BY cliente_id ORDER BY data_pedido) AS anterior
-        FROM rota_perfume.silver.pedidos
+        FROM lakehouse_rotaperfume.silver.pedidos
         WHERE NOT cancelado
     )
     GROUP BY cliente_id
@@ -40,11 +40,11 @@ WITH ritmo AS (
 visitas AS (
     SELECT cliente_id,
            COUNT(*) FILTER (WHERE data_visita >= DATE'2026-06-01') AS visitas_90d
-    FROM rota_perfume.silver.visitas GROUP BY cliente_id
+    FROM lakehouse_rotaperfume.silver.visitas GROUP BY cliente_id
 ),
 funil AS (
     SELECT cliente_id, COUNT(*) AS oportunidades_abertas
-    FROM rota_perfume.silver.oportunidades WHERE aberta GROUP BY cliente_id
+    FROM lakehouse_rotaperfume.silver.oportunidades WHERE aberta GROUP BY cliente_id
 )
 SELECT
     r.cliente_id,
@@ -65,7 +65,7 @@ SELECT
         ELSE                                               'Entrando na janela de compra'
     END                                                     AS motivo
 FROM ritmo r
-JOIN rota_perfume.gold.dim_cliente c ON c.cliente_id = r.cliente_id
+JOIN lakehouse_rotaperfume.gold.dim_cliente c ON c.cliente_id = r.cliente_id
 LEFT JOIN visitas v ON v.cliente_id = r.cliente_id
 LEFT JOIN funil   f ON f.cliente_id = r.cliente_id
 WHERE date_add(r.ultima_compra, CAST(r.ritmo_dias AS INT))
@@ -82,7 +82,7 @@ WITH ritmo AS (
            median(datediff(data_pedido, anterior)) AS ritmo_dias
     FROM (SELECT cliente_id, data_pedido, valor_liquido,
                  lag(data_pedido) OVER (PARTITION BY cliente_id ORDER BY data_pedido) AS anterior
-          FROM rota_perfume.silver.pedidos WHERE NOT cancelado)
+          FROM lakehouse_rotaperfume.silver.pedidos WHERE NOT cancelado)
     GROUP BY cliente_id
     HAVING COUNT(*) >= 3 AND median(datediff(data_pedido, anterior)) IS NOT NULL
 )
@@ -106,7 +106,7 @@ WHERE date_add(ultima_compra, CAST(ritmo_dias AS INT))
 
 WITH ate_julho AS (
     SELECT cliente_id, data_pedido
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado AND data_pedido <= DATE'2026-07-31'
 ),
 ritmo AS (
@@ -124,7 +124,7 @@ previstos AS (
             BETWEEN DATE'2026-07-31' AND DATE'2026-08-31'
 ),
 compraram AS (
-    SELECT DISTINCT cliente_id FROM rota_perfume.silver.pedidos
+    SELECT DISTINCT cliente_id FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
       AND data_pedido > DATE'2026-07-31' AND data_pedido <= DATE'2026-08-31'
 )

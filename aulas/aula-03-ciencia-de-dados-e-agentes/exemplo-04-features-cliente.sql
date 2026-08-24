@@ -19,13 +19,13 @@
 -- Rode com:
 --   python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-04-features-cliente.sql
 
-CREATE OR REPLACE TABLE rota_perfume.gold.features_cliente AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.features_cliente AS
 WITH parametros AS (
     SELECT DATE'2026-07-31' AS referencia, 30 AS horizonte_dias
 ),
 -- ── só o passado ────────────────────────────────────────────────────────────
 passado AS (
-    SELECT p.* FROM rota_perfume.silver.pedidos p, parametros
+    SELECT p.* FROM lakehouse_rotaperfume.silver.pedidos p, parametros
     WHERE NOT p.cancelado AND p.data_pedido <= parametros.referencia
 ),
 rfm AS (
@@ -64,7 +64,7 @@ crm AS (
             date_sub((SELECT referencia FROM parametros), 90))  AS visitas_90d,
         ROUND(AVG(CASE WHEN v.converteu THEN 1.0 ELSE 0.0 END), 3) AS taxa_conversao_visita,
         datediff((SELECT referencia FROM parametros), MAX(v.data_visita)) AS dias_ultima_visita
-    FROM rota_perfume.silver.visitas v, parametros
+    FROM lakehouse_rotaperfume.silver.visitas v, parametros
     WHERE v.data_visita <= parametros.referencia
     GROUP BY v.cliente_id
 ),
@@ -73,7 +73,7 @@ funil AS (
            COUNT(*) FILTER (WHERE o.aberta)                 AS oport_abertas,
            SUM(o.valor_estimado) FILTER (WHERE o.aberta)    AS valor_no_funil,
            ROUND(AVG(CASE WHEN o.ganha THEN 1.0 ELSE 0.0 END), 3) AS taxa_ganho_historica
-    FROM rota_perfume.silver.oportunidades o, parametros
+    FROM lakehouse_rotaperfume.silver.oportunidades o, parametros
     WHERE o.data_abertura <= parametros.referencia
     GROUP BY o.cliente_id
 ),
@@ -82,14 +82,14 @@ mix AS (
            COUNT(DISTINCT f.categoria)                      AS categorias_compradas,
            COUNT(DISTINCT f.marca)                          AS marcas_compradas,
            ROUND(SUM(f.margem) / NULLIF(SUM(f.receita), 0), 3) AS margem_media
-    FROM rota_perfume.gold.fato_vendas f, parametros
+    FROM lakehouse_rotaperfume.gold.fato_vendas f, parametros
     WHERE f.data_pedido <= parametros.referencia
     GROUP BY f.cliente_id
 ),
 -- ── o alvo: olha para a frente, e SÓ ele pode ───────────────────────────────
 alvo AS (
     SELECT DISTINCT p.cliente_id
-    FROM rota_perfume.silver.pedidos p, parametros
+    FROM lakehouse_rotaperfume.silver.pedidos p, parametros
     WHERE NOT p.cancelado
       AND p.data_pedido >  parametros.referencia
       AND p.data_pedido <= date_add(parametros.referencia, parametros.horizonte_dias)
@@ -127,7 +127,7 @@ LEFT JOIN crm   cr ON cr.cliente_id = r.cliente_id
 LEFT JOIN funil fu ON fu.cliente_id = r.cliente_id
 LEFT JOIN mix   mx ON mx.cliente_id = r.cliente_id
 LEFT JOIN alvo  a  ON a.cliente_id  = r.cliente_id
-JOIN rota_perfume.gold.dim_cliente c ON c.cliente_id = r.cliente_id
+JOIN lakehouse_rotaperfume.gold.dim_cliente c ON c.cliente_id = r.cliente_id
 WHERE r.frequencia >= 3;
 
 
@@ -142,4 +142,4 @@ SELECT
     ROUND(AVG(recencia_dias), 1)                            AS recencia_media,
     ROUND(AVG(ritmo_dias), 1)                               AS ritmo_medio,
     COUNT(*) FILTER (WHERE ritmo_dias IS NULL)              AS sem_ritmo
-FROM rota_perfume.gold.features_cliente;
+FROM lakehouse_rotaperfume.gold.features_cliente;

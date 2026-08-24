@@ -8,7 +8,7 @@
 -- Rode com:
 --   python3 scripts/run_sql.py aulas/aula-02-engenharia-de-dados/exemplo-04-silver-crm-e-financeiro.sql
 
-CREATE OR REPLACE TABLE rota_perfume.silver.vendedores AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.vendedores AS
 SELECT
     CAST(vendedor_id AS INT)                                AS vendedor_id,
     nome, regiao, uf,
@@ -17,10 +17,10 @@ SELECT
     try_to_date(data_desligamento, 'yyyy-MM-dd')            AS data_desligamento,
     try_to_date(data_desligamento, 'yyyy-MM-dd') IS NULL    AS ativo,
     CAST(meta_mensal AS DECIMAL(18,2))                      AS meta_mensal
-FROM rota_perfume.bronze.vendedores;
+FROM lakehouse_rotaperfume.bronze.vendedores;
 
 
-CREATE OR REPLACE TABLE rota_perfume.silver.carteira AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.carteira AS
 SELECT
     CAST(c.carteira_id AS INT)                              AS carteira_id,
     CAST(c.cliente_id AS INT)                               AS cliente_id,
@@ -33,11 +33,11 @@ SELECT
     -- comercial ver que 441 clientes estão sem dono de verdade.
     try_to_date(c.data_fim, 'yyyy-MM-dd') IS NULL
       AND v.data_desligamento IS NOT NULL                   AS orfa
-FROM rota_perfume.bronze.carteira c
-LEFT JOIN rota_perfume.silver.vendedores v ON v.vendedor_id = CAST(c.vendedor_id AS INT);
+FROM lakehouse_rotaperfume.bronze.carteira c
+LEFT JOIN lakehouse_rotaperfume.silver.vendedores v ON v.vendedor_id = CAST(c.vendedor_id AS INT);
 
 
-CREATE OR REPLACE TABLE rota_perfume.silver.visitas AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.visitas AS
 SELECT
     CAST(visita_id AS INT)                                  AS visita_id,
     CAST(cliente_id AS INT)                                 AS cliente_id,
@@ -46,10 +46,10 @@ SELECT
     resultado,
     resultado = 'Pedido realizado'                          AS converteu,
     CAST(duracao_min AS INT)                                AS duracao_min
-FROM rota_perfume.bronze.visitas;
+FROM lakehouse_rotaperfume.bronze.visitas;
 
 
-CREATE OR REPLACE TABLE rota_perfume.silver.oportunidades AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.oportunidades AS
 SELECT
     CAST(oportunidade_id AS INT)                            AS oportunidade_id,
     CAST(cliente_id AS INT)                                 AS cliente_id,
@@ -64,10 +64,10 @@ SELECT
     etapa = 'Fechado ganho'                                 AS ganha,
     etapa = 'Fechado perdido'                               AS perdida,
     etapa NOT IN ('Fechado ganho', 'Fechado perdido')       AS aberta
-FROM rota_perfume.bronze.oportunidades;
+FROM lakehouse_rotaperfume.bronze.oportunidades;
 
 
-CREATE OR REPLACE TABLE rota_perfume.silver.pagamentos AS
+CREATE OR REPLACE TABLE lakehouse_rotaperfume.silver.pagamentos AS
 SELECT
     CAST(pagamento_id AS INT)                               AS pagamento_id,
     CAST(pedido_id AS INT)                                  AS pedido_id,
@@ -85,14 +85,14 @@ SELECT
     try_to_date(data_pagamento, 'yyyy-MM-dd') IS NULL       AS em_aberto,
     datediff(try_to_date(data_pagamento, 'yyyy-MM-dd'),
              try_to_date(data_vencimento, 'yyyy-MM-dd'))    AS dias_de_atraso
-FROM rota_perfume.bronze.pagamentos;
+FROM lakehouse_rotaperfume.bronze.pagamentos;
 
 
 -- ----------------------------------------------------------------------------
 SELECT
-    (SELECT COUNT(*) FROM rota_perfume.silver.vendedores WHERE NOT ativo)  AS vendedores_desligados,
-    (SELECT COUNT(*) FROM rota_perfume.silver.carteira WHERE orfa)         AS carteiras_orfas,
-    (SELECT COUNT(*) FROM rota_perfume.silver.visitas WHERE converteu)     AS visitas_com_pedido,
-    (SELECT COUNT(*) FROM rota_perfume.silver.oportunidades WHERE aberta)  AS funil_aberto,
-    (SELECT COUNT(*) FROM rota_perfume.silver.pagamentos WHERE em_aberto)  AS a_receber,
-    (SELECT ROUND(SUM(custo_financeiro), 2) FROM rota_perfume.silver.pagamentos) AS custo_financeiro_total;
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.vendedores WHERE NOT ativo)  AS vendedores_desligados,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.carteira WHERE orfa)         AS carteiras_orfas,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.visitas WHERE converteu)     AS visitas_com_pedido,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.oportunidades WHERE aberta)  AS funil_aberto,
+    (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.pagamentos WHERE em_aberto)  AS a_receber,
+    (SELECT ROUND(SUM(custo_financeiro), 2) FROM lakehouse_rotaperfume.silver.pagamentos) AS custo_financeiro_total;

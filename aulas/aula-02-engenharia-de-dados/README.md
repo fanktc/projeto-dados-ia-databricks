@@ -176,7 +176,7 @@ dashboard da noite 1 — mas compare o SQL dos datasets:
 databricks lakeview create \
   --display-name "Rota do Perfume · Noite 2 (gold)" \
   --warehouse-id SEU-WAREHOUSE \
-  --dataset-catalog rota_perfume --dataset-schema gold \
+  --dataset-catalog lakehouse_rotaperfume --dataset-schema gold \
   --serialized-dashboard "$(cat aulas/aula-02-engenharia-de-dados/dashboard-gold.lvdash.json)" \
   --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
 ```
@@ -208,7 +208,7 @@ claude
 ```
 
 ```
-> A silver de clientes está pronta em rota_perfume.silver.clientes.
+> A silver de clientes está pronta em lakehouse_rotaperfume.silver.clientes.
 > Escreva a silver de pedidos resolvendo os dois formatos de data,
 > rode no warehouse e confira que a receita continua R$ 102.303.828,05.
 ```

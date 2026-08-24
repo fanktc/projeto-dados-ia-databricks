@@ -18,7 +18,7 @@ WITH mensal AS (
     SELECT
         date_trunc('month', data_pedido)                       AS mes,
         SUM(valor_liquido)                                     AS receita
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
     GROUP BY 1
     HAVING date_trunc('month', data_pedido) >= DATE'2024-11-01'
@@ -47,7 +47,7 @@ ORDER BY indice_sazonal DESC;
 WITH mensal AS (
     SELECT date_trunc('month', data_pedido)                       AS mes,
            SUM(valor_liquido)                                   AS receita
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
     GROUP BY 1
 ),
@@ -89,7 +89,7 @@ SELECT
 WITH mensal AS (
     SELECT date_trunc('month', data_pedido)                       AS mes,
            SUM(valor_liquido)                                   AS receita
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
     GROUP BY 1
     HAVING date_trunc('month', data_pedido) >= DATE'2024-11-01'

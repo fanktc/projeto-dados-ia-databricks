@@ -22,7 +22,7 @@ WITH pedidos AS (
     -- Na noite 1 esta CTE tinha CAST e try_to_date em toda coluna. A silver
     -- pagou esse imposto uma vez, para todo mundo.
     SELECT cliente_id, data_pedido, valor_liquido AS valor_total
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
 ),
 ritmo AS (
@@ -79,7 +79,7 @@ WITH pedidos AS (
     -- Na noite 1 esta CTE tinha CAST e try_to_date em toda coluna. A silver
     -- pagou esse imposto uma vez, para todo mundo.
     SELECT cliente_id, data_pedido, valor_liquido AS valor_total
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
 ),
 base AS (
@@ -119,7 +119,7 @@ SELECT
     ROUND(b.receita_historica, 2)                          AS receita_historica
 FROM base b
 JOIN ritmo r ON r.cliente_id = b.cliente_id
-JOIN rota_perfume.gold.dim_cliente c ON c.cliente_id = b.cliente_id
+JOIN lakehouse_rotaperfume.gold.dim_cliente c ON c.cliente_id = b.cliente_id
 WHERE b.dias_parado > 2.5 * r.ritmo_dias
   AND b.dias_parado <= 365          -- ainda dá para trazer de volta
 ORDER BY rendia_por_trimestre DESC
@@ -136,7 +136,7 @@ WITH pedidos AS (
     -- Na noite 1 esta CTE tinha CAST e try_to_date em toda coluna. A silver
     -- pagou esse imposto uma vez, para todo mundo.
     SELECT cliente_id, data_pedido, valor_liquido AS valor_total
-    FROM rota_perfume.silver.pedidos
+    FROM lakehouse_rotaperfume.silver.pedidos
     WHERE NOT cancelado
 ),
 base AS (

@@ -45,35 +45,19 @@ python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-01-primeiro-sele
 
 ---
 
-## 🎬 Dar a aula sem destruir o que já está pronto
+## 🎬 O catálogo nasce na aula
 
-O catálogo `rota_perfume` tem os schemas definitivos (`bronze`, `silver`,
-`gold`) já construídos. Para reconstruir tudo ao vivo sem sobrescrevê-los,
-passe `--sufixo _aovivo`:
+Os exemplos apontam para o catálogo **`lakehouse_rotaperfume`**, que
+**ainda não existe** — ele é criado ao vivo, no primeiro bloco da noite 1:
 
 ```bash
-python3 scripts/run_sql.py aulas/aula-01-databricks-sql/00-setup-catalogo.sql --sufixo _aovivo
-python3 scripts/run_sql.py aulas/aula-01-databricks-sql/01-ingestao-bronze.sql --sufixo _aovivo
+python3 scripts/run_sql.py aulas/aula-01-databricks-sql/00-setup-catalogo.sql
 ```
 
-O runner reescreve `bronze` → `bronze_aovivo` nas tabelas **e** no caminho do
-volume, na hora de executar. **Os arquivos `.sql` seguem limpos** — nenhum
-sufixo escrito neles, então o material continua legível.
+Isso é proposital. O aluno vê o catálogo nascer vazio, os schemas serem
+criados e o dado entrar — em vez de receber tudo pronto.
 
-| | Ambiente pronto | Aula ao vivo |
-|---|---|---|
-| Schemas | `bronze` · `silver` · `gold` | `bronze_aovivo` · `silver_aovivo` · `gold_aovivo` |
-| Volume | `/Volumes/rota_perfume/bronze/raw` | `/Volumes/rota_perfume/bronze_aovivo/raw` |
-| Comando | sem flag | `--sufixo _aovivo` |
-| Bundle | `--target dev` | `--target aovivo` |
-
-Os notebooks em branco começam com `USE SCHEMA bronze_aovivo` — trocar de
-ambiente é editar uma linha.
-
-> **Uma ressalva:** o job `rota_perfume_pipeline` (aula 04) tem tarefas SQL que
-> apontam para arquivos com os schemas fixos, então ele roda sempre no ambiente
-> definitivo. O `--target aovivo` afeta o job `rota_perfume_bronze`, que recebe
-> catálogo e schema por parâmetro.
+Se você já tem um catálogo com outro nome, troque o prefixo nas queries.
 
 ## 🗄️ O dataset
 
@@ -115,7 +99,7 @@ dados/         dataset gerado (não versionado — reproduza com o comando acima
 
 ## 🔑 Convenções
 
-- Catálogo `rota_perfume`, schemas `bronze` / `silver` / `gold`.
+- Catálogo `lakehouse_rotaperfume`, schemas `bronze` / `silver` / `gold`.
 - Tabelas e colunas em snake_case e português, iguais às do CSV.
 - A bronze guarda o dado como veio, **com a sujeira**.
 - Sempre passe `--profile` nos comandos do Databricks.

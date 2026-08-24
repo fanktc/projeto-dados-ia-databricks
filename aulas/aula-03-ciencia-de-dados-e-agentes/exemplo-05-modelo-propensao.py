@@ -23,7 +23,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.metrics import roc_auc_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 
-CATALOGO = "rota_perfume"
+CATALOGO = "lakehouse_rotaperfume"
 
 # Colunas que descrevem o cliente. Repare que nenhuma delas olha para o
 # futuro: todas foram calculadas até a data de referência no exemplo 04.

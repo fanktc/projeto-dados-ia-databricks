@@ -16,7 +16,7 @@ Se a ferramenta não achar dado, ele diz que não sabe. Não estima.
 
 from databricks.connect import DatabricksSession
 
-CAT = "rota_perfume"
+CAT = "lakehouse_rotaperfume"
 HOJE = "DATE'2026-08-31'"
 spark = DatabricksSession.builder.getOrCreate()
 

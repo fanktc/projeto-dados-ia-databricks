@@ -1,6 +1,6 @@
 # 🎯 Dinâmica do Design Sprint · slides 16 a 25
 
-Cinco dinâmicas, dois slides cada: **primeiro só a pergunta** (para a turma
+Cinco dinâmicas em dez slides, mais um de fechamento que liga tudo ao código: **primeiro só a pergunta** (para a turma
 responder), **depois a pergunta com as respostas** do nosso caso.
 
 Rode antes de abrir qualquer ferramenta. O objetivo não é chegar na resposta
@@ -90,6 +90,44 @@ falar isso na segunda-feira do que no fim do trimestre.
 modelo que vai orientá-lo na semana que vem. É por isso que a qualidade do
 registro importa: ninguém preenche CRM pensando em treinar modelo, mas é o que
 acontece.
+
+---
+
+## 🔗 Da dinâmica para o código (slide 26)
+
+O slide que fecha o bloco. Cada "como poderíamos" da dinâmica 1 aponta para a
+query que responde — e para a noite em que ela aparece.
+
+| A pergunta da turma | A query | Onde |
+|---|---|---|
+| Quem vai comprar? | Última compra + ritmo do cliente | noite 3 · `exemplo-01-quem-vai-comprar-sem-modelo.sql` |
+| Quem está sumindo? | Recência contra o ritmo dele | noite 3 · `exemplo-02-quem-esta-sumindo-sem-modelo.sql` |
+| Quanto vamos vender? | Índice sazonal por mês do ano | noite 3 · `exemplo-03-quanto-vamos-vender-sem-modelo.sql` |
+| Vender mais dá lucro? | Margem por categoria | **hoje** · `exemplo-06-margem-marca-e-sazonalidade.sql` |
+| Onde a receita concentra? | Curva ABC de marca | **hoje** · `exemplo-06-margem-marca-e-sazonalidade.sql` |
+| Evitar visita com cliente ausente? | A lista priorizada por propensão | noite 3 · `exemplo-01` |
+
+**O que dizer ao mostrar este slide:**
+
+> Duas das cinco a gente responde hoje, com SQL puro. As outras três precisam
+> do dado limpo — e é exatamente por isso que existe a noite 2.
+
+É a transição natural do bloco de dinâmica para o bloco de código: a turma
+acabou de escrever as perguntas, e agora vê onde cada uma vira query.
+
+### Rodando ao vivo
+
+As duas de hoje:
+
+```bash
+python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-06-margem-marca-e-sazonalidade.sql
+```
+
+A da noite 3, se quiser dar o gostinho (roda em 25 segundos):
+
+```bash
+python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-01-quem-vai-comprar-sem-modelo.sql
+```
 
 ---
 

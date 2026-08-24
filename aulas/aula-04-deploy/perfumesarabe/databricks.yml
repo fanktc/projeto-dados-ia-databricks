@@ -41,17 +41,8 @@ targets:
     workspace:
       host: https://dbc-84cd5511-fa25.cloud.databricks.com
     variables:
-      catalog: rota_perfume
+      catalog: lakehouse_rotaperfume
       schema: bronze
-      warehouse_id: 666be37e3fededf2
-  # Para dar a aula sem tocar no ambiente pronto: mesmos schemas, sufixo _aovivo.
-  aovivo:
-    mode: development
-    workspace:
-      host: https://dbc-84cd5511-fa25.cloud.databricks.com
-    variables:
-      catalog: rota_perfume
-      schema: bronze_aovivo
       warehouse_id: 666be37e3fededf2
   prod:
     mode: production
@@ -60,7 +51,7 @@ targets:
       # We explicitly deploy to /Workspace/Users/lvgalvaofilho@gmail.com to make sure we only have a single copy.
       root_path: /Workspace/Users/lvgalvaofilho@gmail.com/.bundle/${bundle.name}/${bundle.target}
     variables:
-      catalog: rota_perfume
+      catalog: lakehouse_rotaperfume
       schema: bronze
       warehouse_id: 666be37e3fededf2
     permissions:

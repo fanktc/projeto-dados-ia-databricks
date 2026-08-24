@@ -8,7 +8,7 @@ Bundle (DABs) que leva a ingestão bronze para o workspace como job agendado.
 * `resources/rota_perfume.job.yml`: job de duas tarefas, serverless — ingere e depois verifica.
 * `tests/`: contrato dos módulos (sem Databricks) e volumetria da bronze (com workspace).
 
-O catálogo (`rota_perfume`) e o schema (`bronze`) vêm das variáveis do bundle,
+O catálogo (`lakehouse_rotaperfume`) e o schema (`bronze`) vêm das variáveis do bundle,
 não estão no código. O job falha se a volumetria ou os números-âncora divergirem —
 melhor quebrar o pipeline do que deixar o dashboard mentir.
 
@@ -17,7 +17,7 @@ databricks bundle deploy --target dev --profile projeto-dados-ia
 databricks bundle run rota_perfume_bronze --target dev --profile projeto-dados-ia
 ```
 
-Pré-requisito: o volume `/Volumes/rota_perfume/bronze/raw` precisa ter os CSVs.
+Pré-requisito: o volume `/Volumes/lakehouse_rotaperfume/bronze/raw` precisa ter os CSVs.
 Veja o README da raiz do repositório.
 
 

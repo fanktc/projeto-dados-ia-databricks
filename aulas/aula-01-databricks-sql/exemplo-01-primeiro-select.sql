@@ -15,7 +15,7 @@
 -- todos eles na tela, quer entender o formato.
 
 SELECT *
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 LIMIT 10;
 
 
@@ -26,7 +26,7 @@ LIMIT 10;
 -- Isso é de propósito: a bronze guarda o dado como veio, sem interpretar.
 -- Se o Spark tivesse adivinhado os tipos, ele teria estragado as datas.
 
-DESCRIBE TABLE rota_perfume.bronze.pedidos;
+DESCRIBE TABLE lakehouse_rotaperfume.bronze.pedidos;
 
 
 -- ============================================
@@ -34,7 +34,7 @@ DESCRIBE TABLE rota_perfume.bronze.pedidos;
 -- ============================================
 -- COUNT(*) conta linhas. É a pergunta mais básica e a mais esquecida.
 
-SELECT COUNT(*) AS total_pedidos FROM rota_perfume.bronze.pedidos;
+SELECT COUNT(*) AS total_pedidos FROM lakehouse_rotaperfume.bronze.pedidos;
 
 
 -- ============================================
@@ -44,5 +44,5 @@ SELECT COUNT(*) AS total_pedidos FROM rota_perfume.bronze.pedidos;
 -- é mais rápido e deixa claro para quem lê o que importa ali.
 
 SELECT pedido_id, cliente_id, data_pedido, canal, status, valor_total
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 LIMIT 10;

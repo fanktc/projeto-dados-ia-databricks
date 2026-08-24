@@ -21,7 +21,7 @@ escreveu, não só a resposta.
 ### Pergunta 1 — a pergunta da noite (funciona)
 
 > Qual foi a receita total dos pedidos não cancelados na tabela
-> rota_perfume.bronze.pedidos?
+> lakehouse_rotaperfume.bronze.pedidos?
 
 ⚠️ **Na noite 1 só existe a bronze.** A gold nasce amanhã — não peça
 `gold.fato_vendas` hoje, ela não está lá.
@@ -39,7 +39,7 @@ Dois detalhes para apontar na tela:
 
 ### Pergunta 2 — a que depende do dado limpo
 
-> Quantos clientes únicos existem em rota_perfume.bronze.clientes considerando
+> Quantos clientes únicos existem em lakehouse_rotaperfume.bronze.clientes considerando
 > o CNPJ? Cuidado que o mesmo CNPJ pode estar escrito de formas diferentes.
 
 Resposta obtida: **3.000 clientes** para 3.040 registros — e ele mostrou a
@@ -56,7 +56,7 @@ três formatos. Ele não descobre a sujeira — contorna, quando avisado.
 
 ### Comparação que fecha o argumento
 
-Depois da noite 2, refaça a pergunta 2 sobre `rota_perfume.silver.clientes`.
+Depois da noite 2, refaça a pergunta 2 sobre `lakehouse_rotaperfume.silver.clientes`.
 Sem aviso nenhum, ele acerta — porque a dedup já aconteceu. É a prova de que a
 camada silver não serve só ao analista: ela serve à IA também.
 
@@ -70,7 +70,7 @@ Crie pela interface (a API exige um `serialized_space` que só se obtém
 exportando um espaço existente):
 
 1. Menu lateral → **Genie** → **New**
-2. Tabelas: `rota_perfume.bronze.pedidos`, `bronze.clientes`, `bronze.itens_pedido`, `bronze.produtos`
+2. Tabelas: `lakehouse_rotaperfume.bronze.pedidos`, `bronze.clientes`, `bronze.itens_pedido`, `bronze.produtos`
 3. Warehouse: o Serverless Starter
 4. Em **Instructions**, cole:
 
@@ -107,7 +107,7 @@ justamente para comparar: o mesmo dashboard, com queries muito mais curtas.
 databricks lakeview create \
   --display-name "Rota do Perfume · Noite 1" \
   --warehouse-id SEU-WAREHOUSE \
-  --dataset-catalog rota_perfume \
+  --dataset-catalog lakehouse_rotaperfume \
   --dataset-schema bronze \
   --serialized-dashboard "$(cat dashboard-bronze.lvdash.json)" \
   --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' \

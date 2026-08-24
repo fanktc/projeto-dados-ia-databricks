@@ -13,7 +13,7 @@
 -- ============================================
 
 SELECT COUNT(*) AS cancelados
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE status = 'Cancelado';
 
 
@@ -27,7 +27,7 @@ SELECT
     status = 'Cancelado'                               AS cancelado,
     COUNT(*)                                           AS pedidos,
     ROUND(SUM(CAST(valor_total AS DECIMAL(18,2))), 2)  AS receita
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 GROUP BY 1;
 
 
@@ -38,12 +38,12 @@ GROUP BY 1;
 -- São 3.443 pedidos, 12% da base.
 
 SELECT COUNT(*) AS datas_em_formato_brasileiro
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE data_pedido LIKE '%/%';
 
 -- Veja alguns:
 SELECT pedido_id, data_pedido, valor_total
-FROM rota_perfume.bronze.pedidos
+FROM lakehouse_rotaperfume.bronze.pedidos
 WHERE data_pedido LIKE '%/%'
 LIMIT 5;
 
@@ -60,7 +60,7 @@ SELECT
     COUNT(*) FILTER (WHERE cnpj <> trim(cnpj))        AS com_espaco,
     COUNT(DISTINCT cnpj)                              AS cnpj_distintos,
     COUNT(DISTINCT regexp_replace(trim(cnpj), '[^0-9]', '')) AS cnpj_de_verdade
-FROM rota_perfume.bronze.clientes;
+FROM lakehouse_rotaperfume.bronze.clientes;
 
 -- A diferença entre as duas últimas colunas é o tamanho do problema.
 
@@ -70,5 +70,5 @@ FROM rota_perfume.bronze.clientes;
 -- ============================================
 
 SELECT COUNT(*) AS itens_devolvidos
-FROM rota_perfume.bronze.itens_pedido
+FROM lakehouse_rotaperfume.bronze.itens_pedido
 WHERE CAST(quantidade AS INT) < 0;

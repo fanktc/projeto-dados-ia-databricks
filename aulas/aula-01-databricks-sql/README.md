@@ -48,7 +48,7 @@ python3 material/gerar_dataset.py --saida ./dados --seed 42
 ```
 
 ```
-Catálogo: rota_perfume
+Catálogo: lakehouse_rotaperfume
 └── bronze                 (o dado como veio, sujeira inclusa)
     ├── pedidos            28.729   — a tabela fato
     ├── itens_pedido      197.724   — uma linha por produto vendido
@@ -107,9 +107,9 @@ Entre os dois, suba os CSVs:
 
 ```bash
 databricks fs cp --recursive --overwrite dados/erp \
-  dbfs:/Volumes/rota_perfume/bronze/raw/erp --profile SEU-PERFIL
+  dbfs:/Volumes/lakehouse_rotaperfume/bronze/raw/erp --profile SEU-PERFIL
 databricks fs cp --recursive --overwrite dados/crm \
-  dbfs:/Volumes/rota_perfume/bronze/raw/crm --profile SEU-PERFIL
+  dbfs:/Volumes/lakehouse_rotaperfume/bronze/raw/crm --profile SEU-PERFIL
 ```
 
 ### Os exemplos
@@ -203,7 +203,7 @@ Já está publicado no workspace. Para recriar:
 databricks lakeview create \
   --display-name "Rota do Perfume · Noite 1" \
   --warehouse-id SEU-WAREHOUSE \
-  --dataset-catalog rota_perfume --dataset-schema bronze \
+  --dataset-catalog lakehouse_rotaperfume --dataset-schema bronze \
   --serialized-dashboard "$(cat aulas/aula-01-databricks-sql/dashboard-bronze.lvdash.json)" \
   --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
 ```

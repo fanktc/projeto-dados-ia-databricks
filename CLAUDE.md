@@ -38,8 +38,11 @@ Seis a oito exemplos por aula — mais que isso não cabe na noite.
 
 ### Catálogo
 
-`rota_perfume`, schemas `bronze`/`silver`/`gold`, criado no workspace do profile
-`projeto-dados-ia`. O bundle já aponta para ele (a divergência com `perfumearabe` foi corrigida).
+`lakehouse_rotaperfume`, schemas `bronze`/`silver`/`gold`. **O catálogo não existe no workspace** —
+ele é criado ao vivo na aula, pelo `00-setup-catalogo.sql`. Não crie por conta própria.
+
+Existe também um catálogo `rota_perfume` antigo no workspace, de execuções anteriores;
+o material não aponta mais para ele.
 
 Não existe compute clássico na Free Edition: tudo roda no SQL Warehouse serverless
 `Serverless Starter Warehouse`. `python3 scripts/run_sql.py <arquivo.sql>` executa um `.sql`

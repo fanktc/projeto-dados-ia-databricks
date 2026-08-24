@@ -5,7 +5,7 @@
 --
 -- Cada linha compara o valor calculado com o esperado e diz se bate.
 --
--- Rode com: python3 scripts/run_sql.py sql/n1_99_verificacao.sql
+-- Rode com: python3 scripts/run_sql.py aulas/aula-01-databricks-sql/99-verificacao.sql
 
 WITH p AS (
   SELECT

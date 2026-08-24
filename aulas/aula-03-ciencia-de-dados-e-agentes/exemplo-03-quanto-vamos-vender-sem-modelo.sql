@@ -1,21 +1,12 @@
--- ============================================================================
--- PERGUNTA 3 DA DIRETORIA · Quanto vamos vender?
+-- ============================================
+-- EXEMPLO 03: Quanto vamos vender?
+-- ============================================
+-- Conceito: índice sazonal, nível dessazonalizado, teste retroativo
+-- Pergunta de negócio: quanto planejar de compra e de caixa?
+-- Conexão: com 2 ciclos de histórico, entregue faixa e não número cheio
 --
--- A receita da Rota do Perfume não é uma linha reta com ruído: ela tem um
--- padrão de calendário que se repete. Outubro é pico, janeiro é vale, e isso
--- não é acaso — é o varejo se abastecendo ANTES da data comemorativa.
---
--- O método aqui cabe em duas contas: um nível recente (onde o negócio está
--- hoje) vezes um índice sazonal (o que aquele mês costuma fazer).
---
--- Dois cuidados que mudam o resultado:
---   - set/2024 e out/2024 saem da conta. O gerador faz todo cliente entrar
---     na base com um pedido, o que infla o primeiro mês e esvazia o seguinte.
---   - o mês corrente (ago/2026) é o último da base e está completo, mas em
---     produção o mês em curso sempre entra pela metade. Cuidado ao repetir.
---
--- Rode com: python3 scripts/run_sql.py sql/n3_03_quanto_vamos_vender.sql
--- ============================================================================
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-03-quanto-vamos-vender-sem-modelo.sql
 
 -- ----------------------------------------------------------------------------
 -- 3.1 · O PADRÃO: quanto cada mês do ano costuma fazer.

@@ -2,7 +2,7 @@
 -- Cria a casa onde o dado vai morar: um catálogo, três schemas e um volume.
 --
 -- Rode com:
---   databricks experimental aitools tools query --profile projeto-dados-ia --file sql/n1_00_setup.sql
+--   databricks experimental aitools tools query --profile projeto-dados-ia --file aulas/aula-01-databricks-sql/00-setup-catalogo.sql
 
 -- O catálogo é o topo da hierarquia no Unity Catalog: catálogo > schema > tabela.
 CREATE CATALOG IF NOT EXISTS rota_perfume

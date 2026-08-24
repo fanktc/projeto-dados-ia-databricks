@@ -4,6 +4,8 @@ Bem-vindo ao **primeiro dia da imersão**. Hoje você monta o ambiente, sobe o d
 para o catálogo e responde a primeira pergunta da diretoria — em quatro
 ferramentas diferentes.
 
+> 📺 **Gravação da aula:** https://youtube.com/live/plG6mF-ib_w
+>
 > **Domínio:** Rota do Perfume, distribuidora B2B de perfumaria árabe
 > **Pergunta da noite:** *"Qual foi nossa receita e quem são os melhores clientes?"*
 > **Conexão:** o que você achar de sujeira hoje é exatamente o que a **aula-02**

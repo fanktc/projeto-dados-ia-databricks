@@ -1,14 +1,12 @@
--- ============================================================================
--- PERGUNTA 2 DA DIRETORIA · Quem está sumindo?
+-- ============================================
+-- EXEMPLO 02: Quem está sumindo?
+-- ============================================
+-- Conceito: corte relativo vs corte fixo, valor observado vs extrapolado
+-- Pergunta de negócio: quem parou de comprar, e quanto custa por trimestre?
+-- Conexão: a definição de churn é decisão de negócio, não sai do dado
 --
--- Numa distribuidora B2B ninguém cancela contrato. O cliente simplesmente
--- para de aparecer, e quando alguém percebe já passaram seis meses.
---
--- Não existe coluna de churn no dado. A definição é nossa — e é a decisão
--- mais importante desta query.
---
--- Rode com: python3 scripts/run_sql.py sql/n3_02_quem_esta_sumindo.sql
--- ============================================================================
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-02-quem-esta-sumindo-sem-modelo.sql
 
 -- ----------------------------------------------------------------------------
 -- 2.1 · A DECISÃO: corte fixo ou corte relativo?

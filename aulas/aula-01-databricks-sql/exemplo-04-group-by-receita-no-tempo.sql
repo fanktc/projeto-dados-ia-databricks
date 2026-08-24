@@ -1,6 +1,15 @@
--- Noite 1 · A pergunta da noite, parte 1: qual foi nossa receita?
+-- ============================================
+-- EXEMPLO 04: GROUP BY — a receita no tempo
+-- ============================================
+-- Conceito: GROUP BY, date_trunc, agregação com CAST
+-- Pergunta de negócio: qual foi nossa receita, mês a mês?
+-- Conexão com a aula 02: o try_to_date daqui vira a coluna data_pedido da silver
 --
--- Rode com: python3 scripts/run_sql.py sql/n1_02_receita_mensal.sql
+-- Este é o exemplo central da noite. Ele tem duas versões da mesma query: a
+-- que a gente escreveria sem olhar o dado (e que NÃO roda), e a que funciona.
+--
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-04-group-by-receita-no-tempo.sql --continuar
 
 -- ============================================================================
 -- 1a. A QUERY INGÊNUA — a que a gente escreveria sem olhar o dado.

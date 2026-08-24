@@ -9,8 +9,8 @@ de aaaa-mm-dd. Ignorar isso não dá erro aqui — dá um número menor, em
 silêncio, que é bem pior.
 
 Uso:
-    python3 notebooks/n1_receita.py
-    python3 notebooks/n1_receita.py --csv dados/erp/pedidos.csv
+    python3 aulas/aula-01-databricks-sql/receita-sem-databricks.py
+    python3 aulas/aula-01-databricks-sql/receita-sem-databricks.py --csv dados/erp/pedidos.csv
 """
 
 import argparse

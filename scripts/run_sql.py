@@ -5,7 +5,7 @@ A CLI (`databricks experimental aitools tools query`) aceita só uma statement
 por chamada. Este runner divide o arquivo em `;` (respeitando aspas e
 comentários) e dispara uma chamada por statement.
 
-Uso:  python3 scripts/run_sql.py sql/n1_00_setup.sql [--profile projeto-dados-ia] [--quiet]
+Uso:  python3 scripts/run_sql.py aulas/aula-01-databricks-sql/00-setup-catalogo.sql [--profile projeto-dados-ia] [--quiet]
 """
 import argparse, subprocess, sys
 

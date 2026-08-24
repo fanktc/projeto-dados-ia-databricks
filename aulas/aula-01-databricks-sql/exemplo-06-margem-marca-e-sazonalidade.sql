@@ -1,6 +1,12 @@
--- Noite 1 · O que mais o dado responde
+-- ============================================
+-- EXEMPLO 06: Onde a receita se concentra
+-- ============================================
+-- Conceito: window function, FILTER, margem, índice de participação
+-- Pergunta de negócio: qual marca concentra? Qual categoria dá lucro?
+-- Conexão com a aula 02: estas agregações viram a gold.fato_vendas
 --
--- Rode com: python3 scripts/run_sql.py sql/n1_04_extras.sql
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-06-margem-marca-e-sazonalidade.sql
 
 -- ============================================================================
 -- A. Sazonalidade: em que mês do ano a distribuidora vende mais?

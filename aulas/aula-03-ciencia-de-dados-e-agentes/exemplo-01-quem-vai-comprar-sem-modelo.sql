@@ -1,18 +1,12 @@
--- ============================================================================
--- PERGUNTA 1 DA DIRETORIA · Quem vai comprar?
+-- ============================================
+-- EXEMPLO 01: Quem vai comprar?
+-- ============================================
+-- Conceito: LAG, median, CTE encadeada, validação retroativa
+-- Pergunta de negócio: para quem o vendedor liga na segunda-feira?
+-- Conexão: esta régua é a LINHA DE BASE que o modelo precisa bater
 --
--- Não é pergunta de modelo, é pergunta de agenda: quem o vendedor procura
--- na segunda-feira.
---
--- A régua aqui não usa machine learning nenhum, e mesmo assim responde:
--- cada cliente tem um ritmo de compra. Última compra + ritmo = data provável
--- da próxima. Quem cai na janela dos próximos 30 dias está para comprar.
---
--- A vantagem de uma regra explicável é que dá para testar se ela acerta —
--- e é isso que a query 1.3 faz, antes de a lista ir para a rua.
---
--- Rode com: python3 scripts/run_sql.py sql/n3_01_quem_vai_comprar.sql
--- ============================================================================
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-01-quem-vai-comprar-sem-modelo.sql
 
 -- ----------------------------------------------------------------------------
 -- 1.1 · A RESPOSTA: quem deve comprar nos próximos 30 dias.

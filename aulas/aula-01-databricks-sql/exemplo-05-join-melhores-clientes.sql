@@ -1,6 +1,12 @@
--- Noite 1 · A pergunta da noite, parte 2: quem são os melhores clientes?
+-- ============================================
+-- EXEMPLO 05: JOIN — quem são os melhores clientes
+-- ============================================
+-- Conceito: JOIN, GROUP BY por chave certa, COUNT(DISTINCT)
+-- Pergunta de negócio: quem sustenta o faturamento?
+-- Conexão com a aula 02: a deduplicação por CNPJ resolve o que sobra aqui
 --
--- Rode com: python3 scripts/run_sql.py sql/n1_03_top_clientes.sql
+-- Rode com:
+--   python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-05-join-melhores-clientes.sql
 
 -- ============================================================================
 -- 2a. Top 10 clientes agrupando por NOME.

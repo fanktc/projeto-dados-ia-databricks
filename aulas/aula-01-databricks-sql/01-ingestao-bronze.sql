@@ -16,7 +16,7 @@
 -- qualquer investigação.
 --
 -- Rode com:
---   python3 scripts/run_sql.py sql/n1_01_bronze.sql
+--   python3 scripts/run_sql.py aulas/aula-01-databricks-sql/01-ingestao-bronze.sql
 
 -- ---------- ERP: o que foi vendido ----------
 

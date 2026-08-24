@@ -13,7 +13,7 @@ Empresa fictícia, dado gerado com seed fixa, sujeira proposital.
 
 | Noite | Data | Tema | Pasta |
 |---|---|---|---|
-| **1** | seg 24/08 | Objetivo e a primeira análise | [`aulas/aula-01-databricks-sql`](aulas/aula-01-databricks-sql) |
+| **1** | seg 24/08 | Objetivo e a primeira análise | [`aulas/aula-01-databricks-sql`](aulas/aula-01-databricks-sql) · [📺 gravação](https://youtube.com/live/plG6mF-ib_w) |
 | **2** | ter 25/08 | Engenharia de dados: o projeto roda sozinho | [`aulas/aula-02-engenharia-de-dados`](aulas/aula-02-engenharia-de-dados) |
 | **3** | qua 26/08 | Ciência de dados e agentes | [`aulas/aula-03-ciencia-de-dados-e-agentes`](aulas/aula-03-ciencia-de-dados-e-agentes) |
 | **4** | qui 27/08 | Deploy: o projeto no ar e monitorado | [`aulas/aula-04-deploy`](aulas/aula-04-deploy) |

@@ -67,11 +67,11 @@ databricks bundle run perfumesarabe_etl --refresh sample_trips_perfumesarabe --p
 Os testes usam **Databricks Connect** e exigem workspace acessível — `tests/conftest.py` faz
 fallback para serverless se nenhum compute estiver configurado. Não existe execução local pura.
 
-### Dataset (`files/`)
+### Dataset (`material/`)
 
 ```bash
 python gerar_dataset.py --saida ./dados --seed 42   # sem dependências externas
-unzip dados-rota-do-perfume.zip                     # ou apenas descompacte o pronto (~14 MB)
+unzip material/dados-rota-do-perfume.zip                     # ou apenas descompacte o pronto (~14 MB)
 ```
 
 ## Arquitetura do bundle `perfumesarabe/`
@@ -113,8 +113,8 @@ Estas foram testadas na Noite 1 e valem para o resto do projeto:
 ## Domínio: Rota do Perfume
 
 O contrato de dados, as 10 "sujeiras propositais", o comportamento esperado dos números e as
-convenções de nomenclatura estão em `files/CLAUDE.md` e no PRD. Os pontos que mudam decisões
-mesmo fora da pasta `files/`:
+convenções de nomenclatura estão em `material/CLAUDE.md` e no PRD. Os pontos que mudam decisões
+mesmo fora da pasta `material/`:
 
 - **A sujeira nos dados é conteúdo, não bug.** Nunca "conserte" `gerar_dataset.py`. Limpar é o
   exercício da noite 2, e acontece na camada silver — a bronze preserva o dado como veio.

@@ -1,28 +1,43 @@
 {
   "datasets": [
     {
-      "name": "ds_vendas",
-      "displayName": "Vendas por mês, canal, categoria e marca",
+      "name": "ds_pedidos",
+      "displayName": "Pedidos faturados",
       "queryLines": [
-        "SELECT date_trunc('MONTH', data_pedido) AS mes,\n",
-        "       canal, categoria, marca,\n",
-        "       SUM(receita)              AS receita,\n",
-        "       SUM(margem)               AS margem,\n",
-        "       COUNT(DISTINCT pedido_id) AS pedidos,\n",
-        "       SUM(quantidade)           AS unidades\n",
+        "-- grão: um pedido por linha. Assim AVG() já é o ticket médio correto,\n",
+        "-- sem precisar de razão de somas.\n",
+        "SELECT pedido_id,\n",
+        "       date_trunc('MONTH', data_pedido) AS mes,\n",
+        "       canal,\n",
+        "       SUM(receita) AS valor\n",
         "FROM fato_vendas\n",
-        "GROUP BY 1, 2, 3, 4\n",
-        "ORDER BY 1"
-      ],
-      "columns": [
-        {"displayName": "Receita",      "description": "Receita líquida, já sem devolução",
-         "expression": "SUM(`receita`)"},
-        {"displayName": "Margem %",     "description": "Margem sobre a receita",
-         "expression": "SUM(`margem`) / NULLIF(SUM(`receita`), 0)"},
-        {"displayName": "Pedidos",      "description": "Pedidos distintos",
-         "expression": "SUM(`pedidos`)"},
-        {"displayName": "Ticket médio", "description": "Receita dividida por pedido",
-         "expression": "SUM(`receita`) / NULLIF(SUM(`pedidos`), 0)"}
+        "GROUP BY 1, 2, 3\n",
+        "ORDER BY 2"
+      ]
+    },
+    {
+      "name": "ds_margem",
+      "displayName": "Margem global",
+      "queryLines": [
+        "SELECT SUM(margem) / SUM(receita) AS margem_pct FROM fato_vendas"
+      ]
+    },
+    {
+      "name": "ds_marca",
+      "displayName": "Receita por marca",
+      "queryLines": [
+        "SELECT marca, SUM(receita) AS receita\n",
+        "FROM fato_vendas GROUP BY 1 ORDER BY receita DESC"
+      ]
+    },
+    {
+      "name": "ds_categoria",
+      "displayName": "Margem por categoria",
+      "queryLines": [
+        "SELECT categoria,\n",
+        "       SUM(receita) AS receita,\n",
+        "       SUM(margem) / SUM(receita) AS margem_pct\n",
+        "FROM fato_vendas GROUP BY 1 ORDER BY margem_pct DESC"
       ]
     },
     {
@@ -31,13 +46,10 @@
       "queryLines": [
         "SELECT c.razao_social AS cliente, c.segmento, c.cidade,\n",
         "       COUNT(DISTINCT f.pedido_id) AS pedidos,\n",
-        "       SUM(f.receita)              AS receita,\n",
-        "       SUM(f.margem) / NULLIF(SUM(f.receita), 0) AS margem_pct\n",
+        "       SUM(f.receita) AS receita\n",
         "FROM fato_vendas f\n",
         "JOIN dim_cliente c ON c.cliente_id = f.cliente_id\n",
-        "GROUP BY 1, 2, 3\n",
-        "ORDER BY receita DESC\n",
-        "LIMIT 15"
+        "GROUP BY 1, 2, 3 ORDER BY receita DESC LIMIT 15"
       ]
     }
   ],
@@ -53,240 +65,606 @@
             "name": "titulo",
             "textbox_spec": "# Rota do Perfume · a pergunta da noite 1\n\nQual foi nossa receita e quem são os melhores clientes? O pico **não** é dezembro: o varejo compra **antes** da data, então o mês forte da distribuidora é o anterior — abril, junho e outubro."
           },
-          "position": {"x": 0, "y": 0, "width": 12, "height": 3}
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 3
+          }
         },
         {
           "widget": {
             "name": "kpi-receita",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "measure(Receita)", "expression": "MEASURE(`Receita`)"},
-                {"name": "monthly(mes)", "expression": "DATE_TRUNC(\"MONTH\", `mes`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 2, "widgetType": "counter",
+              "version": 2,
+              "widgetType": "counter",
               "encodings": {
-                "value": {"fieldName": "measure(Receita)", "displayName": "Receita",
-                  "format": {"type": "number-currency", "currencyCode": "BRL",
-                             "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}},
-                "period": {"fieldName": "monthly(mes)"}
+                "value": {
+                  "fieldName": "sum(valor)",
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
               },
-              "frame": {"showTitle": true, "title": "Receita no período"}
+              "frame": {
+                "showTitle": true,
+                "title": "Receita no período"
+              }
             }
           },
-          "position": {"x": 0, "y": 3, "width": 3, "height": 4}
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
         },
         {
           "widget": {
             "name": "kpi-pedidos",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "measure(Pedidos)", "expression": "MEASURE(`Pedidos`)"},
-                {"name": "monthly(mes)", "expression": "DATE_TRUNC(\"MONTH\", `mes`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "count(pedido_id)",
+                      "expression": "COUNT(`pedido_id`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 2, "widgetType": "counter",
+              "version": 2,
+              "widgetType": "counter",
               "encodings": {
-                "value": {"fieldName": "measure(Pedidos)", "displayName": "Pedidos",
-                  "format": {"type": "number-plain", "abbreviation": "compact",
-                             "decimalPlaces": {"type": "max", "places": 1}}},
-                "period": {"fieldName": "monthly(mes)"}
+                "value": {
+                  "fieldName": "count(pedido_id)",
+                  "displayName": "Pedidos",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
               },
-              "frame": {"showTitle": true, "title": "Pedidos faturados"}
+              "frame": {
+                "showTitle": true,
+                "title": "Pedidos faturados"
+              }
             }
           },
-          "position": {"x": 3, "y": 3, "width": 3, "height": 4}
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
         },
         {
           "widget": {
             "name": "kpi-ticket",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "measure(Ticket médio)", "expression": "MEASURE(`Ticket médio`)"},
-                {"name": "monthly(mes)", "expression": "DATE_TRUNC(\"MONTH\", `mes`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "avg(valor)",
+                      "expression": "AVG(`valor`)"
+                    },
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 2, "widgetType": "counter",
+              "version": 2,
+              "widgetType": "counter",
               "encodings": {
-                "value": {"fieldName": "measure(Ticket médio)", "displayName": "Ticket médio",
-                  "format": {"type": "number-currency", "currencyCode": "BRL",
-                             "decimalPlaces": {"type": "max", "places": 2}}},
-                "period": {"fieldName": "monthly(mes)"}
+                "value": {
+                  "fieldName": "avg(valor)",
+                  "displayName": "Ticket médio",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                },
+                "period": {
+                  "fieldName": "monthly(mes)"
+                }
               },
-              "frame": {"showTitle": true, "title": "Ticket médio por pedido"}
+              "frame": {
+                "showTitle": true,
+                "title": "Ticket médio por pedido"
+              }
             }
           },
-          "position": {"x": 6, "y": 3, "width": 3, "height": 4}
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
         },
         {
           "widget": {
             "name": "kpi-margem",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "measure(Margem %)", "expression": "MEASURE(`Margem %`)"},
-                {"name": "monthly(mes)", "expression": "DATE_TRUNC(\"MONTH\", `mes`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_margem",
+                  "fields": [
+                    {
+                      "name": "margem_pct",
+                      "expression": "`margem_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
             "spec": {
-              "version": 2, "widgetType": "counter",
+              "version": 2,
+              "widgetType": "counter",
               "encodings": {
-                "value": {"fieldName": "measure(Margem %)", "displayName": "Margem",
-                  "format": {"type": "number-percent", "decimalPlaces": {"type": "max", "places": 1}}},
-                "period": {"fieldName": "monthly(mes)"}
+                "value": {
+                  "fieldName": "margem_pct",
+                  "displayName": "Margem",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
               },
-              "frame": {"showTitle": true, "title": "Margem sobre receita"}
+              "frame": {
+                "showTitle": true,
+                "title": "Margem sobre receita"
+              }
             }
           },
-          "position": {"x": 9, "y": 3, "width": 3, "height": 4}
+          "position": {
+            "x": 9,
+            "y": 3,
+            "width": 3,
+            "height": 4
+          }
         },
         {
           "widget": {
             "name": "secao-tempo",
-            "textbox_spec": "## A receita no tempo\n\nRepare em outubro e no vale de dezembro/janeiro."
+            "textbox_spec": "## A receita no tempo\n\nRepare no pico de outubro e no vale de dezembro/janeiro."
           },
-          "position": {"x": 0, "y": 7, "width": 12, "height": 1}
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 1
+          }
         },
         {
           "widget": {
             "name": "receita-mensal",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "monthly(mes)", "expression": "DATE_TRUNC(\"MONTH\", `mes`)"},
-                {"name": "sum(receita)", "expression": "SUM(`receita`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    },
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 3, "widgetType": "line",
+              "version": 3,
+              "widgetType": "line",
               "encodings": {
-                "x": {"fieldName": "monthly(mes)", "scale": {"type": "temporal"},
-                      "displayName": "Mês"},
-                "y": {"fieldName": "sum(receita)", "scale": {"type": "quantitative"},
-                      "displayName": "Receita",
-                      "format": {"type": "number-currency", "currencyCode": "BRL",
-                                 "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}
+                "x": {
+                  "fieldName": "monthly(mes)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Mês"
+                },
+                "y": {
+                  "fieldName": "sum(valor)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
               },
-              "frame": {"showTitle": true, "title": "Receita por mês"}
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por mês"
+              }
             }
           },
-          "position": {"x": 0, "y": 8, "width": 8, "height": 6}
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 8,
+            "height": 6
+          }
         },
         {
           "widget": {
             "name": "receita-canal",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "canal", "expression": "`canal`"},
-                {"name": "sum(receita)", "expression": "SUM(`receita`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_pedidos",
+                  "fields": [
+                    {
+                      "name": "canal",
+                      "expression": "`canal`"
+                    },
+                    {
+                      "name": "sum(valor)",
+                      "expression": "SUM(`valor`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 3, "widgetType": "pie",
+              "version": 3,
+              "widgetType": "pie",
               "encodings": {
-                "angle": {"fieldName": "sum(receita)", "scale": {"type": "quantitative"},
-                          "displayName": "Receita"},
-                "color": {"fieldName": "canal", "scale": {"type": "categorical"},
-                          "displayName": "Canal"}
+                "angle": {
+                  "fieldName": "sum(valor)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita"
+                },
+                "color": {
+                  "fieldName": "canal",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Canal"
+                }
               },
-              "frame": {"showTitle": true, "title": "Receita por canal"}
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por canal"
+              }
             }
           },
-          "position": {"x": 8, "y": 8, "width": 4, "height": 6}
+          "position": {
+            "x": 8,
+            "y": 8,
+            "width": 4,
+            "height": 6
+          }
         },
         {
           "widget": {
             "name": "secao-mix",
             "textbox_spec": "## Onde a receita se concentra\n\nLayali faz 3,6x o que Attar Real faz. E Kit Presente vende muito com a pior margem."
           },
-          "position": {"x": 0, "y": 14, "width": 12, "height": 1}
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 12,
+            "height": 1
+          }
         },
         {
           "widget": {
             "name": "receita-marca",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "marca", "expression": "`marca`"},
-                {"name": "sum(receita)", "expression": "SUM(`receita`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_marca",
+                  "fields": [
+                    {
+                      "name": "marca",
+                      "expression": "`marca`"
+                    },
+                    {
+                      "name": "sum(receita)",
+                      "expression": "SUM(`receita`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
             "spec": {
-              "version": 3, "widgetType": "bar",
+              "version": 3,
+              "widgetType": "bar",
               "encodings": {
-                "y": {"fieldName": "marca", "scale": {"type": "categorical"}, "displayName": "Marca"},
-                "x": {"fieldName": "sum(receita)", "scale": {"type": "quantitative"},
-                      "displayName": "Receita",
-                      "format": {"type": "number-currency", "currencyCode": "BRL",
-                                 "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}}
+                "y": {
+                  "fieldName": "marca",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Marca"
+                },
+                "x": {
+                  "fieldName": "sum(receita)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Receita",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "BRL",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
               },
-              "frame": {"showTitle": true, "title": "Receita por marca"}
+              "frame": {
+                "showTitle": true,
+                "title": "Receita por marca"
+              }
             }
           },
-          "position": {"x": 0, "y": 15, "width": 6, "height": 6}
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 6,
+            "height": 6
+          }
         },
         {
           "widget": {
             "name": "margem-categoria",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_vendas",
-              "fields": [
-                {"name": "categoria", "expression": "`categoria`"},
-                {"name": "measure(Margem %)", "expression": "MEASURE(`Margem %`)"}
-              ], "disaggregated": false}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_categoria",
+                  "fields": [
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "margem_pct",
+                      "expression": "`margem_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
             "spec": {
-              "version": 3, "widgetType": "bar",
+              "version": 3,
+              "widgetType": "bar",
               "encodings": {
-                "y": {"fieldName": "categoria", "scale": {"type": "categorical"}, "displayName": "Categoria"},
-                "x": {"fieldName": "measure(Margem %)", "scale": {"type": "quantitative"},
-                      "displayName": "Margem",
-                      "format": {"type": "number-percent", "decimalPlaces": {"type": "max", "places": 1}}}
+                "y": {
+                  "fieldName": "categoria",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Categoria"
+                },
+                "x": {
+                  "fieldName": "margem_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Margem",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
               },
-              "frame": {"showTitle": true, "title": "Margem por categoria"}
+              "frame": {
+                "showTitle": true,
+                "title": "Margem por categoria"
+              }
             }
           },
-          "position": {"x": 6, "y": 15, "width": 6, "height": 6}
+          "position": {
+            "x": 6,
+            "y": 15,
+            "width": 6,
+            "height": 6
+          }
         },
         {
           "widget": {
             "name": "secao-clientes",
             "textbox_spec": "## Quem são os melhores clientes"
           },
-          "position": {"x": 0, "y": 21, "width": 12, "height": 1}
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 12,
+            "height": 1
+          }
         },
         {
           "widget": {
             "name": "top-clientes",
-            "queries": [{"name": "main_query", "query": {"datasetName": "ds_clientes",
-              "fields": [
-                {"name": "cliente", "expression": "`cliente`"},
-                {"name": "segmento", "expression": "`segmento`"},
-                {"name": "cidade", "expression": "`cidade`"},
-                {"name": "pedidos", "expression": "`pedidos`"},
-                {"name": "receita", "expression": "`receita`"},
-                {"name": "margem_pct", "expression": "`margem_pct`"}
-              ], "disaggregated": true}}],
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_clientes",
+                  "fields": [
+                    {
+                      "name": "cliente",
+                      "expression": "`cliente`"
+                    },
+                    {
+                      "name": "segmento",
+                      "expression": "`segmento`"
+                    },
+                    {
+                      "name": "cidade",
+                      "expression": "`cidade`"
+                    },
+                    {
+                      "name": "pedidos",
+                      "expression": "`pedidos`"
+                    },
+                    {
+                      "name": "receita",
+                      "expression": "`receita`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
             "spec": {
-              "version": 2, "widgetType": "table",
+              "version": 2,
+              "widgetType": "table",
               "encodings": {
                 "columns": [
-                  {"fieldName": "cliente", "displayName": "Cliente"},
-                  {"fieldName": "segmento", "displayName": "Segmento"},
-                  {"fieldName": "cidade", "displayName": "Cidade"},
-                  {"fieldName": "pedidos", "displayName": "Pedidos"},
-                  {"fieldName": "receita", "displayName": "Receita"},
-                  {"fieldName": "margem_pct", "displayName": "Margem %"}
+                  {
+                    "fieldName": "cliente",
+                    "displayName": "Cliente"
+                  },
+                  {
+                    "fieldName": "segmento",
+                    "displayName": "Segmento"
+                  },
+                  {
+                    "fieldName": "cidade",
+                    "displayName": "Cidade"
+                  },
+                  {
+                    "fieldName": "pedidos",
+                    "displayName": "Pedidos"
+                  },
+                  {
+                    "fieldName": "receita",
+                    "displayName": "Receita"
+                  }
                 ]
               },
-              "frame": {"showTitle": true, "title": "Top 15 clientes por receita"}
+              "frame": {
+                "showTitle": true,
+                "title": "Top 15 clientes por receita"
+              }
             }
           },
-          "position": {"x": 0, "y": 22, "width": 12, "height": 7}
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 12,
+            "height": 7
+          }
         }
       ]
     }
   ],
   "uiSettings": {
     "theme": {
-      "canvasBackgroundColor": {"light": "#FCFCFC", "dark": "#1F272D"},
-      "widgetBackgroundColor": {"light": "#FFFFFF", "dark": "#11171C"},
-      "fontColor": {"light": "#11171C", "dark": "#E8ECF0"},
-      "selectionColor": {"light": "#8C4A6B", "dark": "#E8A0BF"},
+      "canvasBackgroundColor": {
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#8C4A6B",
+        "dark": "#E8A0BF"
+      },
       "visualizationColors": [
-        "#8C4A6B", "#C97B9A", "#E0A96D", "#B8860B",
-        "#6B4E71", "#3D5A6C", "#7FB3A3"
+        "#8C4A6B",
+        "#C97B9A",
+        "#E0A96D",
+        "#B8860B",
+        "#6B4E71",
+        "#3D5A6C",
+        "#7FB3A3"
       ],
       "widgetHeaderAlignment": "LEFT",
       "widgetCornerRadius": 8

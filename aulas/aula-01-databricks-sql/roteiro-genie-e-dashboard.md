@@ -129,10 +129,33 @@ databricks lakeview publish DASHBOARD_ID --warehouse-id SEU-WAREHOUSE --profile 
    `ds_vendas`. Se cada widget tivesse seu próprio dataset, isso não
    aconteceria.
 
-3. **As métricas são declaradas uma vez.** `Receita`, `Margem %` e
-   `Ticket médio` estão em `dataset.columns` e são chamadas com `MEASURE()`.
-   Nenhum widget redefine a conta — é o antídoto para "cada tela mostra um
-   número diferente".
+3. **O grão do dataset resolve o ticket médio.** `ds_pedidos` tem uma linha
+   por pedido, então `AVG(valor)` já é o ticket médio correto — R$ 3.683,70 —
+   sem precisar de razão de somas dentro do widget.
+
+### ⚠️ A armadilha do `MEASURE()`
+
+A primeira versão deste dashboard declarava as métricas em `dataset.columns` e
+as chamava com `MEASURE()` nos KPIs. Parecia mais elegante: a conta escrita uma
+vez só.
+
+**Os quatro KPIs renderizaram "Unable to render visualization".** Os gráficos,
+que usavam agregação inline, funcionaram normalmente.
+
+A correção foi escolher o **grão do dataset** de forma que as agregações
+permitidas já bastassem:
+
+| KPI | Como resolve sem `MEASURE` |
+|---|---|
+| Receita | `SUM(valor)` sobre o dataset de pedidos |
+| Pedidos | `COUNT(pedido_id)` |
+| Ticket médio | `AVG(valor)` — correto porque cada linha é um pedido |
+| Margem % | dataset próprio de **uma linha** com a razão já calculada em SQL |
+
+A lição vale além do dashboard: **quando a ferramenta não deixa você calcular,
+mude o grão do dado em vez de forçar a ferramenta.** Razão de somas
+(`SUM(a)/SUM(b)`) não é expressão válida num widget — mas vira uma coluna
+trivial no SQL do dataset.
 
 ### O gancho para a noite 2
 

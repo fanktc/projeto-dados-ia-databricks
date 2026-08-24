@@ -127,7 +127,23 @@ databricks fs cp --recursive --overwrite dados/crm \
 > vamos vender — são a [noite 3](../aula-03-ciencia-de-dados-e-agentes). Lá elas
 > já estão respondidas em SQL puro, e depois ganham modelo.
 
-### Como rodar
+### 📓 Para dar a aula: os notebooks em branco
+
+[`notebooks-em-branco/`](notebooks-em-branco) tem os mesmos seis exemplos, mas
+**só com as perguntas** — as células de query estão vazias, para escrever ao
+vivo. Cada pergunta traz a dica dos comandos e o resultado esperado, então dá
+para conferir na hora se saiu certo.
+
+```bash
+DEST=/Workspace/Users/SEU-EMAIL/imersao-aula-01
+databricks workspace mkdirs $DEST --profile SEU-PERFIL
+for f in aulas/aula-01-databricks-sql/notebooks-em-branco/*.sql; do
+  databricks workspace import "$DEST/$(basename "$f" .sql)" --file "$f" \
+    --language SQL --format SOURCE --overwrite --profile SEU-PERFIL
+done
+```
+
+### Como rodar os exemplos resolvidos
 
 ```bash
 python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-01-primeiro-select.sql

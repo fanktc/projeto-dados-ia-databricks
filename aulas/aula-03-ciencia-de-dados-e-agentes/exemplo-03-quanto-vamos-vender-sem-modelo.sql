@@ -16,16 +16,12 @@
 
 WITH mensal AS (
     SELECT
-        date_trunc('month',
-          coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
-                   try_to_date(data_pedido, 'dd/MM/yyyy')))    AS mes,
-        SUM(CAST(valor_total AS DECIMAL(18,2)))                AS receita
-    FROM rota_perfume.bronze.pedidos
-    WHERE status <> 'Cancelado'
+        date_trunc('month', data_pedido)                       AS mes,
+        SUM(valor_liquido)                                     AS receita
+    FROM rota_perfume.silver.pedidos
+    WHERE NOT cancelado
     GROUP BY 1
-    HAVING date_trunc('month',
-             coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
-                      try_to_date(data_pedido, 'dd/MM/yyyy'))) >= DATE'2024-11-01'
+    HAVING date_trunc('month', data_pedido) >= DATE'2024-11-01'
 )
 SELECT
     month(mes)                                              AS mes_do_ano,
@@ -49,12 +45,10 @@ ORDER BY indice_sazonal DESC;
 -- ----------------------------------------------------------------------------
 
 WITH mensal AS (
-    SELECT date_trunc('month',
-             coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
-                      try_to_date(data_pedido, 'dd/MM/yyyy')))  AS mes,
-           SUM(CAST(valor_total AS DECIMAL(18,2)))              AS receita
-    FROM rota_perfume.bronze.pedidos
-    WHERE status <> 'Cancelado'
+    SELECT date_trunc('month', data_pedido)                       AS mes,
+           SUM(valor_liquido)                                   AS receita
+    FROM rota_perfume.silver.pedidos
+    WHERE NOT cancelado
     GROUP BY 1
 ),
 treino AS (   -- só o passado conhecido em 31/07/2026
@@ -93,16 +87,12 @@ SELECT
 -- ----------------------------------------------------------------------------
 
 WITH mensal AS (
-    SELECT date_trunc('month',
-             coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
-                      try_to_date(data_pedido, 'dd/MM/yyyy')))  AS mes,
-           SUM(CAST(valor_total AS DECIMAL(18,2)))              AS receita
-    FROM rota_perfume.bronze.pedidos
-    WHERE status <> 'Cancelado'
+    SELECT date_trunc('month', data_pedido)                       AS mes,
+           SUM(valor_liquido)                                   AS receita
+    FROM rota_perfume.silver.pedidos
+    WHERE NOT cancelado
     GROUP BY 1
-    HAVING date_trunc('month',
-             coalesce(try_to_date(data_pedido, 'yyyy-MM-dd'),
-                      try_to_date(data_pedido, 'dd/MM/yyyy'))) >= DATE'2024-11-01'
+    HAVING date_trunc('month', data_pedido) >= DATE'2024-11-01'
 ),
 indice AS (
     SELECT month(mes) AS mes_do_ano,

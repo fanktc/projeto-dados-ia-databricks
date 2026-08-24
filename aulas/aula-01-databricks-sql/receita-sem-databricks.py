@@ -15,6 +15,10 @@ Uso:
 
 import argparse
 import csv
+from pathlib import Path
+
+# a raiz do repositório, a partir deste arquivo
+RAIZ = Path(__file__).resolve().parent.parent.parent
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -94,8 +98,8 @@ def salvar_png(receita: dict, destino: str) -> str | None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--csv", default="dados/erp/pedidos.csv")
-    ap.add_argument("--png", default="notebooks/n1_receita.png")
+    ap.add_argument("--csv", default=str(RAIZ / "dados/erp/pedidos.csv"))
+    ap.add_argument("--png", default=str(RAIZ / "receita-por-mes.png"))
     args = ap.parse_args()
 
     receita, pedidos, ignorados, cancelados = receita_por_mes(args.csv)

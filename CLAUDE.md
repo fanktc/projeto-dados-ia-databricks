@@ -8,20 +8,23 @@ Material e código da **Imersão Jornada de Dados** (24 a 27 de agosto de 2026):
 ao vivo em 4 noites, a área de dados e vendas da **Rota do Perfume** — distribuidora B2B fictícia
 de perfumaria árabe. Todo o conteúdo é em português e escrito para ser acompanhado ao vivo.
 
-O repositório tem duas partes independentes, sem código compartilhado entre elas:
+O repositório é organizado **uma pasta por noite**, no mesmo esquema do
+`data-engineering-roadmap`: cada aula é autocontida, com README próprio, KPIS
+quando faz sentido e exemplos numerados em progressão.
 
 | Pasta | O que é |
 |---|---|
-| `files/` | Material da aula: PRD completo (`PRD-imersao-rota-do-perfume.md`, 875 linhas — a especificação canônica das 4 noites), gerador do dataset, slides e o zip com os CSVs |
-| `sql/` | Noite 1: `n1_00_setup`, `n1_01_bronze`, `n1_02..04` (análises), `n1_99_verificacao` |
-| `notebooks/` | `n1_receita.py` — receita por mês lendo o CSV local, sem Databricks |
-| `scripts/` | `run_sql.py` — executa um `.sql` no warehouse, statement por statement |
-| `dados/` | Dataset gerado, **não versionado**. Reproduza com `python3 files/gerar_dataset.py --saida ./dados --seed 42` |
-| `perfumesarabe/` | Projeto Databricks Asset Bundle (DAB) gerado pelo template `default-python`, ainda **não customizado** para o domínio |
+| `aulas/aula-01-databricks-sql/` | Noite 1: setup, ingestão bronze, 6 exemplos progressivos, slides, roteiro do Genie |
+| `aulas/aula-02-engenharia-de-dados/` | Noite 2: silver, gold, pipeline, testes — a construir ao vivo |
+| `aulas/aula-03-ciencia-de-dados-e-agentes/` | Noite 3: as 3 perguntas já em SQL puro; modelo e agente ao vivo |
+| `aulas/aula-04-deploy/perfumesarabe/` | Noite 4: o bundle DABs, com job de ingestão + verificação já no ar |
+| `material/` | PRD (a especificação canônica das 4 noites), gerador do dataset, zip de referência, slides antigos |
+| `scripts/run_sql.py` | Executa um `.sql` no warehouse, statement por statement |
+| `dados/` | Dataset gerado, **não versionado**. `python3 material/gerar_dataset.py --saida ./dados --seed 42` |
 
-Cada pasta tem seu próprio arquivo de instruções, carregado quando você trabalha nela:
-`files/CLAUDE.md` (regras do dataset e convenções de análise) e `perfumesarabe/CLAUDE.md`
-(importa `perfumesarabe/AGENTS.md`).
+Ao criar exemplos novos, siga o padrão: `exemplo-NN-tema.sql`, com cabeçalho
+declarando conceito, pergunta de negócio e conexão com a aula seguinte.
+Seis a oito exemplos por aula — mais que isso não cabe na noite.
 
 ## Databricks
 

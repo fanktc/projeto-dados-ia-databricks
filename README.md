@@ -60,13 +60,31 @@ Dezembro e janeiro são vale — o varejo já está abastecido.
 Se uma query der resultado muito diferente disso, o erro está na query.
 `sql/n1_99_verificacao.sql` checa isso automaticamente.
 
+## As três perguntas da diretoria
+
+Antes de treinar qualquer modelo, vale medir se o dado sustenta a pergunta.
+Um explorer por pergunta, todos rodando local, sem Databricks:
+
+```bash
+cd notebooks
+python3 n3_explorer_propensao.py   # Quem vai comprar?
+python3 n3_explorer_churn.py       # Quem está sumindo?
+python3 n3_explorer_previsao.py    # Quanto vamos vender?
+```
+
+| Pergunta | Resposta medida |
+|---|---|
+| Quem vai comprar? | **Sim.** 2.816 clientes com histórico, 93% com ritmo mensurável. Use janela de 30 dias (41% de eventos) — com 90 dias, 81% compram e não há o que aprender |
+| Quem está sumindo? | **Sim, mas a definição é sua.** Não existe coluna de churn: 170 clientes (6,5%) estão atrasados em relação ao próprio ritmo. Corte relativo, não fixo |
+| Quanto vamos vender? | **Sim, com ressalvas.** O mês explica 87% da variação, mas são só 2 ciclos anuais e não há tendência de crescimento para extrapolar |
+
 ## Estrutura
 
 ```
 dados/         dataset gerado (não versionado — reproduza com o comando acima)
 files/         PRD, gerador do dataset, slides, zip de referência
 sql/           n1_00_setup · n1_01_bronze · n1_02..04 análises · n1_99 verificação
-notebooks/     n1_receita.py — receita por mês sem Databricks
+notebooks/     n1_receita.py e os explorers das 3 perguntas (n3_explorer_*)
 scripts/       run_sql.py — roda um .sql statement por statement
 perfumesarabe/ bundle de deploy (DABs) — entra pra valer na noite 4
 ```

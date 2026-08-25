@@ -124,7 +124,7 @@ databricks fs cp --recursive --overwrite dados/crm \
 | 06 | `exemplo-06-margem-marca-e-sazonalidade.sql` | janela, `FILTER`, margem | Onde a receita concentra? |
 
 > As três perguntas da diretoria — quem vai comprar, quem está sumindo, quanto
-> vamos vender — são a [noite 3](../aula-03-ciencia-de-dados-e-agentes). Lá elas
+> vamos vender — são a **noite 3**. Lá elas
 > já estão respondidas em SQL puro, e depois ganham modelo.
 
 ### 📓 Para dar a aula: os notebooks em branco
@@ -193,7 +193,7 @@ o pico da distribuidora é o mês anterior:
 | `roteiro-genie-e-dashboard.md` | O bloco sem código: perguntas do Genie e o dashboard, com o que esperar |
 | `dashboard-bronze.lvdash.json` | O AI/BI dashboard da noite, sobre a **bronze** — 13 widgets |
 | `receita-sem-databricks.py` | Receita por mês lendo o CSV local — o plano B se o workspace cair |
-| `aula-01-imersao-agosto.pptx` | Os slides da noite |
+| `Lançamento Agosto … Aula 01.pptx` | Os slides da noite |
 
 ### 📊 O dashboard
 

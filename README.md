@@ -9,17 +9,20 @@ Empresa fictícia, dado gerado com seed fixa, sujeira proposital.
 
 ---
 
-## 🗓️ As quatro noites
+## 🗓️ As noites
 
 | Noite | Data | Tema | Pasta |
 |---|---|---|---|
 | **1** | seg 24/08 | Objetivo e a primeira análise | [`aulas/aula-01-databricks-sql`](aulas/aula-01-databricks-sql) · [📺 gravação](https://youtube.com/live/plG6mF-ib_w) |
-| **2** | ter 25/08 | Engenharia de dados: o projeto roda sozinho | [`aulas/aula-02-engenharia-de-dados`](aulas/aula-02-engenharia-de-dados) |
-| **3** | qua 26/08 | Ciência de dados e agentes | [`aulas/aula-03-ciencia-de-dados-e-agentes`](aulas/aula-03-ciencia-de-dados-e-agentes) |
-| **4** | qui 27/08 | Deploy: o projeto no ar e monitorado | [`aulas/aula-04-deploy`](aulas/aula-04-deploy) |
+| **2** | ter 25/08 | Engenharia de dados: o projeto roda sozinho | [`aulas/aula-02-engenharia-de-dados`](aulas/aula-02-engenharia-de-dados) · [📺 gravação](https://www.youtube.com/watch?v=0KRcn4ZIDPg) |
+| **3** | qua 26/08 | Ciência de dados e agentes | _a construir_ |
 
 Cada pasta é autocontida: tem o próprio README, os exemplos numerados e o que
 for preciso rodar.
+
+> **A noite 4 saiu do calendário — e por um bom motivo.** Deploy não é etapa de
+> fim de projeto: é o que acontece toda vez que você termina alguma coisa. Por
+> isso ele acontece **seis vezes dentro da noite 2**, uma por prompt.
 
 ---
 
@@ -29,12 +32,17 @@ for preciso rodar.
 # 1. gerar o dataset (seed fixa: todo mundo gera exatamente o mesmo dado)
 python3 material/gerar_dataset.py --saida ./dados --seed 42
 
-# 2. autenticar no Databricks
-databricks auth login --host https://SEU-WORKSPACE.cloud.databricks.com --profile meu-perfil
+# 2. autenticar no Databricks (cria o profile e salva a credencial)
+databricks auth login
 
-# 3. seguir a aula 01
+# 3. seguir a aula 01, que é toda pelo navegador
 cd aulas/aula-01-databricks-sql && cat README.md
 ```
+
+A **noite 2** é a que exige terminal. O passo a passo completo — versões
+mínimas, o erro de credencial que quase todo mundo vê, `bundle init`, skills,
+MCP e guard rails — está em
+[`aulas/aula-02-engenharia-de-dados/README.md`](aulas/aula-02-engenharia-de-dados/README.md#-passo-a-passo--do-zero-até-o-primeiro-deploy).
 
 O runner `scripts/run_sql.py` executa qualquer `.sql` deste repositório no
 warehouse, uma statement por vez:
@@ -91,7 +99,12 @@ ativa. Limpar isso é o conteúdo da noite 2 — não conserte o gerador.
 ## 📁 Estrutura
 
 ```
-aulas/         uma pasta por noite, autocontida
+aulas/
+├── aula-01-databricks-sql/          tudo pela interface: catálogo, bronze, 6 exemplos
+└── aula-02-engenharia-de-dados/
+    ├── prd/                         os 6 prompts (+ o reset 00) e o roteiro da noite
+    ├── rotaperfume/                 o bundle DABs: raw → bronze → silver → gold → BI → Genie
+    └── slides/                      gerar_slides.py — os slides como código
 material/      PRD da imersão, gerador do dataset, slides
 scripts/       run_sql.py — roda um .sql no warehouse
 dados/         dataset gerado (não versionado — reproduza com o comando acima)

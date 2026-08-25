@@ -56,7 +56,7 @@ pergunta de negócio por trás e onde ele é respondido.
 ## 🤝 3. As três perguntas da diretoria
 
 Quem vai comprar, quem está sumindo e quanto vamos vender são o tema da
-[noite 3](../aula-03-ciencia-de-dados-e-agentes) — inclusive as versões que já
+**noite 3** — inclusive as versões que já
 respondem em SQL puro, sem modelo.
 
 Elas dependem do que se constrói hoje: sem saber a receita e quem são os

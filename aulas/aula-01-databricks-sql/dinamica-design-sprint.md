@@ -126,7 +126,7 @@ python3 scripts/run_sql.py aulas/aula-01-databricks-sql/exemplo-06-margem-marca-
 Se quiser dar o gostinho da noite 3 (roda em 25 segundos):
 
 ```bash
-python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-01-quem-vai-comprar-sem-modelo.sql
+# a noite 3 está sendo reescrita no formato de prompts — veja aulas/aula-02-engenharia-de-dados/prd/
 ```
 
 ---
@@ -152,5 +152,5 @@ responder antes de avançar.
 Para rodar ao vivo (25 segundos):
 
 ```bash
-python3 scripts/run_sql.py aulas/aula-03-ciencia-de-dados-e-agentes/exemplo-01-quem-vai-comprar-sem-modelo.sql
+# a noite 3 está sendo reescrita no formato de prompts — veja aulas/aula-02-engenharia-de-dados/prd/
 ```

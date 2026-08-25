@@ -15,16 +15,20 @@ quando faz sentido e exemplos numerados em progressão.
 | Pasta | O que é |
 |---|---|
 | `aulas/aula-01-databricks-sql/` | Noite 1: setup, ingestão bronze, 6 exemplos progressivos, slides, roteiro do Genie |
-| `aulas/aula-02-engenharia-de-dados/` | Noite 2: silver, gold, pipeline, testes — a construir ao vivo |
-| `aulas/aula-03-ciencia-de-dados-e-agentes/` | Noite 3: as 3 perguntas já em SQL puro; modelo e agente ao vivo |
-| `aulas/aula-04-deploy/perfumesarabe/` | Noite 4: o bundle DABs, com job de ingestão + verificação já no ar |
+| `aulas/aula-02-engenharia-de-dados/` | Noite 2: **6 prompts, 6 deploys**. O bundle `rotaperfume/` nasce vazio e vira raw → bronze → silver → gold → dashboard → Genie |
+| `aulas/aula-02-engenharia-de-dados/prd/` | Os 6 prompts (+ o reset 00), o `CLAUDE.md` do projeto e o roteiro da noite |
+| `aulas/aula-02-engenharia-de-dados/slides/` | `gerar_slides.py` — os slides como código, no design da noite 1 |
 | `material/` | PRD (a especificação canônica das 4 noites), gerador do dataset, zip de referência, slides antigos |
 | `scripts/run_sql.py` | Executa um `.sql` no warehouse, statement por statement |
 | `dados/` | Dataset gerado, **não versionado**. `python3 material/gerar_dataset.py --saida ./dados --seed 42` |
 
-Ao criar exemplos novos, siga o padrão: `exemplo-NN-tema.sql`, com cabeçalho
-declarando conceito, pergunta de negócio e conexão com a aula seguinte.
-Seis a oito exemplos por aula — mais que isso não cabe na noite.
+**As aulas 03 e 04 foram removidas.** A 04 (deploy) morreu por desenho: deploy
+não é etapa de fim de projeto, é o que acontece toda vez que você termina algo —
+por isso a noite 2 faz seis. A 03 será reescrita no mesmo formato de prompts.
+
+Ao criar exemplos novos para a aula 01, siga o padrão: `exemplo-NN-tema.sql`,
+com cabeçalho declarando conceito, pergunta de negócio e conexão com a aula
+seguinte. Seis a oito exemplos por aula — mais que isso não cabe na noite.
 
 ## Databricks
 
@@ -38,8 +42,11 @@ Seis a oito exemplos por aula — mais que isso não cabe na noite.
 
 ### Catálogo
 
-`lakehouse_rotaperfume`, schemas `bronze`/`silver`/`gold`. **O catálogo não existe no workspace** —
-ele é criado ao vivo na aula, pelo `00-setup-catalogo.sql`. Não crie por conta própria.
+`lakehouse_rotaperfume`, schemas `bronze`/`silver`/`gold`. O nome **não tem underscore**
+entre "rota" e "perfume" — se algum documento escrever `lakehouse_rota_perfume`, está errado.
+
+O catálogo é recriado do zero pelos 6 prompts da noite 2. `prd/00-reset.sh` apaga tudo
+(catálogo, bundle e código local) para provar que os seis bastam.
 
 Existe também um catálogo `rota_perfume` antigo no workspace, de execuções anteriores;
 o material não aponta mais para ele.
@@ -52,23 +59,34 @@ Passe `--continuar` em arquivos que contêm query que falha de propósito.
 
 ## Comandos
 
-### Bundle (`perfumesarabe/`)
+### Bundle da noite 2 (`aulas/aula-02-engenharia-de-dados/rotaperfume/`)
 
 ```bash
-uv sync --dev                                    # instala dependências (pytest, ruff, dlt, db-connect)
-uv run pytest                                    # todos os testes
-uv run pytest tests/sample_taxis_test.py::test_find_all_taxis   # um teste
-uv run ruff check .                              # lint (line-length 120)
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
 
-databricks bundle validate --profile <perfil>
-databricks bundle deploy --target dev  --profile <perfil>   # dev é o target default
-databricks bundle deploy --target prod --profile <perfil>
-databricks bundle run --profile <perfil>
-databricks bundle run perfumesarabe_etl --refresh sample_trips_perfumesarabe --profile <perfil>  # uma transformação
+bash scripts/criar-catalogo.sh <perfil>       # o catálogo (SQL — a API do UC não cria no Free Edition)
+databricks bundle validate --target dev  --profile <perfil>
+databricks bundle deploy   --target dev  --profile <perfil>   # dev é o target default
+bash scripts/subir-raw.sh  <perfil>           # os CSVs para o Volume — DEPOIS do deploy
+databricks bundle run rotaperfume_pipeline --target dev --profile <perfil>
 ```
 
-Os testes usam **Databricks Connect** e exigem workspace acessível — `tests/conftest.py` faz
-fallback para serverless se nenhum compute estiver configurado. Não existe execução local pura.
+A ordem importa duas vezes: o catálogo antes do deploy (que cria os schemas), e o
+deploy antes do upload (que precisa do Volume existindo).
+
+Para zerar tudo e recomeçar do nada:
+
+```bash
+bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil>         # simula
+bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil> --sim   # apaga
+```
+
+### Slides
+
+```bash
+uv venv --python 3.12 /tmp/pptx && uv pip install --python /tmp/pptx/bin/python python-pptx
+/tmp/pptx/bin/python aulas/aula-02-engenharia-de-dados/slides/gerar_slides.py
+```
 
 ### Dataset (`material/`)
 
@@ -77,41 +95,42 @@ python gerar_dataset.py --saida ./dados --seed 42   # sem dependências externas
 unzip material/dados-rota-do-perfume.zip                     # ou apenas descompacte o pronto (~14 MB)
 ```
 
-## Arquitetura do bundle `perfumesarabe/`
+## Arquitetura do bundle `rotaperfume/`
 
-Estado atual: **template intocado**. Todo o código de exemplo lê `samples.nyctaxi.trips` —
-`src/perfumesarabe/taxis.py`, as duas transformações em `src/perfumesarabe_etl/transformations/`
-e `tests/sample_taxis_test.py`. Ao começar a implementar o domínio real, esses arquivos são
-para substituir, não para estender.
+Um bundle só, que na aula nasce vazio e ganha uma camada por prompt. Seis deploys.
 
-Três caminhos de deploy convivem, todos parametrizados pelas variáveis `catalog` e `schema`
-declaradas em `databricks.yml`:
+```
+databricks.yml            targets dev e prod, variáveis catalog e warehouse_id
+scripts/
+  criar-catalogo.sh       CREATE CATALOG via SQL (a API do UC recusa no Free Edition)
+  subir-raw.sh            databricks fs cp dos CSVs para o Volume
+resources/
+  catalogo.yml            schemas bronze/silver/gold + volume bronze.raw
+  pipeline.job.yml        rotaperfume_pipeline — 12 tarefas, agendado, serverless
+  dashboard.dashboard.yml + dashboard-comercial.lvdash.json
+  genie.genie_space.yml   + comercial.geniespace.json
+src/
+  raw/conferencia.py      notebook: os 10 arquivos chegaram? grava bronze._raw_arquivos
+  bronze/ingestao.py      notebook: CSV → Delta, tudo texto, sem limpar nada
+  silver/01..04*.sql      sql_task: a limpeza, com CONSTRAINT declarada
+  gold/05..10*.sql        sql_task: dimensões, fato, marts, 9 testes, views, auditoria
+```
 
-1. **Wheel** — `src/perfumesarabe/` é empacotado (`uv build --wheel`, artifact `python_artifact`)
-   e o entrypoint `main` (`[project.scripts]`) recebe `--catalog` e `--schema`.
-2. **Pipeline declarativo** — `src/perfumesarabe_etl/transformations/`, um dataset por arquivo,
-   decorados com `@dp.table` (`from pyspark import pipelines as dp`). Serverless, `root_path`
-   apontando para `src/perfumesarabe_etl`. Dependências de pipeline vão na seção `environment`
-   do `.pipeline.yml`, **não** em `pyproject.toml` (são cacheadas em desenvolvimento).
-3. **Job** — `resources/sample_job.job.yml` encadeia notebook → wheel + refresh do pipeline,
-   com trigger diário (pausado automaticamente no target `dev`, que usa `mode: development`).
+O DAG do job é a tela que conta a história da noite:
 
-`src/perfumesarabe_etl/explorations/` é ignorado pelo `.gitignore` — notebooks ad-hoc não versionam.
+```
+raw_conferencia → bronze_ingestao → silver ×4 (paralelo) → gold_dimensoes
+  → gold_fato_vendas → gold_marts → testes_de_qualidade
+                                  → metricas_de_negocio → auditoria_de_metadado
+```
 
-## Armadilhas já verificadas contra o workspace
+Camada em Python (notebook serverless) onde há arquivo e loop; camada em SQL
+(`sql_task` no warehouse) onde há transformação. Nenhum wheel, nenhum build —
+o deploy é de segundos, o que importa quando são seis ao vivo.
 
-Estas foram testadas na Noite 1 e valem para o resto do projeto:
-
-- **ANSI mode está ligado.** `to_date` e `date_trunc` sobre data malformada **abortam a query**
-  com `CAST_INVALID_INPUT` — não retornam `NULL`. Use sempre `try_to_date`. O código da Noite 2
-  no PRD (`:288-324`, `:334-360`) usa `to_date` e vai quebrar como está.
-- **`read_files` injeta `_rescued_data`.** Descarte com `SELECT * EXCEPT (_rescued_data)`.
-  Passar `rescuedDataColumn => ''` não desliga a coluna: cria uma com nome vazio, e o
-  `CREATE TABLE` falha com `INVALID_PARAMETER_VALUE`.
-- **`inferColumnTypes => false`** é o equivalente do `inferSchema=false` do PySpark. Sem ele o
-  CNPJ vira número e perde os zeros à esquerda (309 registros).
-- Os CSVs são **CRLF**. O leitor padrão trata bem; não use `multiLine => true`.
-- `databricks fs cp` exige o esquema `dbfs:` mesmo para Volumes UC.
+**Os testes quebram o job de propósito.** `raise_error()` dentro de `CASE WHEN`
+interrompe a tarefa. Melhor o dashboard ficar com o dado de ontem do que com o
+dado errado de hoje.
 
 ## Domínio: Rota do Perfume
 

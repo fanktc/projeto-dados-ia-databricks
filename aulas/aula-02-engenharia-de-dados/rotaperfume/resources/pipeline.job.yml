@@ -1,0 +1,138 @@
+# O pipeline da Rota do Perfume — o job que a noite inteira constrói.
+#
+# Ele começa aqui com UMA tarefa e termina o prompt 6 com onze. Abra o DAG no
+# workspace depois de cada deploy: o desenho crescendo é a melhor tela da aula.
+#
+#   prompt 1  raw_conferencia
+#   prompt 2  + bronze_ingestao
+#   prompt 3  + silver ×4 (em paralelo)
+#   prompt 4  + gold_dimensoes → gold_fato_vendas → gold_marts → testes
+#   prompt 6  + auditoria_metadado e metricas_negocio
+#
+# A ordem não é sugestão: cada camada lê a anterior. Se a conferência do raw
+# falhar, a bronze não roda — e é isso que impede o dashboard de mostrar meio
+# dado com cara de dado inteiro.
+
+resources:
+  jobs:
+    rotaperfume_pipeline:
+      name: rotaperfume_pipeline
+      description: Pipeline medallion da Rota do Perfume — raw, bronze, silver, gold e testes.
+
+      # Todo dia às 6h. Em dev o mode: development pausa sozinho.
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: America/Sao_Paulo
+        pause_status: PAUSED
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+
+      tasks:
+        # ── 1. raw: os dez arquivos chegaram? ─────────────────────────
+        - task_key: raw_conferencia
+          notebook_task:
+            notebook_path: ../src/raw/conferencia.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+
+        # ── 2. bronze: os CSVs viram Delta, sujeira preservada ────────
+        - task_key: bronze_ingestao
+          depends_on:
+            - task_key: raw_conferencia
+          notebook_task:
+            notebook_path: ../src/bronze/ingestao.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+
+        # ── 3. silver: a limpeza ──────────────────────────────────────
+        # As quatro rodam EM PARALELO: nenhuma depende da outra, todas dependem
+        # da bronze. É o formato que o DAG desenha melhor na tela.
+        #
+        # O SQL usa o caminho completo lakehouse_rotaperfume.silver.x em vez de
+        # variável: `sql_task` não substitui identificador por parâmetro, e SQL
+        # legível vale mais numa aula do que IDENTIFIER(:catalog || '.silver.x').
+        - task_key: silver_clientes
+          depends_on: [{ task_key: bronze_ingestao }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/silver/01-clientes.sql
+
+        - task_key: silver_pedidos
+          depends_on: [{ task_key: bronze_ingestao }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/silver/02-pedidos.sql
+
+        - task_key: silver_itens_e_produtos
+          depends_on: [{ task_key: bronze_ingestao }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/silver/03-itens-e-produtos.sql
+
+        - task_key: silver_crm_e_financeiro
+          depends_on: [{ task_key: bronze_ingestao }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/silver/04-crm-e-financeiro.sql
+
+        # ── 4. gold: modelar para consumo ─────────────────────────────
+        # Aqui a ordem volta a ser série: o fato lê as dimensões, os marts leem
+        # o fato. Nada disso pode acontecer fora de ordem.
+        - task_key: gold_dimensoes
+          depends_on:
+            - { task_key: silver_clientes }
+            - { task_key: silver_pedidos }
+            - { task_key: silver_itens_e_produtos }
+            - { task_key: silver_crm_e_financeiro }
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/05-dimensoes.sql
+
+        - task_key: gold_fato_vendas
+          depends_on: [{ task_key: gold_dimensoes }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/06-fato-vendas.sql
+
+        - task_key: gold_marts
+          depends_on: [{ task_key: gold_fato_vendas }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/07-marts.sql
+
+        # ── 5. os testes, por último e obrigatórios ───────────────────
+        # Se qualquer um falhar, o job falha. Melhor o dashboard ficar com o
+        # dado de ontem do que com o dado errado de hoje.
+        - task_key: testes_de_qualidade
+          depends_on: [{ task_key: gold_marts }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/08-testes.sql
+
+        # ── 6. o que faz o agente de IA funcionar ─────────────────────
+        # As views com nome de negócio e a auditoria de metadado. A auditoria
+        # QUEBRA o job se alguma tabela ou coluna da gold estiver sem COMMENT:
+        # metadado faltando é bug, não pendência de documentação.
+        - task_key: metricas_de_negocio
+          depends_on: [{ task_key: gold_marts }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/09-metricas-negocio.sql
+
+        - task_key: auditoria_de_metadado
+          depends_on: [{ task_key: metricas_de_negocio }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/gold/10-auditoria-metadado.sql

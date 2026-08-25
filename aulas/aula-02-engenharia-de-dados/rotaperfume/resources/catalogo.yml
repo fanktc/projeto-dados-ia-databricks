@@ -1,0 +1,43 @@
+# O catálogo inteiro como código.
+#
+# Na noite 1 isso nasceu de clique: Create catalog, Create schema, três vezes.
+# Aqui são trinta linhas de YAML que sobem em trinta segundos — e sobem iguais
+# na máquina de qualquer pessoa da equipe.
+#
+# Repare no VOLUME. Volume guarda ARQUIVO; tabela guarda LINHA. O CSV que o ERP
+# mandou fica ali, byte por byte, para que a pergunta "de onde veio esse
+# número?" tenha como resposta um arquivo — e não uma opinião.
+#
+# Por que Volume e não DBFS: Volume é objeto do Unity Catalog. Tem dono, tem
+# permissão e aparece na linhagem. DBFS é uma pasta sem sobrenome.
+
+# O CATÁLOGO NÃO ESTÁ AQUI, e isso é uma armadilha do Free Edition que vale
+# guardar: com Default Storage ligado, a API do Unity Catalog RECUSA criar
+# catálogo — ela pede um MANAGED LOCATION que a conta gratuita não tem. Só a UI
+# e o SQL conseguem. Por isso o catálogo nasce em scripts/criar-catalogo.sh,
+# rodado uma vez antes do primeiro deploy, e o bundle cuida do resto.
+#
+#   Error: Metastore storage root URL does not exist.
+#          Default Storage is enabled in your account. (400 INVALID_STATE)
+
+resources:
+  schemas:
+    bronze:
+      catalog_name: ${var.catalog}
+      name: bronze
+      comment: Ingestão crua. O dado como veio da origem, sujeira inclusa. Nunca se edita.
+    silver:
+      catalog_name: ${var.catalog}
+      name: silver
+      comment: Limpo, deduplicado e tipado. Uma linha por entidade real do negócio.
+    gold:
+      catalog_name: ${var.catalog}
+      name: gold
+      comment: Fatos, dimensões e marts. Modelado para consumo, não para armazenamento.
+
+  volumes:
+    raw:
+      catalog_name: ${var.catalog}
+      schema_name: bronze
+      name: raw
+      comment: CSVs originais de ERP e CRM, exatamente como saíram do sistema de origem.

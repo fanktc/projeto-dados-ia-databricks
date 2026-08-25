@@ -1,0 +1,47 @@
+# Rota do Perfume — o projeto da Noite 2 da Imersão Jornada de Dados.
+#
+# Este bundle nasce vazio no prompt 1 e ganha uma camada por prompt. São seis
+# deploys numa noite: deploy não é etapa de fim de projeto, é rotina.
+#
+#   raw → bronze → silver → gold → dashboard → agentes de IA
+#
+# Tudo roda em serverless: o Databricks Free Edition não tem cluster clássico.
+
+bundle:
+  name: rotaperfume
+
+include:
+  - resources/*.yml
+
+# Catálogo e warehouse ficam em variável para que o mesmo código rode em dev e
+# em prod sem uma linha editada. É o mínimo que separa "script" de "projeto".
+variables:
+  catalog:
+    description: Catálogo do Unity Catalog onde as três camadas moram
+    default: lakehouse_rotaperfume
+  warehouse_id:
+    description: SQL Warehouse serverless que executa as tarefas SQL
+    default: 666be37e3fededf2
+
+targets:
+  dev:
+    default: true
+    workspace:
+      host: https://dbc-84cd5511-fa25.cloud.databricks.com
+    # NÃO usamos `mode: development` de propósito. Ele prefixaria os nomes com
+    # [dev seu_usuario] — inclusive os SCHEMAS, que virariam dev_fulano_bronze e
+    # quebrariam todo o SQL da noite. Em troca, pausamos o agendamento na mão:
+    # ninguém quer o job da aula acordando às 6h de sábado.
+    presets:
+      trigger_pause_status: PAUSED
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-84cd5511-fa25.cloud.databricks.com
+      root_path: /Workspace/Users/lvgalvaofilho@gmail.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: lakehouse_rotaperfume_prod
+    permissions:
+      - user_name: lvgalvaofilho@gmail.com
+        level: CAN_MANAGE

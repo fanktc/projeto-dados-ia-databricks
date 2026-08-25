@@ -1,8 +1,5 @@
 # 🏗️ Dia 2: Engenharia de dados | Imersão Jornada de Dados
 
-> **Status:** os 7 exemplos estão prontos e **rodados no workspace**. A silver,
-> a gold e os três marts existem. Os 9 testes passam.
-
 Ontem a query quebrou por causa das datas em dois formatos, e a gente resolveu
 no braço com um `try_to_date` dentro do `SELECT`. Funcionou — para uma query.
 
@@ -11,37 +8,56 @@ consultar o dado depois já pega ele limpo.
 
 > **Promessa da noite:** o projeto passa a rodar sozinho.
 > **Pergunta da noite:** *"Como faço para não resolver o mesmo problema toda vez?"*
-> **Conexão:** a `gold.fato_vendas` que sai daqui é a tabela que a
-> [aula-03](../aula-03-ciencia-de-dados-e-agentes) usa para treinar o modelo.
+> **Formato:** [6 prompts, 6 deploys](prd/6-prompts-noite-2.md). O projeto inteiro
+> nasce de um catálogo vazio.
 
 ---
 
-## 🧠 Antes de tudo: por que três camadas?
+## 🧠 A ideia da noite: deploy é rotina, não evento
 
-A tentação é limpar o dado na entrada e pronto. O problema aparece no primeiro
-número errado: sem o original, não dá para saber se o erro veio da origem ou
-da sua limpeza.
+A aula 4 original era "deploy". Ela morreu, e por um bom motivo: deploy não é
+uma etapa no fim do projeto. É o que acontece **toda vez que você termina
+alguma coisa**.
+
+Por isso ele aparece seis vezes aqui. Um bundle que nasce vazio e ganha uma
+camada por prompt — o mesmo job começa com **uma** tarefa e termina com **doze**:
 
 ```
-  BRONZE                SILVER                 GOLD
-  como veio             limpo e tipado         modelado para consumo
-
-  tudo texto            data é DATE            uma linha por item vendido
-  CNPJ nos 3 formatos   CNPJ com 14 dígitos    já com marca, margem e mês
-  sujeira preservada    duplicado resolvido    é o que o dashboard lê
+prompt 1   raw
+prompt 2   raw → bronze
+prompt 3   raw → bronze → silver ×4
+prompt 4   raw → bronze → silver ×4 → dimensões → fato → marts → testes
+prompt 5   + dashboard versionado no bundle
+prompt 6   + views de negócio, auditoria de metadado e Genie
 ```
 
-Cada camada responde a uma pergunta diferente:
-
-- **bronze** — "o que a origem mandou?" É a prova. Nunca se edita.
-- **silver** — "qual é o dado correto?" Uma linha por entidade real.
-- **gold** — "como o negócio quer ver?" Fato e dimensão, pronto para agregar.
+A tela que conta essa história é o DAG do job. Abra depois de cada deploy.
 
 ---
 
-## 🧹 A sujeira que a noite 1 encontrou, e que hoje some
+## 📋 Os seis prompts
 
-Cada item aqui foi **medido** na aula 1, não estimado:
+Cada um está num arquivo próprio, com o prompt copiável, o que falar enquanto
+o Claude Code trabalha, como validar ao vivo e uma tabela **"se der errado"**.
+
+| # | Entrega | Arquivo |
+|---|---|---|
+| — | **Reset** — apaga tudo, para provar que os seis bastam | [`prompt-00-reset.md`](prd/prompt-00-reset.md) |
+| 1 | **Raw** — bundle, catálogo, Volume e conferência de chegada | [`prompt-01-raw.md`](prd/prompt-01-raw.md) |
+| 2 | **Bronze** — 10 tabelas Delta, sujeira preservada | [`prompt-02-bronze.md`](prd/prompt-02-bronze.md) |
+| 3 | **Silver** — limpeza com contrato de qualidade | [`prompt-03-silver.md`](prd/prompt-03-silver.md) |
+| 4 | **Gold** — dimensões, fato, marts e os 9 testes | [`prompt-04-gold.md`](prd/prompt-04-gold.md) |
+| 5 | **Dashboard** — AI/BI versionado no bundle | [`prompt-05-dashboard.md`](prd/prompt-05-dashboard.md) |
+| 6 | **Agentes de IA** — metadado, views de negócio, Genie | [`prompt-06-agentes.md`](prd/prompt-06-agentes.md) |
+
+O contexto do projeto que o Claude Code lê antes de tudo está em
+[`prd/CLAUDE.md`](prd/CLAUDE.md).
+
+---
+
+## 🧹 A sujeira da noite 1, e como cada uma some
+
+Cada item foi **medido**, não estimado:
 
 | Problema | Quantos | Como a silver resolve |
 |---|---|---|
@@ -49,108 +65,45 @@ Cada item aqui foi **medido** na aula 1, não estimado:
 | CNPJ pontuado | 1.111 clientes | `regexp_replace(cnpj, '[^0-9]', '')` |
 | CNPJ com espaço em volta | 223 clientes | `trim()` antes de tudo |
 | CNPJ com zero à esquerda | 309 clientes | `lpad(..., 14, '0')` — e nunca converter para número |
-| Mesmo CNPJ, cadastros diferentes | 40 clientes | `row_number()` por CNPJ, mantém o cadastro mais antigo |
-| Devolução como quantidade negativa | 2.327 itens | coluna `devolucao` própria + `abs(quantidade)` |
-| Cancelado com valor zerado | 957 pedidos | flag `cancelado` explícita, sem confiar no valor |
-| SKU descontinuado em pedido | 76 itens | join com produtos, coluna `sku_descontinuado` |
-| Carteira ativa de vendedor desligado | 441 vínculos | vigência na junção, não só `data_fim IS NULL` |
+| Mesmo CNPJ, cadastros diferentes | 40 clientes | `row_number()` por CNPJ, mantém o mais antigo |
+| Devolução como quantidade negativa | 2.327 itens | coluna `devolucao` + `quantidade_abs`, **sem descartar** |
+| Cancelado com valor zerado | 957 pedidos | flag `cancelado` explícita |
+| SKU descontinuado em venda | 76 itens | join com produtos, coluna `sku_descontinuado` |
+| Carteira ativa de vendedor desligado | 441 vínculos | coluna `orfao_vendedor_desligado`, que **expõe** em vez de consertar |
 
 ---
 
-## 🎯 Roteiro da noite
+## 🔢 O que tem que aparecer na tela
 
-```
-  Limpar                      Modelar              Automatizar
-  (01 → 02 → 03)              (04)                 (05 → 06)
+Rodado de ponta a ponta, do catálogo vazio, com `seed 42`:
 
-  clientes, pedidos           fato_vendas          pipeline declarativo
-  e itens viram silver        com margem           e testes de qualidade
-```
+| Onde | Número |
+|---|---|
+| Raw no Volume | 10 arquivos · 14,7 MB · 313.551 linhas |
+| Silver · clientes | 3.000 (eram 3.040) |
+| **Silver · receita** | **R$ 102.303.828,05** — o mesmo da noite 1 |
+| Gold · `fato_vendas` | 191.080 linhas · R$ 102.303.828,05 |
+| Gold · bruto vendido | R$ 103.568.586,35 |
+| Gold · margem | R$ 41,1 mi · 40,2% |
+| Marca líder | Layali R$ 18,4 mi líquido · R$ 18,6 mi bruto |
+| Margem por categoria | Kit Presente 33,0% · Óleo Concentrado 49,9% |
+| Outubro/2025 · Janeiro/2026 | R$ 7,02 mi · R$ 2,46 mi |
+| Clientes em risco | 503 · R$ 836 mil/mês parados |
+| Testes | 9 de qualidade + 2 de metadado, todos passando |
 
-| # | Arquivo | O que faz |
-|---|---|---|
-| 01 | `exemplo-01-silver-clientes.sql` | CNPJ normalizado, razão social padronizada, dedup por CNPJ |
-| 02 | `exemplo-02-silver-pedidos.sql` | Data resolvida, tipos certos, flag de cancelado |
-| 03 | `exemplo-03-silver-itens-e-produtos.sql` | Devolução sinalizada, SKU descontinuado marcado |
-| 04 | `exemplo-04-silver-crm-e-financeiro.sql` | Vendedores, carteira, visitas, funil e pagamentos |
-| 05 | `exemplo-05-gold-dimensoes-e-fato.sql` | 4 dimensões conformadas + `fato_vendas` |
-| 06 | `exemplo-06-data-marts-por-diretoria.sql` | Vendas, produto e financeiro sobre o mesmo fato |
-| 07 | `exemplo-07-testes-de-qualidade.sql` | Os 9 testes que quebram antes do dashboard |
-
-## 🏛️ Data marts: um por diretoria, um fato só
-
-O erro clássico é criar um **fato por área** — `fato_vendas_comercial` e
-`fato_vendas_produto`. Em três meses eles divergem e ninguém sabe qual está certo.
-
-O que separa um mart do outro é a **dimensão dominante** e as **métricas**, não
-a tabela base:
-
-```
-gold/
-├── dim_cliente · dim_produto · dim_vendedor · dim_calendario   (conformadas)
-├── fato_vendas          grão: item de pedido não cancelado
-│
-├── mart_vendas_por_vendedor      vendedor  → meta, carteira, produtividade
-├── mart_vendas_funil             origem    → conversão, ciclo, motivo de perda
-├── mart_produto_performance      SKU       → mix, margem, curva ABC
-└── mart_financeiro_recebimento   vencimento→ caixa, atraso, custo de taxa
-```
-
-| Diretoria | O que só ela pergunta | Coluna que só ela usa |
-|---|---|---|
-| **Vendas** | "qual vendedor está abaixo da meta?" | `meta_mensal`, `etapa` |
-| **Produto** | "vendo o dobro e ganho menos — mudo o mix?" | `custo_unitario` |
-| **Financeiro** | "quanto entra em caixa em 30 dias?" | `data_vencimento`, `taxa_pct` |
-
-As três somam **o mesmo R$ 102.303.828,05**. É isso que "conformado" significa.
-
-> **E supply?** Parece natural, mas o dado não sustenta: cada SKU aparece em
-> só 28,8 das 105 semanas de snapshot (27,4% de cobertura). Dá para taxa de
-> ruptura agregada, não para giro por produto. É um bom exemplo de quando a
-> resposta honesta para a diretoria é "com esse dado, não".
-
----
-
-## ⚠️ Duas armadilhas já medidas no warehouse
-
-**1. `to_date` aborta a query.** O código de exemplo do PRD usa
-`coalesce(to_date(...), to_date(...))`. Em ANSI mode — que é o padrão do
-Databricks SQL — a data malformada levanta exceção em vez de virar `NULL`, e
-derruba tudo. Use **`try_to_date`**.
-
-**2. Não deixe o Spark adivinhar tipo na bronze.** `inferSchema=true`
-transformaria o CNPJ em número e apagaria os 309 zeros à esquerda. Na silver
-você converte de propósito, sabendo o que está fazendo.
-
----
-
-## 🔢 Os testes que precisam passar
-
-| # | Teste | Resultado |
-|---|---|---|
-| 1 | Receita preservada da bronze até a gold | R$ 102.303.828,05 ✓ |
-| 2 | CNPJ único na silver | 0 duplicados (eram 40) ✓ |
-| 3 | Nenhuma data nula em pedidos | 0 (3.443 convertidos) ✓ |
-| 4 | Receita negativa só em devolução | 0 fora de devolução ✓ |
-| 5 | Volume da `fato_vendas` | 191.080 linhas ✓ |
-| 6 | Nenhum pedido órfão no fato | 0 ✓ |
-| 7 | Nenhum cliente órfão no fato | 0 ✓ |
-| 8 | Mart de produto bate com o fato | R$ 102.303.828,05 ✓ |
-| 9 | Todo CNPJ com 14 dígitos | 0 malformados ✓ |
-
-O primeiro é o que mais importa: **limpeza não pode mudar o faturamento**. Se
-mudou, você jogou dado fora sem querer.
+**O teste que mais importa é o primeiro:** limpeza **não pode mudar o
+faturamento**. Se mudou, você jogou dado fora sem querer — e três meses depois
+alguém compara dois relatórios numa reunião e a discussão vira sobre qual
+sistema está certo.
 
 ### 🔍 A armadilha que quase passou
 
-A primeira versão do `fato_vendas` deixava a devolução **de fora** — parecia
-certo, "receita é o que vendeu". O resultado: a gold mostrava R$ 103,6 mi e a
-silver R$ 102,3 mi.
+A primeira versão do `fato_vendas` deixava a devolução **de fora**. Parecia
+certo: "receita é o que vendeu". O resultado: a gold mostrava R$ 103,6 mi e a
+silver R$ 102,3 mi. **R$ 1,26 milhão de diferença entre duas camadas do mesmo
+pipeline.**
 
-R$ 1,26 milhão de diferença entre duas camadas do mesmo pipeline. Um dia alguém
-compara os relatórios e a discussão vira sobre qual sistema está certo.
-
-A devolução ficou **dentro do fato**, com flag e valor negativo:
+A devolução ficou **dentro** do fato, com flag e valor negativo:
 
 ```sql
 SUM(receita)                                  -- R$ 102,3 mi, igual à silver
@@ -159,29 +112,84 @@ SUM(receita) FILTER (WHERE NOT devolucao)     -- R$ 103,6 mi, o bruto vendido
 
 Quem quer cada número tem como pedir, e os dois reconciliam.
 
+### 🧨 A constraint que estava errada
+
+A regra `valor_liquido >= 0` parece óbvia, e **falhou em 135 pedidos**. A
+investigação mostrou que os 135 têm item devolvido: o saldo do pedido virou
+negativo, e é negócio legítimo. A regra errada era a nossa.
+
+É exatamente para isso que a constraint serve — ela transformou uma suposição
+em pergunta **antes** de a suposição virar número no dashboard.
+
 ---
 
-## 📊 O mesmo dashboard, agora sobre a gold
+## 🗂️ O projeto
 
-`dashboard-gold.lvdash.json` responde exatamente as mesmas perguntas do
-dashboard da noite 1 — mas compare o SQL dos datasets:
-
-| | Noite 1 (bronze) | Noite 2 (gold) |
-|---|---|---|
-| Receita | `CAST(valor_total AS DECIMAL(18,2))` | `receita` |
-| Data | `coalesce(try_to_date(...), try_to_date(...))` | `data_pedido` |
-| Margem | `JOIN` de 3 tabelas para achar o custo | `margem` |
-
-```bash
-databricks lakeview create \
-  --display-name "Rota do Perfume · Noite 2 (gold)" \
-  --warehouse-id SEU-WAREHOUSE \
-  --dataset-catalog lakehouse_rotaperfume --dataset-schema gold \
-  --serialized-dashboard "$(cat aulas/aula-02-engenharia-de-dados/dashboard-gold.lvdash.json)" \
-  --json '{"parent_path": "/Workspace/Users/SEU-EMAIL/dashboards"}' --profile SEU-PERFIL
+```
+rotaperfume/
+├── databricks.yml                    o bundle, targets dev e prod
+├── scripts/
+│   ├── criar-catalogo.sh             o catálogo (por SQL — veja abaixo)
+│   └── subir-raw.sh                  os CSVs para o Volume
+├── resources/
+│   ├── catalogo.yml                  schemas e volume como código
+│   ├── pipeline.job.yml              o job de 12 tarefas
+│   ├── dashboard.dashboard.yml       + dashboard-comercial.lvdash.json
+│   └── genie.genie_space.yml         + comercial.geniespace.json
+└── src/
+    ├── raw/conferencia.py            os 10 arquivos chegaram?
+    ├── bronze/ingestao.py            CSV → Delta, sem limpar nada
+    ├── silver/01..04*.sql            a limpeza, com CONSTRAINT
+    └── gold/05..10*.sql              dimensões, fato, marts, testes, views
 ```
 
-É a prova visual do que a camada silver comprou: mesmo resultado, metade do SQL.
+### Como rodar
+
+```bash
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
+bash scripts/criar-catalogo.sh SEU-PERFIL
+databricks bundle deploy --target dev --profile SEU-PERFIL
+bash scripts/subir-raw.sh SEU-PERFIL
+databricks bundle run rotaperfume_pipeline --target dev --profile SEU-PERFIL
+```
+
+### Para zerar e recomeçar
+
+```bash
+bash prd/00-reset.sh SEU-PERFIL          # simula
+bash prd/00-reset.sh SEU-PERFIL --sim    # apaga de verdade
+```
+
+---
+
+## ⚠️ Armadilhas medidas contra o workspace
+
+Estas custaram tempo na preparação. Estão documentadas dentro do prompt onde
+aparecem, com a correção em uma frase.
+
+1. **O bundle não consegue criar catálogo no Free Edition.** Com Default
+   Storage ligado, a API do Unity Catalog pede um `MANAGED LOCATION` que a
+   conta gratuita não tem. Só a UI e o `CREATE CATALOG` em SQL conseguem — por
+   isso existe o `scripts/criar-catalogo.sh`.
+
+2. **`mode: development` prefixa os schemas do UC.** `bronze` viraria
+   `dev_seunome_bronze` e todo o SQL da noite quebraria. O target `dev` não usa
+   `mode`; o agendamento é pausado com `presets: trigger_pause_status: PAUSED`.
+
+3. **`to_date` aborta a query em ANSI mode.** Data malformada levanta
+   `CAST_INVALID_INPUT` em vez de virar `NULL`. Sempre `try_to_date`.
+
+4. **`inferSchema` na bronze apaga evidência.** O CNPJ vira número e some com
+   os 309 zeros à esquerda. A bronze lê tudo como texto, de propósito.
+
+5. **`read_files` injeta `_rescued_data`.** Descarte com
+   `SELECT * EXCEPT (_rescued_data)`. Passar `rescuedDataColumn => ''` cria uma
+   coluna de nome vazio e o `CREATE TABLE` falha.
+
+6. **`databricks fs cp` exige o esquema `dbfs:`**, mesmo para Volumes do UC.
+
+7. **O Genie space exige listas ordenadas e ids de 32 hex** em cada pergunta e
+   instrução. Gere os ids por hash do conteúdo, nunca aleatórios.
 
 ---
 
@@ -190,8 +198,6 @@ databricks lakeview create \
 Na noite 1 a pergunta foi respondida em três ambientes — Claude Web, SQL e
 Genie. Os três **respondem**. O Claude Code é diferente: ele **constrói**.
 
-Por isso ele fica para hoje. Ontem não havia pipeline para escrever; hoje há.
-
 | | Claude Web | SQL | Genie | **Claude Code** |
 |---|---|---|---|---|
 | Escala | ○ | ● | ● | ● |
@@ -199,40 +205,23 @@ Por isso ele fica para hoje. Ontem não havia pipeline para escrever; hoje há.
 | Governado | ○ | ● | ● | ● |
 | **Constrói** | ○ | ○ | ○ | **●** |
 
-### O que mostrar ao vivo
-
-Abra o terminal na raiz do repositório e peça o próximo passo real do projeto:
-
-```bash
-claude
-```
-
-```
-> A silver de clientes está pronta em lakehouse_rotaperfume.silver.clientes.
-> Escreva a silver de pedidos resolvendo os dois formatos de data,
-> rode no warehouse e confira que a receita continua R$ 102.303.828,05.
-```
-
-Três coisas ficam visíveis, e é isso que separa o Claude Code dos outros três:
-
-1. **Ele escreve o arquivo** — `exemplo-02-silver-pedidos.sql` aparece no disco,
-   versionado no Git, não numa janela de chat que some.
-2. **Ele roda** — executa no warehouse e lê o resultado de volta.
-3. **Ele confere** — se a receita não bater, ele vê o erro e corrige, em vez de
-   entregar um número errado com confiança.
+Três coisas ficam visíveis ao vivo, e é isso que o separa dos outros três:
+**ele escreve o arquivo** (versionado no Git, não numa janela de chat que
+some), **ele roda** (executa no workspace e lê o resultado de volta) e **ele
+confere** (se a receita não bater, o teste quebra e ele corrige, em vez de
+entregar um número errado com confiança).
 
 > O Genie responde "qual foi a receita". O Claude Code entrega a tabela que
 > passa a responder isso todo dia, sozinha.
 
-### O aviso honesto
-
-Ele erra igual aos outros quando o dado está bagunçado — a diferença é que o
-erro aparece: a query quebra, o teste falha, e você vê. Foi assim que este
-próprio repositório achou que `to_date` aborta em ANSI mode.
+E ele erra igual aos outros quando o dado está bagunçado. A diferença é que o
+erro **aparece**: a query quebra, o teste falha, e você vê. Foi assim que este
+repositório descobriu que `to_date` aborta em ANSI mode — e que a constraint
+`valor_liquido >= 0` estava errada.
 
 ---
 
 ## ➡️ Amanhã
 
-Com a `gold.fato_vendas` de pé, as três perguntas da diretoria deixam de ser
-consulta e viram modelo: [aula-03](../aula-03-ciencia-de-dados-e-agentes).
+Com a `gold.fato_vendas` de pé e o Genie respondendo sobre dado limpo, as três
+perguntas da diretoria deixam de ser consulta e viram modelo.

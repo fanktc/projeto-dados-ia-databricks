@@ -131,7 +131,7 @@ Todos medidos na execução real, com `seed 42`:
 | Claude Code demora demais | Fale mais. O tempo de espera é seu, não dele. |
 | Código sai errado | Corrija com um segundo prompt curto. Ensina mais que acertar de primeira. |
 | Erro que você não resolve em 2 min | Branch `gabarito`: `git checkout gabarito -- aulas/aula-02-engenharia-de-dados/rotaperfume/` |
-| Precisa começar do zero de novo | `bash prd/00-reset.sh projeto-dados-ia --sim` e recomeça pelo prompt 1 |
+| Precisa começar do zero de novo | `bash prd/00-reset.sh projeto-dados-ia --apagar` e recomeça pelo prompt 1 |
 | Estourou o tempo | Corte o **prompt 5**. Dashboard já foi visto ontem; o 6 é o fechamento. |
 | Cota do Free Edition travou | Plano B em DuckDB — os prompts de silver e gold funcionam quase iguais |
 

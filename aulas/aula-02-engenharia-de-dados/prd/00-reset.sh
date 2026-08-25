@@ -4,8 +4,9 @@
 # Existe por um motivo só: os seis prompts precisam funcionar a partir do nada.
 # Se você não consegue apagar, você não consegue provar que reconstrói.
 #
-# Uso:  bash prd/00-reset.sh <profile> [--sim]
-#       Sem --sim ele só MOSTRA o que faria.
+# Uso:  bash prd/00-reset.sh <profile> [--apagar]
+#       Sem --apagar ele só MOSTRA o que faria. A flag se chama --apagar, e não
+#       --sim, de propósito: ninguém confunde "apagar" com "simular".
 #
 # O que apaga:
 #   1. o deployment do bundle no workspace (jobs, dashboards, Genie space)
@@ -13,7 +14,7 @@
 #   3. a pasta local rotaperfume/, com todo o código dos seis prompts
 set -euo pipefail
 
-PROFILE="${1:?uso: bash prd/00-reset.sh <profile> [--sim]}"
+PROFILE="${1:?uso: bash prd/00-reset.sh <profile> [--apagar]}"
 CONFIRMA="${2:-}"
 CATALOGO="${CATALOGO:-lakehouse_rotaperfume}"
 
@@ -25,9 +26,9 @@ echo "catálogo:  $CATALOGO  (DROP ... CASCADE)"
 echo "bundle:    $BUNDLE    (destroy + rm -rf)"
 echo
 
-if [ "$CONFIRMA" != "--sim" ]; then
+if [ "$CONFIRMA" != "--apagar" ]; then
   echo "Simulação. Nada foi apagado."
-  echo "Para apagar de verdade:  bash prd/00-reset.sh $PROFILE --sim"
+  echo "Para apagar de verdade:  bash prd/00-reset.sh $PROFILE --apagar"
   exit 0
 fi
 

@@ -8,8 +8,8 @@ bastam.
 > para que a resposta a *"e se eu perder tudo?"* seja **nove minutos**.
 
 ```bash
-bash prd/00-reset.sh projeto-dados-ia          # simula, não apaga nada
-bash prd/00-reset.sh projeto-dados-ia --sim    # apaga de verdade
+bash prd/00-reset.sh projeto-dados-ia             # simula, não apaga nada
+bash prd/00-reset.sh projeto-dados-ia --apagar    # apaga de verdade
 ```
 
 ## O que ele apaga
@@ -24,15 +24,19 @@ Depois disso o workspace fica **sem o catálogo da noite 1**. É proposital: os
 seis prompts recriam o catálogo, os três schemas, o volume, as dez tabelas
 bronze, a silver, a gold, os testes, o dashboard e o Genie — do nada.
 
-## Por que ele pede `--sim`
+## Por que ele pede `--apagar`
 
 Sem a flag, ele só imprime o que faria. `DROP CATALOG CASCADE` não tem desfazer,
 e a pior hora para descobrir isso é ao vivo.
 
+A flag se chama **`--apagar`**, e não `--sim`, de propósito: `--sim` fica ao
+lado da palavra "simula" e alguém acaba lendo como *simulate* — rodando o modo
+destrutivo achando que era o seguro.
+
 ## Como usar na preparação da aula
 
 ```bash
-bash prd/00-reset.sh projeto-dados-ia --sim     # zera
+bash prd/00-reset.sh projeto-dados-ia --apagar  # zera
 # ... roda prompt-01 a prompt-06 ...
 git checkout -b gabarito && git add . && git commit -m "gabarito da noite 2"
 ```

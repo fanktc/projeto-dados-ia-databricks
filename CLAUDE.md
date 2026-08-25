@@ -77,8 +77,8 @@ deploy antes do upload (que precisa do Volume existindo).
 Para zerar tudo e recomeçar do nada:
 
 ```bash
-bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil>         # simula
-bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil> --sim   # apaga
+bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil>            # simula
+bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil> --apagar   # apaga
 ```
 
 ### Slides

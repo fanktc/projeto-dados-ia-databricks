@@ -46,18 +46,79 @@ Databricks**.
 > [Databricks + IA: o workflow completo de desenvolvimento com Claude Code (DABs, MCP, AI Dev Kit)](https://www.youtube.com/watch?v=0l-DZkniRSg).
 > Se algum passo aqui não fizer sentido, lá ele está sendo executado ao vivo.
 
+### 📛 Antes de tudo: escolha o nome do seu profile
+
+Todo comando desta aula leva `--profile`. Escolha **um** nome agora e use o
+mesmo do começo ao fim — este README inteiro usa **`jornada`**.
+
+| Nome | Serve? | Por quê |
+|---|---|---|
+| `jornada` | ✅ **o sugerido aqui** | curto, sem espaço, fácil de digitar ao vivo |
+| `jornada-dev`, `rotaperfume` | ✅ | também bons: minúsculo, com hífen, sem acento |
+| `DEFAULT` | ⚠️ | é o profile implícito — usar ele é justamente o que queremos evitar |
+| `Jornada de Dados`, `teste`, `prod` | ❌ | espaço quebra a CLI; `teste` e `prod` você não lembra amanhã qual é qual |
+
+> **Regra da noite: nunca deixe o profile implícito.** É assim que um dia você
+> faz deploy em produção sem querer. Se você escolheu outro nome, troque
+> `jornada` por ele em todos os comandos abaixo — inclusive nos seis prompts
+> em [`prd/`](prd), que vêm com `projeto-dados-ia` no texto.
+
+### ⚡ A cola — a noite inteira em um bloco
+
+Se você já fez isso antes e só quer repetir, é esta sequência. Cada linha está
+explicada em detalhe nos passos de 0 a 7 logo abaixo.
+
+```bash
+# 0 · conferir as ferramentas
+databricks --version && python --version && claude --version && uv --version && gh --version
+
+# 1 · autenticar
+databricks auth login --host https://SEU-WORKSPACE.cloud.databricks.com --profile jornada
+databricks auth profiles
+
+# 2 · criar o projeto
+databricks bundle init --profile jornada
+cd rotaperfume
+
+# 3 · ambiente Python
+uv venv --python 3.12 --seed
+source .venv/bin/activate
+uv sync
+
+# 4 · versionar antes de a IA escrever a primeira linha
+git init && git add . && git commit -m "first commit"
+gh repo create
+
+# 5 · abrir o Claude Code e conferir o MCP (dentro dele: /mcp)
+claude
+
+# 7 · o ciclo de cada prompt: catálogo uma vez, depois validate → deploy → run
+bash scripts/criar-catalogo.sh jornada
+databricks bundle validate --target dev --profile jornada
+databricks bundle deploy   --target dev --profile jornada
+bash scripts/subir-raw.sh  jornada
+databricks bundle run rotaperfume_pipeline --target dev --profile jornada
+```
+
+---
+
 ### 0 · Confira o que já está instalado
 
-```console
-➜  EngenhariaDatabricks git:(main) databricks --version
+```bash
+databricks --version
+python --version
+claude --version
+uv --version
+gh --version
+```
+
+O que tem que aparecer:
+
+```
 Databricks CLI v1.13.0
-➜  EngenhariaDatabricks git:(main) python --version
 Python 3.11.15
-➜  EngenhariaDatabricks git:(main) claude --version
 2.1.245 (Claude Code)
-➜  EngenhariaDatabricks git:(main) uv --version
 uv 0.6.3
-➜  EngenhariaDatabricks git:(main) gh --version
 gh version 2.49.0
 ```
 
@@ -78,43 +139,62 @@ gh version 2.49.0
 
 A tentação é já sair criando o projeto. Ele reclama:
 
-```console
-➜  EngenhariaDatabricks git:(main) databricks bundle init
+```
 Error: error getting token: cache: stored credentials from older CLI versions
 are no longer used; run `databricks auth login` to sign in again, or set
 DATABRICKS_AUTH_STORAGE=plaintext to keep using the file cache
 ```
 
 **Não é bug seu.** A CLI mudou onde guarda credencial: o que estava no cache
-antigo não vale mais. A correção é literalmente o que a mensagem manda:
+antigo não vale mais. A correção é literalmente o que a mensagem manda — e já
+com o nome do profile no comando, sem perguntas:
+
+```bash
+databricks auth login --host https://SEU-WORKSPACE.cloud.databricks.com --profile jornada
+```
+
+O host é a URL que você vê na barra do navegador quando está no workspace
+(`https://dbc-xxxxxxxx.cloud.databricks.com`). Ele abre o navegador, você
+confirma, e o profile fica salvo.
+
+<details>
+<summary>Sem saber o host? Rode <code>databricks auth login</code> puro e responda as perguntas</summary>
 
 ```console
-➜  EngenhariaDatabricks git:(main) databricks auth login
+➜  databricks auth login
 Using profile: + Create a new profile
-Databricks profile name [DEFAULT]: EngenhariaDatabricks
+Databricks profile name [DEFAULT]: jornada
 Opening login.databricks.com in your browser...
-Profile EngenhariaDatabricks was successfully saved
+Profile jornada was successfully saved
 ```
+
+</details>
 
 Confira que ficou válido antes de seguir:
 
-```console
-➜  EngenhariaDatabricks git:(main) databricks auth profiles
-Name                  Host                                            Valid
-EngenhariaDatabricks  https://dbc-xxxxxxxx.cloud.databricks.com       YES
+```bash
+databricks auth profiles
 ```
 
-> **Daqui para frente, sempre passe `--profile`.** Nunca deixe implícito — é
-> assim que um dia você faz deploy em produção sem querer.
+Tem que dizer `YES` na coluna `Valid`:
+
+```
+Name      Host                                          Valid
+jornada   https://dbc-xxxxxxxx.cloud.databricks.com     YES
+```
 
 ---
 
 ### 2 · Criar o projeto
 
-```console
-➜  EngenhariaDatabricks git:(main) databricks bundle init
-Template to use [default-python]: default-python
+```bash
+databricks bundle init --profile jornada
+```
 
+Ele pergunta oito coisas. Responda assim:
+
+```
+Template to use [default-python]: default-python
 Unique name for this project [my_project]: rotaperfume
 Initial language for this project [Python]: Python
 Include a job that runs a notebook [yes]: no
@@ -128,9 +208,12 @@ Use serverless compute [yes]: yes
 
 **Entre no projeto** — todo comando daqui para frente roda de dentro dele:
 
-```console
-➜  EngenhariaDatabricks git:(main) cd rotaperfume
-➜  rotaperfume ls
+```bash
+cd rotaperfume
+ls
+```
+
+```
 AGENTS.md  CLAUDE.md  README.md  databricks.yml  fixtures  pyproject.toml  tests
 ```
 
@@ -140,7 +223,8 @@ AGENTS.md  CLAUDE.md  README.md  databricks.yml  fixtures  pyproject.toml  tests
 Útil quando você já rodou uma vez, ou quando precisa refazer rápido ao vivo.
 Crie um `respostas.json`:
 
-```json
+```bash
+cat > respostas.json <<'JSON'
 {
   "project_name": "rotaperfume",
   "include_job": "no",
@@ -150,14 +234,13 @@ Crie um `respostas.json`:
   "default_catalog": "lakehouse_rotaperfume",
   "personal_schemas": "no, I will customize the schema configuration later in databricks.yml"
 }
+JSON
 ```
 
 E rode:
 
-```console
-➜  EngenhariaDatabricks databricks bundle init default-python \
-     --config-file respostas.json --profile EngenhariaDatabricks
-✨ Your new project has been created in the 'rotaperfume' directory!
+```bash
+databricks bundle init default-python --config-file respostas.json --profile jornada
 ```
 
 > O valor de `personal_schemas` é comprido assim mesmo — a CLI valida contra o
@@ -187,10 +270,10 @@ engenharia de dados.
 
 ### 3 · O ambiente Python
 
-```console
-➜  rotaperfume uv venv --python 3.12 --seed
-➜  rotaperfume source .venv/bin/activate
-➜  rotaperfume uv sync
+```bash
+uv venv --python 3.12 --seed
+source .venv/bin/activate
+uv sync
 ```
 
 O `--seed` já instala o `pip` junto, e evita dor de cabeça depois.
@@ -202,9 +285,9 @@ O `--seed` já instala o `pip` junto, e evita dor de cabeça depois.
 
 ### 4 · Versionar antes de a IA escrever a primeira linha
 
-```console
-➜  rotaperfume git init && git add . && git commit -m "first commit"
-➜  rotaperfume gh repo create
+```bash
+git init && git add . && git commit -m "first commit"
+gh repo create
 ```
 
 Não é burocracia. Se a IA vai escrever código, você precisa de `git diff` para
@@ -227,9 +310,14 @@ pergunta três coisas:
 Claude passa a saber como o Databricks funciona. *MCP* é **ação** — é o que
 conecta de verdade no workspace e executa.
 
-```console
-➜  rotaperfume claude
-> /mcp
+```bash
+claude
+```
+
+E, dentro dele:
+
+```
+/mcp
 ```
 
 Se o MCP não aparecer na lista: **reinicie o Claude Code**. É quase sempre isso.
@@ -263,24 +351,37 @@ o `DROP TABLE` vai. O guard rail existe para esse dia.
 
 ### 7 · Os seis prompts, na ordem
 
-Cada um está num arquivo próprio em [`prd/`](prd). A sequência de comandos é
-sempre a mesma: **prompt → deploy → run → validar**.
+Cada um está num arquivo próprio em [`prd/`](prd). A sequência é sempre a
+mesma: **prompt → validate → deploy → run → validar o número**.
 
-```console
-# uma única vez, antes de tudo: o catálogo
-➜  rotaperfume bash scripts/criar-catalogo.sh SEU-PERFIL
+Uma única vez, antes de tudo — o catálogo:
 
-# a cada prompt
-➜  rotaperfume databricks bundle validate --target dev --profile SEU-PERFIL
-➜  rotaperfume databricks bundle deploy   --target dev --profile SEU-PERFIL
-➜  rotaperfume databricks bundle run rotaperfume_pipeline --target dev --profile SEU-PERFIL
+```bash
+bash scripts/criar-catalogo.sh jornada
 ```
 
-No **prompt 1** entra um passo a mais entre o deploy e o run, porque o Volume
-precisa existir antes de receber arquivo:
+Depois de **cada** prompt, este trio:
 
-```console
-➜  rotaperfume bash scripts/subir-raw.sh SEU-PERFIL
+```bash
+databricks bundle validate --target dev --profile jornada
+databricks bundle deploy   --target dev --profile jornada
+databricks bundle run rotaperfume_pipeline --target dev --profile jornada
+```
+
+No **prompt 1** entra um passo a mais **entre** o deploy e o run, porque o
+Volume precisa existir antes de receber arquivo:
+
+```bash
+databricks bundle validate --target dev --profile jornada
+databricks bundle deploy   --target dev --profile jornada
+bash scripts/subir-raw.sh  jornada
+databricks bundle run rotaperfume_pipeline --target dev --profile jornada
+```
+
+Para abrir o job, o dashboard e o Genie no navegador — os links saem daqui:
+
+```bash
+databricks bundle summary --target dev --profile jornada
 ```
 
 O número que confirma cada passo:
@@ -301,15 +402,16 @@ O número que confirma cada passo:
 
 | Mensagem | O que é | Correção |
 |---|---|---|
-| `stored credentials from older CLI versions` | Cache antigo da CLI | `databricks auth login` |
+| `stored credentials from older CLI versions` | Cache antigo da CLI | `databricks auth login --profile jornada` |
 | `Metastore storage root URL does not exist` | O bundle tentou criar o catálogo pela API | Use `scripts/criar-catalogo.sh` — no Free Edition só SQL cria catálogo |
 | Os schemas viraram `dev_seunome_bronze` | `mode: development` no target | Tire o `mode` e use `presets: trigger_pause_status: PAUSED` |
 | `CAST_INVALID_INPUT` e a query morre | `to_date` em ANSI mode | Sempre `try_to_date` |
-| `Tree node ... does not exist` | A pasta do workspace não existe | `databricks workspace mkdirs <caminho>` |
+| `Tree node ... does not exist` | A pasta do workspace não existe | `databricks workspace mkdirs <caminho> --profile jornada` |
 | `databricks fs cp` reclama do caminho | Faltou o esquema `dbfs:` | O destino é `dbfs:/Volumes/...`, mesmo em Volume do UC |
-| Deploy falha por falta de compute | Você respondeu `no` para serverless | Corrija o `databricks.yml` ou refaça o `bundle init` |
+| Deploy falha por falta de compute | Você respondeu `no` para serverless | Corrija o `databricks.yml` ou refaça o `bundle init --profile jornada` |
 | Biblioteca não instala | Você está no Python 3.13 | Volte para 3.12 |
 | O MCP não aparece | Falta reiniciar | Feche e abra o Claude Code |
+| `Error: cannot resolve profile` ou pede host | Você digitou um `--profile` que não existe | `databricks auth profiles` mostra os que você tem |
 | Cota estourou e o compute não liga | Limite do Free Edition | Espera o reset, ou use o plano B em DuckDB |
 
 ---
@@ -424,19 +526,32 @@ rotaperfume/
 
 ### Como rodar
 
+Do zero, com o projeto já criado. A ordem importa duas vezes: **o catálogo
+antes do deploy** (que cria os schemas) e **o deploy antes do upload** (que
+precisa do Volume existindo).
+
 ```bash
 cd aulas/aula-02-engenharia-de-dados/rotaperfume
-bash scripts/criar-catalogo.sh SEU-PERFIL
-databricks bundle deploy --target dev --profile SEU-PERFIL
-bash scripts/subir-raw.sh SEU-PERFIL
-databricks bundle run rotaperfume_pipeline --target dev --profile SEU-PERFIL
+bash scripts/criar-catalogo.sh jornada
+databricks bundle validate --target dev --profile jornada
+databricks bundle deploy   --target dev --profile jornada
+bash scripts/subir-raw.sh  jornada
+databricks bundle run rotaperfume_pipeline --target dev --profile jornada
+databricks bundle summary  --target dev --profile jornada
 ```
 
 ### Para zerar e recomeçar
 
+O reset roda em seco por padrão. **Ele só apaga com `--apagar`** — a flag se
+chama assim, e não `--sim`, justamente para ninguém confundir "apagar" com
+"simular".
+
 ```bash
-bash prd/00-reset.sh SEU-PERFIL          # simula
-bash prd/00-reset.sh SEU-PERFIL --sim    # apaga de verdade
+# 1 · veja o que ele faria (não apaga nada)
+bash prd/00-reset.sh jornada
+
+# 2 · apaga de verdade: catálogo, bundle e código local
+bash prd/00-reset.sh jornada --apagar
 ```
 
 ---

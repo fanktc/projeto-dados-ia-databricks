@@ -6,6 +6,51 @@ o deploy. **Deploy nº 5.**
 > Conceito que quase ninguém ensina. Ontem eles viram dashboard **clicado**.
 > Hoje veem dashboard **em JSON, no repositório, dentro do bundle**.
 
+---
+
+## O que mostrar antes
+
+Abra o dashboard da noite 1 lado a lado com o editor. São duas comparações, e a
+segunda é a que fica.
+
+**1 · O SQL que o dashboard de ontem precisava — porque lia a bronze**
+
+```sql
+-- receita por mês, na noite 1
+SELECT date_trunc('month', coalesce(try_to_date(data_pedido),
+                                    try_to_date(data_pedido, 'dd/MM/yyyy'))) AS mes,
+       ROUND(SUM(try_cast(valor_total AS DECIMAL(18,2))), 2) AS receita
+FROM lakehouse_rotaperfume.bronze.pedidos
+WHERE status <> 'Cancelado'
+GROUP BY 1 ORDER BY 1;
+```
+
+**2 · O mesmo gráfico, hoje, lendo a gold**
+
+```sql
+SELECT ano, mes, ROUND(SUM(receita), 2) AS receita
+FROM lakehouse_rotaperfume.gold.fato_vendas
+GROUP BY ano, mes ORDER BY ano, mes;
+```
+
+Os dois dão o mesmo total. Um tem dois `try_to_date`, um `try_cast` e uma regra
+de negócio solta no `WHERE`; o outro tem `SUM(receita)`. **Isso é o que a silver
+e a gold compraram** — e é o argumento que convence quem já trabalha com dados.
+
+**3 · E a pergunta que expõe o problema do dashboard clicado**
+
+```bash
+ls aulas/aula-02-engenharia-de-dados/rotaperfume/resources/*.lvdash.json
+# não existe: o dashboard de ontem mora só no workspace
+git log --oneline -- '*dashboard*'      # nada para mostrar
+```
+
+> *"Quem aqui consegue me dizer o que mudou no dashboard da sua empresa na
+> semana passada, e quem mudou? Dashboard clicado não tem diff, não tem revisão
+> e não tem rollback."*
+
+---
+
 **Enquanto ele trabalha, você explica:**
 
 - **Dashboard clicado não tem diff, não tem revisão, não tem rollback.** Se
@@ -78,14 +123,74 @@ Depois me dê o link do dashboard publicado.
 
 ---
 
-## Validar ao vivo
+## Como verificar a feature
 
-Abra o dashboard. Três coisas para mostrar, nessa ordem:
+**1 · Os números do dashboard batem com o número canônico da noite**
 
-1. **É um arquivo no Git.** `git diff` mostra o que mudou no dashboard.
-2. **Clique numa marca** — a tela inteira filtra, porque os widgets dividem o
-   mesmo dataset.
-3. **Aponte a margem por categoria.** Kit Presente na ponta esquerda.
+Antes de olhar para a tela, rode no warehouse a query que está por trás dos
+quatro cartões de KPI:
+
+```sql
+SELECT ROUND(SUM(receita), 2)                        AS receita_total,
+       ROUND(SUM(margem), 2)                         AS margem_total,
+       COUNT(DISTINCT pedido_id)                     AS pedidos,
+       ROUND(SUM(receita) / COUNT(DISTINCT pedido_id), 2) AS ticket_medio
+FROM lakehouse_rotaperfume.gold.fato_vendas;
+-- receita_total = R$ 102.303.828,05 — tem que ser IGUAL ao cartão do dashboard
+```
+
+**Se o cartão mostrar outro número, o widget está errado** — quase sempre um
+filtro esquecido ou um dataset com `WHERE` a mais. É esse o motivo de testar
+toda query antes de montar o JSON.
+
+E a query do gráfico que faz o diretor comercial parar:
+
+```sql
+SELECT categoria,
+       ROUND(SUM(receita)/1e6, 1)                 AS receita_mi,
+       ROUND(100 * SUM(margem) / SUM(receita), 1) AS margem_pct
+FROM lakehouse_rotaperfume.gold.fato_vendas
+GROUP BY categoria ORDER BY margem_pct;     -- Kit Presente 33,0 na ponta esquerda
+```
+
+**2 · O dashboard subiu, e o bundle sabe onde ele está**
+
+```bash
+databricks bundle summary --target dev --profile projeto-dados-ia
+# a saída traz a URL do dashboard publicado — abra a partir dela
+```
+
+**3 · É um arquivo no Git — a demonstração que vale a seção inteira**
+
+```bash
+# mude o título de um widget no JSON e mostre o diff
+git diff -- '*lvdash.json'
+databricks bundle deploy --target dev --profile projeto-dados-ia
+# recarregue o dashboard: o título mudou
+
+git checkout -- '*lvdash.json'
+databricks bundle deploy --target dev --profile projeto-dados-ia
+# e voltou. Isso é rollback de dashboard, em dois comandos.
+```
+
+**4 · Apague o dashboard ao vivo e traga de volta**
+
+Delete o dashboard pela interface, na frente da turma. Depois:
+
+```bash
+databricks bundle deploy --target dev --profile projeto-dados-ia
+```
+
+Ele volta idêntico, com os mesmos widgets e as mesmas cores.
+
+> *"Dashboard clicado, quando alguém apaga, acabou — e normalmente a pessoa que
+> sabia montar já saiu da empresa."*
+
+**5 · O filtro cruzado funciona — a prova de que os widgets dividem o dataset**
+
+Clique numa marca no gráfico de barras: **a tela inteira filtra**, KPIs
+incluídos. Se um widget não acompanhar, ele tem dataset próprio — é o erro que
+está na tabela de sintomas no fim deste prompt.
 
 ---
 

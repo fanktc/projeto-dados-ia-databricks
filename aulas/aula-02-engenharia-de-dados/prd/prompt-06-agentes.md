@@ -7,6 +7,49 @@ configurado e as instruções do agente. **Deploy nº 6 — o último.**
 > Genie direto na bronze e avisou ao vivo: *"pode dar certo e pode dar errado,
 > não fui eu que limpei esses dados"*. Hoje você mostra a diferença.
 
+---
+
+## O que mostrar antes
+
+Três telas, e a terceira é a que explica por que o Genie de ontem errou.
+
+**1 · A gold ainda não fala a língua da diretoria**
+
+```sql
+SHOW VIEWS IN lakehouse_rotaperfume.gold;    -- nenhuma
+SHOW TABLES IN lakehouse_rotaperfume.gold;   -- dim_*, fato_vendas, mart_* — nomes de engenheiro
+```
+
+> *"Ninguém da diretoria pergunta por `mart_produto_performance`. Perguntam
+> 'quais marcas estão vendendo' e 'quem parou de comprar'."*
+
+**2 · Onde o metadado está furado hoje**
+
+```sql
+-- colunas da gold sem COMMENT: é exatamente o que o agente NÃO consegue usar
+SELECT table_name, COUNT(*) AS colunas_sem_comentario
+FROM lakehouse_rotaperfume.information_schema.columns
+WHERE table_schema = 'gold' AND (comment IS NULL OR comment = '')
+GROUP BY table_name ORDER BY 2 DESC;
+
+-- e as tabelas sem COMMENT
+SELECT table_name, comment
+FROM lakehouse_rotaperfume.information_schema.tables
+WHERE table_schema = 'gold' AND (comment IS NULL OR comment = '');
+```
+
+**3 · A pergunta de ontem, ainda na bronze**
+
+Abra o Genie da noite 1 — o que aponta para a bronze — e repita a pergunta:
+
+> *"Quais marcas mais venderam nos últimos 6 meses?"*
+
+Guarde o SQL que ele gerou (o botão *Show generated code*). Você vai comparar
+com o de hoje daqui a vinte minutos, e a diferença é o argumento inteiro da
+noite: **o modelo é o mesmo; o que mudou está embaixo dele.**
+
+---
+
 **Enquanto ele trabalha, você explica:**
 
 - **O que faz o agente funcionar não é o modelo — é o dado.** O mesmo Genie, o
@@ -109,15 +152,109 @@ para consumo por linguagem natural.
 
 ---
 
-## Validar ao vivo — o clímax da noite
+## Como verificar a feature
+
+**1 · A cobertura de metadado é 100% — e isso é verificável, não é promessa**
+
+```sql
+-- tem que voltar VAZIO. Se voltar linha, a tarefa auditoria_de_metadado quebra o job.
+SELECT table_name, column_name
+FROM lakehouse_rotaperfume.information_schema.columns
+WHERE table_schema = 'gold' AND (comment IS NULL OR comment = '')
+ORDER BY table_name, column_name;
+
+-- e o relatório de cobertura, objeto por objeto
+SELECT c.table_name,
+       COUNT(*)                                                        AS colunas,
+       COUNT(*) FILTER (WHERE c.comment IS NOT NULL AND c.comment <> '') AS comentadas,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE c.comment IS NOT NULL AND c.comment <> '') / COUNT(*), 1) AS cobertura_pct
+FROM lakehouse_rotaperfume.information_schema.columns c
+WHERE c.table_schema = 'gold'
+GROUP BY c.table_name ORDER BY cobertura_pct, c.table_name;
+```
+
+**2 · As seis views respondem perguntas, não mostram tabelas**
+
+```sql
+SHOW VIEWS IN lakehouse_rotaperfume.gold;
+
+-- o COMMENT de cada uma é a PERGUNTA que ela responde — é o que o Genie lê
+SELECT table_name, comment
+FROM lakehouse_rotaperfume.information_schema.tables
+WHERE table_schema = 'gold' AND table_type = 'VIEW'
+ORDER BY table_name;
+
+SELECT * FROM lakehouse_rotaperfume.gold.ranking_marcas       LIMIT 5;
+SELECT * FROM lakehouse_rotaperfume.gold.margem_por_categoria ORDER BY 1;
+SELECT * FROM lakehouse_rotaperfume.gold.clientes_em_risco     LIMIT 10;
+SELECT * FROM lakehouse_rotaperfume.gold.receita_mensal        ORDER BY 1;
+```
+
+E a checagem que fecha o arco com a noite inteira: **as views não podem inventar
+número.**
+
+```sql
+SELECT
+  (SELECT ROUND(SUM(receita),2) FROM lakehouse_rotaperfume.gold.fato_vendas)    AS fato,
+  (SELECT ROUND(SUM(receita),2) FROM lakehouse_rotaperfume.gold.receita_mensal) AS view_mensal,
+  (SELECT ROUND(SUM(receita),2) FROM lakehouse_rotaperfume.gold.ranking_marcas) AS view_marcas;
+-- as três colunas: R$ 102.303.828,05
+```
+
+**3 · A auditoria tem dente — quebre de propósito**
+
+```sql
+-- crie uma view sem COMMENT nenhum, de propósito
+CREATE OR REPLACE VIEW lakehouse_rotaperfume.gold._sem_comentario AS SELECT 1 AS x;
+```
+
+```bash
+databricks bundle run rotaperfume_pipeline --target dev --profile projeto-dados-ia
+# a tarefa auditoria_de_metadado FALHA: objeto da gold sem COMMENT
+```
+
+```sql
+DROP VIEW lakehouse_rotaperfume.gold._sem_comentario;   -- e rode de novo: verde
+```
+
+> *"Metadado faltando não é pendência de documentação. É bug — porque a partir
+> de hoje tem um agente lendo esse comentário para decidir qual coluna usar."*
+
+**4 · O pipeline inteiro, com as 12 tarefas**
+
+```bash
+databricks bundle run rotaperfume_pipeline --target dev --profile projeto-dados-ia
+```
+
+Abra o DAG e conte na tela: raw → bronze → silver ×4 → dimensões → fato →
+marts → testes, e em paralelo métricas de negócio → auditoria de metadado.
+
+**5 · O clímax da noite — o mesmo Genie, o mesmo modelo, outro dado**
 
 Faça no Genie a **mesma pergunta de ontem**, agora sobre a gold:
 
 > *"Quais marcas mais venderam nos últimos 6 meses?"*
 
-E depois uma que **só funciona com dado limpo e documentado**:
+Abra o *Show generated code* e coloque lado a lado com o SQL que você guardou
+antes de começar: o de ontem tinha `CAST` e `try_to_date` e lia a bronze; o de
+hoje é um `SELECT` na view. Confira o número na mão:
+
+```sql
+SELECT marca, ROUND(SUM(receita)/1e6, 1) AS receita_mi
+FROM lakehouse_rotaperfume.gold.fato_vendas
+WHERE data_pedido >= add_months(current_date(), -6)
+GROUP BY marca ORDER BY 2 DESC LIMIT 5;
+```
+
+Depois a pergunta que **só funciona com dado limpo e documentado**:
 
 > *"Quais clientes pararam de comprar, e quanta receita a gente perdeu com isso?"*
+
+```sql
+-- o que ele deveria estar lendo para responder
+SELECT COUNT(*) AS clientes_em_risco FROM lakehouse_rotaperfume.gold.clientes_em_risco;
+-- 503 clientes · cerca de R$ 836 mil por mês de receita parada
+```
 
 E a que prova que ele entendeu o negócio:
 
@@ -130,6 +267,17 @@ E a que prova que ele entendeu o negócio:
 > um mês de vale no setor, o que significa que é esperado ter menor receita,
 > não sendo considerado um mês ruim. (…) Esse comportamento é normal, pois o
 > varejo já está abastecido após os picos de vendas anteriores."*
+
+E a query que mostra que ele está certo:
+
+```sql
+SELECT ano, mes, ROUND(SUM(receita)/1e6, 2) AS receita_mi
+FROM lakehouse_rotaperfume.gold.fato_vendas
+WHERE ano = 2025 AND mes IN (10, 11, 12)
+   OR ano = 2026 AND mes = 1
+GROUP BY ano, mes ORDER BY ano, mes;
+-- outubro 7,02 · ... · janeiro 2,46. O vale é do setor, não da empresa.
+```
 
 ---
 

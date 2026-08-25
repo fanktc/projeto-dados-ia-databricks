@@ -7,6 +7,34 @@ Volume e o job `rotaperfume_pipeline` roda com a primeira tarefa. **Deploy nº 1
 > em *Create schema*, três vezes. Hoje o catálogo inteiro são trinta linhas de
 > YAML que sobem em trinta segundos — e sobem iguais na máquina de qualquer um.
 
+---
+
+## O que mostrar antes
+
+Abra o Catalog Explorer na frente da turma **antes de colar o prompt**. Não tem
+nada lá. É esse o ponto de partida, e é o contraste que faz o resto da noite.
+
+```bash
+# 1. o catálogo da noite não existe
+databricks catalogs list --profile projeto-dados-ia | grep rotaperfume || echo 'não existe'
+
+# 2. os 10 CSVs existem, mas só na sua máquina
+ls -1 dados/erp dados/crm
+du -sh dados/                      # ~14,7 MB
+```
+
+```sql
+-- 3. a prova de que não há nada no workspace: o erro que a gente QUER ver agora
+SELECT COUNT(*) FROM lakehouse_rotaperfume.bronze.clientes;
+-- [TABLE_OR_VIEW_NOT_FOUND] · Catalog 'lakehouse_rotaperfume' was not found
+```
+
+**A pergunta para a sala, antes de rodar:** *"ontem vocês criaram catálogo e
+schema clicando. Se esse workspace sumisse agora, quanto tempo levaria para
+refazer tudo — e vocês lembrariam de todos os cliques, na ordem certa?"*
+
+---
+
 **Enquanto ele trabalha, você explica:**
 
 - **Raw não é bronze.** Raw é *arquivo*; bronze é *tabela*. O Volume guarda o CSV
@@ -111,18 +139,82 @@ Não crie a camada bronze ainda. Hoje o dado só chega no Volume.
 
 ---
 
-## Validar ao vivo
+## Como verificar a feature
+
+Cinco verificações, nessa ordem. Cada uma prova uma coisa diferente — e as duas
+últimas são as que a turma lembra na semana seguinte.
+
+**1 · O catálogo inteiro existe, e nasceu de trinta linhas de YAML**
+
+```sql
+SHOW SCHEMAS IN lakehouse_rotaperfume;          -- bronze, silver, gold
+DESCRIBE VOLUME lakehouse_rotaperfume.bronze.raw;
+
+-- e o COMMENT que o YAML declarou, que é o que documenta a camada
+SELECT schema_name, comment
+FROM lakehouse_rotaperfume.information_schema.schemata
+WHERE schema_name IN ('bronze','silver','gold');
+```
+
+**2 · Os 10 arquivos chegaram ao Volume**
+
+```sql
+LIST '/Volumes/lakehouse_rotaperfume/bronze/raw/erp';
+LIST '/Volumes/lakehouse_rotaperfume/bronze/raw/crm';
+```
 
 ```bash
 databricks fs ls dbfs:/Volumes/lakehouse_rotaperfume/bronze/raw/erp --profile projeto-dados-ia
 ```
 
+**3 · A conferência de chegada registrou o que chegou**
+
 ```sql
-SELECT * FROM lakehouse_rotaperfume.bronze._raw_arquivos ORDER BY linhas DESC;
+SELECT sistema, arquivo, bytes, linhas, conferido_em
+FROM lakehouse_rotaperfume.bronze._raw_arquivos
+ORDER BY linhas DESC;
+
+SELECT COUNT(*)                        AS arquivos,
+       SUM(linhas)                     AS linhas_de_dado,
+       ROUND(SUM(bytes)/1024/1024, 1)  AS mb
+FROM lakehouse_rotaperfume.bronze._raw_arquivos;
 ```
 
-**O que tem que aparecer:** 10 arquivos, 14,7 MB no total, 313.551 linhas de
-dado, com `itens_pedido.csv` (197.724) no topo.
+| O que aparece | Valor | Query que mostra |
+|---|---|---|
+| Arquivos conferidos | **10** | `SELECT COUNT(*) FROM bronze._raw_arquivos` |
+| Linhas de dado | **313.551** | `SELECT SUM(linhas) FROM bronze._raw_arquivos` |
+| Tamanho total | **14,7 MB** | `SELECT ROUND(SUM(bytes)/1024/1024,1) FROM bronze._raw_arquivos` |
+| Maior arquivo | **itens_pedido.csv · 197.724** | `... ORDER BY linhas DESC LIMIT 1` |
+
+**4 · A prova de que é código, não clique — apague e traga de volta**
+
+```sql
+DROP SCHEMA lakehouse_rotaperfume.gold;    -- ainda está vazio, é seguro fazer ao vivo
+SHOW SCHEMAS IN lakehouse_rotaperfume;     -- gold sumiu
+```
+
+```bash
+databricks bundle deploy --target dev --profile projeto-dados-ia
+```
+
+```sql
+SHOW SCHEMAS IN lakehouse_rotaperfume;     -- gold voltou idêntico, em segundos
+```
+
+**5 · A prova de que a conferência serve para alguma coisa — quebre de propósito**
+
+```bash
+databricks fs rm dbfs:/Volumes/lakehouse_rotaperfume/bronze/raw/erp/pagamentos.csv \
+  --profile projeto-dados-ia
+databricks bundle run rotaperfume_pipeline --target dev --profile projeto-dados-ia
+# a tarefa raw_conferencia FALHA e o job para: falta pagamentos.csv
+bash scripts/subir-raw.sh projeto-dados-ia     # devolve o arquivo e rode de novo
+```
+
+> Diga isso enquanto o job está vermelho: *"sem essa tarefa, o pipeline seguiria
+> verde, a bronze teria nove tabelas em vez de dez, e o dashboard mostraria um
+> faturamento menor — com cara de número certo."*
 
 ---
 

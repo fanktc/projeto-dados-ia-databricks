@@ -7,6 +7,61 @@ os 9 testes de qualidade que interrompem o job. **Deploy nº 4.**
 > para um consumidor específico**. Se você não sabe quem consome, não está
 > pronto para criar Gold.
 
+---
+
+## O que mostrar antes
+
+A silver está limpa — e mesmo assim a pergunta simples continua cara. É esse o
+argumento da gold, e ele só funciona se a sala VIR a query feia primeiro.
+
+**1 · A gold está vazia**
+
+```sql
+SHOW TABLES IN lakehouse_rotaperfume.gold;   -- nada
+```
+
+**2 · "Receita por marca nos últimos 6 meses" — direto da silver**
+
+```sql
+SELECT pr.marca,
+       ROUND(SUM(i.quantidade * i.preco_praticado), 2) AS receita
+FROM lakehouse_rotaperfume.silver.itens_pedido i
+JOIN lakehouse_rotaperfume.silver.pedidos  p ON p.pedido_id = i.pedido_id
+JOIN lakehouse_rotaperfume.silver.produtos pr ON pr.sku = i.sku
+WHERE NOT p.cancelado
+  AND p.data_pedido >= add_months(current_date(), -6)
+GROUP BY pr.marca
+ORDER BY receita DESC
+LIMIT 5;
+```
+
+**Três `JOIN` e duas regras de negócio escondidas dentro do `WHERE`.** Pergunte
+para a sala: *"quantas pessoas na sua empresa escreveriam esse `WHERE NOT
+p.cancelado`? E quantas esqueceriam?"* Cada esquecimento é um relatório com
+número diferente na mesma reunião.
+
+**3 · A pergunta que ninguém consegue responder ainda**
+
+```sql
+-- "qual é a margem por categoria?" — a silver não sabe: custo está em produtos,
+-- receita está em itens, e a regra de margem não existe em lugar nenhum.
+SELECT pr.categoria,
+       ROUND(SUM(i.quantidade * i.preco_praticado), 2)                        AS receita,
+       ROUND(SUM(i.quantidade * i.preco_praticado - i.quantidade * pr.custo_unitario), 2) AS margem
+FROM lakehouse_rotaperfume.silver.itens_pedido i
+JOIN lakehouse_rotaperfume.silver.pedidos  p  ON p.pedido_id = i.pedido_id
+JOIN lakehouse_rotaperfume.silver.produtos pr ON pr.sku = i.sku
+WHERE NOT p.cancelado
+GROUP BY pr.categoria ORDER BY margem;
+```
+
+> *"Essa regra de margem — receita menos custo, sem frete, sem desconto
+> comercial — acabou de ser inventada por mim, agora, nessa query. Amanhã outra
+> pessoa inventa outra. A gold existe para essa frase ser escrita **uma vez**,
+> numa coluna com COMMENT, e valer para a empresa inteira."*
+
+---
+
 **Enquanto ele trabalha, você explica:**
 
 - **O contrato vem antes do SQL.** Granularidade, dimensões, métricas e filtros
@@ -104,7 +159,9 @@ nunca o teste.
 
 ---
 
-## O momento que fecha o arco da noite 1
+## Como verificar a feature
+
+**1 · A mesma pergunta do "o que mostrar antes", agora em uma linha**
 
 ```sql
 SELECT marca, ROUND(SUM(receita)/1e6, 1) AS receita_mi
@@ -113,8 +170,115 @@ GROUP BY marca ORDER BY 2 DESC LIMIT 5;
 -- Layali 18,6 · ... · Attar Real 5,2
 ```
 
-Compare com o `exemplo-06` de ontem, que precisou de três `JOIN` e dois `CAST`
-para chegar no mesmo número.
+Sem `JOIN`, sem `CAST`, sem lembrar do `WHERE NOT cancelado` — o filtro já está
+dentro do contrato do fato. Compare com o `exemplo-06` de ontem, que precisou de
+três `JOIN` e dois `CAST` para chegar no mesmo número.
+
+**2 · O grão é o que o contrato diz que é: uma linha por item de pedido**
+
+```sql
+SELECT
+  (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.itens_pedido)          AS itens_na_silver,
+  (SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.fato_vendas)             AS linhas_no_fato,
+  (SELECT COUNT(*) FROM lakehouse_rotaperfume.silver.pedidos WHERE cancelado) AS pedidos_cancelados;
+-- 197.724 · 191.080 · 957
+```
+
+A diferença — 6.644 linhas — são exatamente os itens dos 957 pedidos
+cancelados, cerca de sete itens por pedido. **Se o fato tivesse MAIS linhas que
+a silver, algum `JOIN` duplicou linha**, e é o erro mais comum de quem monta
+fato pela primeira vez:
+
+```sql
+SELECT ROUND(COUNT(*) / COUNT(DISTINCT pedido_id), 1) AS itens_por_pedido
+FROM lakehouse_rotaperfume.gold.fato_vendas;   -- ~6,9. Se der 13,8, dobrou.
+```
+
+**3 · Conformado significa que os três marts somam igual**
+
+```sql
+SELECT
+  (SELECT ROUND(SUM(valor_liquido),2) FROM lakehouse_rotaperfume.silver.pedidos)                   AS silver,
+  (SELECT ROUND(SUM(receita),2)       FROM lakehouse_rotaperfume.gold.fato_vendas)                 AS fato,
+  (SELECT ROUND(SUM(receita),2)       FROM lakehouse_rotaperfume.gold.mart_vendas_por_vendedor)    AS mart_comercial,
+  (SELECT ROUND(SUM(receita),2)       FROM lakehouse_rotaperfume.gold.mart_produto_performance)    AS mart_produto;
+-- as quatro colunas: R$ 102.303.828,05
+```
+
+> *"Quatro tabelas diferentes, quatro consumidores diferentes, o mesmo número.
+> É isso que a palavra 'conformado' significa — e é o teste 8."*
+
+### O que tem que aparecer na tela — com a query de cada número
+
+| Número | Valor | Query |
+|---|---|---|
+| Linhas na `fato_vendas` | **191.080** | `SELECT COUNT(*) FROM gold.fato_vendas` |
+| Receita (com devolução) | **R$ 102.303.828,05** | `SELECT ROUND(SUM(receita),2) FROM gold.fato_vendas` |
+| Bruto vendido | **R$ 103.568.586,35** | `SELECT ROUND(SUM(receita) FILTER (WHERE NOT devolucao),2) FROM gold.fato_vendas` |
+| Diferença entre os dois | **R$ 1,26 mi** — a devolução | `SELECT ROUND(SUM(receita) FILTER (WHERE devolucao),2) FROM gold.fato_vendas` |
+| Margem total | **R$ 41.125.619,86 (40,2%)** | `SELECT ROUND(SUM(margem),2), ROUND(100*SUM(margem)/SUM(receita),1) FROM gold.fato_vendas` |
+| Layali, a marca líder | **R$ 18,4 mi líquido · R$ 18,6 mi bruto** | ver query (b) abaixo |
+| Kit Presente | margem **33,0%** — a pior | ver query (c) abaixo |
+| Óleo Concentrado | margem **49,9%** — a melhor | ver query (c) abaixo |
+| Outubro/2025 · Janeiro/2026 | **R$ 7,02 mi · R$ 2,46 mi** | ver query (d) abaixo |
+
+```sql
+-- (a) os quatro primeiros números de uma vez
+SELECT
+  COUNT(*)                                                    AS linhas,
+  ROUND(SUM(receita), 2)                                      AS receita_liquida,
+  ROUND(SUM(receita) FILTER (WHERE NOT devolucao), 2)         AS bruto_vendido,
+  ROUND(SUM(receita) FILTER (WHERE devolucao), 2)             AS devolucoes,
+  ROUND(SUM(margem), 2)                                       AS margem,
+  ROUND(100 * SUM(margem) / SUM(receita), 1)                  AS margem_pct
+FROM lakehouse_rotaperfume.gold.fato_vendas;
+```
+
+```sql
+-- (b) a marca líder, líquido e bruto lado a lado
+SELECT marca,
+       ROUND(SUM(receita)/1e6, 1)                             AS liquido_mi,
+       ROUND(SUM(receita) FILTER (WHERE NOT devolucao)/1e6, 1) AS bruto_mi
+FROM lakehouse_rotaperfume.gold.fato_vendas
+GROUP BY marca ORDER BY liquido_mi DESC LIMIT 3;
+-- Layali: 18,4 líquido · 18,6 bruto
+```
+
+```sql
+-- (c) a melhor e a pior categoria por margem — o gráfico do prompt 5
+SELECT categoria,
+       ROUND(SUM(receita)/1e6, 1)                 AS receita_mi,
+       ROUND(100 * SUM(margem) / SUM(receita), 1) AS margem_pct
+FROM lakehouse_rotaperfume.gold.fato_vendas
+GROUP BY categoria ORDER BY margem_pct;
+-- Kit Presente 33,0 na ponta de baixo · Óleo Concentrado 49,9 na de cima
+```
+
+```sql
+-- (d) o pico e o vale — a sazonalidade invertida do setor
+SELECT ano, mes, ROUND(SUM(receita)/1e6, 2) AS receita_mi
+FROM lakehouse_rotaperfume.gold.fato_vendas
+WHERE (ano = 2025 AND mes = 10) OR (ano = 2026 AND mes = 1)
+GROUP BY ano, mes ORDER BY ano, mes;
+-- outubro/2025: 7,02   ·   janeiro/2026: 2,46
+```
+
+**4 · A prova de que os testes têm dente — quebre um de propósito**
+
+```sql
+-- o mecanismo, isolado: raise_error dentro de CASE WHEN interrompe a tarefa
+SELECT CASE WHEN 1 = 1 THEN 'PASSOU'
+            ELSE raise_error('receita da gold diferente da silver') END AS teste_1;
+-- troque 1 = 1 por 1 = 0 e rode de novo:
+-- [USER_RAISED_EXCEPTION] receita da gold diferente da silver
+```
+
+Rode o job com a versão que falha e mostre o DAG: a tarefa `testes` fica
+vermelha, e **nada depois dela roda**.
+
+> *"O dashboard vai ficar com o dado de ontem. É de longe o melhor dos dois
+> cenários ruins — o outro é ele ficar com o dado errado de hoje, e ninguém
+> perceber até a reunião de segunda."*
 
 ---
 
@@ -131,25 +295,6 @@ para chegar no mesmo número.
 > o dado de ontem. Que é infinitamente melhor do que ficar com o dado errado
 > de hoje."*
 
-
----
-
-## O que tem que aparecer na tela
-
-| Número | Valor |
-|---|---|
-| Linhas na `fato_vendas` | **191.080** |
-| Receita (com devolução) | **R$ 102.303.828,05** — igual à silver |
-| Bruto vendido (`FILTER (WHERE NOT devolucao)`) | R$ 103.568.586,35 |
-| Diferença entre os dois | R$ 1,26 mi — a devolução |
-| Margem total | R$ 41.125.619,86 (40,2%) |
-| Layali (marca líder) | R$ 18,4 mi líquido · R$ 18,6 mi bruto |
-| Kit Presente | margem 33,0% — a pior |
-| Óleo Concentrado | margem 49,9% — a melhor |
-| Outubro/2025 · Janeiro/2026 | R$ 7,02 mi · R$ 2,46 mi |
-
-Os três marts e o fato somam **exatamente o mesmo** R$ 102.303.828,05. É isso
-que a palavra "conformado" significa, e é o teste 8.
 
 ---
 

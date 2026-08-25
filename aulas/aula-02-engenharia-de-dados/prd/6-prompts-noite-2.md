@@ -99,7 +99,8 @@ Todos medidos na execução real, com `seed 42`:
 | Um prompt por entrega | O aluno vê começo, meio e fim |
 | Fale enquanto ele trabalha | O tempo de espera vira aula |
 | Abra o DAG depois de cada deploy | É a tela que conta a história da noite |
-| Valide toda entrega antes de seguir | O prompt seguinte depende do anterior |
+| Abra **"O que mostrar antes"** antes de colar o prompt | O contraste é o que faz a entrega valer — sem o problema na tela, a solução não impressiona |
+| Feche com **"Como verificar a feature"** | O prompt seguinte depende do anterior, e a sala precisa ver o número, não ouvir que deu certo |
 | Não corrija tudo ao vivo | Se der ruim, ajuste num segundo prompt curto — isso ensina mais |
 
 **Orçamento:** ~9 minutos por prompt, dos quais 5 a 6 são de fala sua.

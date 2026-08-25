@@ -6,6 +6,49 @@ tarefa no job. **Deploy nº 2.**
 > **A resposta direta à noite de ontem.** Eles subiram tabela por tabela na
 > interface, uma de cada vez. Hoje é uma função e uma lista.
 
+---
+
+## O que mostrar antes
+
+Duas telas, e a segunda é a que vende a decisão da bronze.
+
+**1 · A bronze está vazia. Só existe o controle de chegada.**
+
+```sql
+SHOW TABLES IN lakehouse_rotaperfume.bronze;
+-- só _raw_arquivos, do prompt 1. Nenhuma tabela de dado ainda.
+```
+
+**2 · O que acontece se você deixar o Spark adivinhar o tipo**
+
+Rode as duas leituras do MESMO arquivo, uma ao lado da outra:
+
+```sql
+-- (a) tudo texto, que é como a bronze vai guardar
+SELECT cliente_id, cnpj, data_cadastro
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/clientes.csv',
+                format => 'csv', header => true)
+WHERE cnpj LIKE '0%' LIMIT 5;
+
+-- (b) o mesmo arquivo com inferência de tipo ligada
+SELECT typeof(cnpj) AS tipo_do_cnpj, cliente_id, cnpj, data_cadastro
+FROM read_files('/Volumes/lakehouse_rotaperfume/bronze/raw/crm/clientes.csv',
+                format => 'csv', header => true, inferColumnTypes => true)
+WHERE cliente_id IN (SELECT cliente_id FROM read_files(
+        '/Volumes/lakehouse_rotaperfume/bronze/raw/crm/clientes.csv',
+        format => 'csv', header => true) WHERE cnpj LIKE '0%')
+LIMIT 5;
+```
+
+Em (b) o CNPJ virou número e **perdeu o zero da frente**. São 309 clientes cujo
+documento fica errado para sempre — e ninguém recebe erro nenhum. Essa é a
+justificativa inteira do `inferColumnTypes => false` do prompt.
+
+**A pergunta para a sala:** *"quem aqui já viu CNPJ ou CEP virar número numa
+planilha? E quem descobriu isso no mesmo dia?"*
+
+---
+
 **Enquanto ele trabalha, você explica:**
 
 - **Por que a bronze preserva a sujeira.** Se o Spark adivinhar o tipo, ele
@@ -62,7 +105,73 @@ Não limpe nada. A sujeira é o conteúdo do próximo prompt.
 
 ---
 
-## Validar ao vivo
+## Como verificar a feature
+
+**1 · As 10 tabelas existem, e a contagem bate com o arquivo de origem**
+
+```sql
+SHOW TABLES IN lakehouse_rotaperfume.bronze;   -- 10 + _raw_arquivos
+
+WITH contagem AS (
+  SELECT 'produtos'     AS tabela, COUNT(*) AS linhas FROM lakehouse_rotaperfume.bronze.produtos
+  UNION ALL SELECT 'pedidos',      COUNT(*) FROM lakehouse_rotaperfume.bronze.pedidos
+  UNION ALL SELECT 'itens_pedido', COUNT(*) FROM lakehouse_rotaperfume.bronze.itens_pedido
+  UNION ALL SELECT 'pagamentos',   COUNT(*) FROM lakehouse_rotaperfume.bronze.pagamentos
+  UNION ALL SELECT 'estoque',      COUNT(*) FROM lakehouse_rotaperfume.bronze.estoque
+  UNION ALL SELECT 'clientes',     COUNT(*) FROM lakehouse_rotaperfume.bronze.clientes
+  UNION ALL SELECT 'vendedores',   COUNT(*) FROM lakehouse_rotaperfume.bronze.vendedores
+  UNION ALL SELECT 'carteira',     COUNT(*) FROM lakehouse_rotaperfume.bronze.carteira
+  UNION ALL SELECT 'oportunidades',COUNT(*) FROM lakehouse_rotaperfume.bronze.oportunidades
+  UNION ALL SELECT 'visitas',      COUNT(*) FROM lakehouse_rotaperfume.bronze.visitas
+)
+SELECT c.tabela, c.linhas AS na_tabela, r.linhas AS no_arquivo,
+       c.linhas = r.linhas AS bate
+FROM contagem c
+JOIN lakehouse_rotaperfume.bronze._raw_arquivos r ON r.arquivo = c.tabela || '.csv'
+ORDER BY c.linhas DESC;
+```
+
+**Coluna `bate` tem que ser `true` nas 10 linhas.** O total é 313.551 — o mesmo
+número do prompt 1. Se uma linha der `false`, o CSV foi lido errado (quase
+sempre `multiLine` ligado ou separador trocado), e é melhor descobrir agora.
+
+**2 · Tudo entrou como texto — de propósito**
+
+```sql
+DESCRIBE TABLE lakehouse_rotaperfume.bronze.pedidos;
+-- todas as colunas de negócio em STRING; só _ingerido_em é TIMESTAMP
+```
+
+**3 · O metadado técnico responde "de onde veio" e "quando entrou"**
+
+```sql
+SELECT _arquivo_origem, MIN(_ingerido_em) AS ingerido_em, COUNT(*) AS linhas
+FROM lakehouse_rotaperfume.bronze.itens_pedido
+GROUP BY _arquivo_origem;
+```
+
+**4 · A sujeira foi PRESERVADA — e é a deixa literal do prompt 3**
+
+```sql
+SELECT
+  COUNT(*)                                                          AS clientes,
+  COUNT(*) FILTER (WHERE cnpj LIKE '%.%')                           AS cnpj_pontuado,
+  COUNT(*) FILTER (WHERE cnpj <> trim(cnpj))                        AS cnpj_com_espaco,
+  COUNT(*) FILTER (WHERE regexp_replace(trim(cnpj),'[^0-9]','') LIKE '0%') AS cnpj_zero_a_esquerda,
+  COUNT(*) FILTER (WHERE data_cadastro LIKE '%/%')                  AS data_formato_br,
+  COUNT(*) FILTER (WHERE razao_social = upper(razao_social))        AS razao_caixa_alta
+FROM lakehouse_rotaperfume.bronze.clientes;
+```
+
+| O que aparece | Valor | Onde isso é resolvido |
+|---|---|---|
+| Clientes na bronze | **3.040** | prompt 3 · dedup → 3.000 |
+| CNPJ pontuado | **1.111** | prompt 3 · `regexp_replace` |
+| CNPJ com espaço | **223** | prompt 3 · `trim` |
+| CNPJ com zero à esquerda | **309** | prompt 3 · `lpad`, e nunca CAST para número |
+| Data em dd/MM/yyyy | 12% da tabela | prompt 3 · `try_to_date` duplo |
+
+E a tela que abre o próximo prompt:
 
 ```sql
 SELECT cliente_id, cnpj, razao_social, data_cadastro
@@ -72,7 +181,29 @@ LIMIT 10;
 ```
 
 **Aponte na tela:** o CNPJ em três formatos e a razão social em CAIXA ALTA.
-É a deixa literal para o prompt 3.
+
+**5 · A prova de que a bronze não conserta nada — o erro de propósito**
+
+```sql
+-- "me dá os cinco maiores pedidos" — direto da bronze
+SELECT pedido_id, valor_total
+FROM lakehouse_rotaperfume.bronze.pedidos
+ORDER BY valor_total DESC
+LIMIT 5;
+-- o "maior" pedido é o que COMEÇA com 9: valor_total é texto, e texto
+-- ordena em ordem alfabética: '987.50' vem antes de '10240.00'.
+
+-- e a mesma pergunta com a conversão que a silver vai fazer amanhã
+SELECT pedido_id, CAST(valor_total AS DECIMAL(18,2)) AS valor
+FROM lakehouse_rotaperfume.bronze.pedidos
+ORDER BY valor DESC
+LIMIT 5;
+```
+
+> *"As duas listas são diferentes, e nenhuma das duas deu erro. Isso não é
+> limitação da bronze, é o contrato dela: ela responde 'o que o ERP mandou'.
+> Quem responde 'quanto a gente vendeu' é a próxima camada — e é lá que a
+> conversão fica escrita uma vez, para todo mundo."*
 
 ---
 

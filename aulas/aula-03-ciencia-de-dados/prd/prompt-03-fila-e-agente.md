@@ -192,6 +192,13 @@ a tarefa sozinha 35s.
 
 ## Como rodar, e por que NÃO o job inteiro
 
+> **⚠️ Se a tarefa falhar com `Unable to access the notebook`:** a pasta
+> `src/ml/` está no `.gitignore` (para nascer vazia toda vez) e **o bundle
+> respeita o `.gitignore` ao sincronizar**. O `databricks.yml` já traz o
+> `sync.include` que resolve isso — se alguém apagar esse bloco, o notebook
+> nunca chega ao workspace, e a mensagem de erro não menciona gitignore
+> nenhum.
+
 ```bash
 bash scripts/rodar-tarefa.sh <perfil> ml_fila
 ```

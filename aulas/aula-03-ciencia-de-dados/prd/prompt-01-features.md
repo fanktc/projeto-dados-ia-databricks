@@ -213,6 +213,13 @@ DUAS ARMADILHAS MEDIDAS — as duas quebraram na preparação:
 
 ## Como rodar, e por que NÃO o job inteiro
 
+> **⚠️ Se a tarefa falhar com `Unable to access the notebook`:** a pasta
+> `src/ml/` está no `.gitignore` (para nascer vazia toda vez) e **o bundle
+> respeita o `.gitignore` ao sincronizar**. O `databricks.yml` já traz o
+> `sync.include` que resolve isso — se alguém apagar esse bloco, o notebook
+> nunca chega ao workspace, e a mensagem de erro não menciona gitignore
+> nenhum.
+
 ```bash
 bash scripts/rodar-tarefa.sh <perfil> ml_features
 ```
@@ -292,6 +299,7 @@ negativa é a assinatura do vazamento** — é o que o notebook
 
 | Sintoma | Causa | Saída |
 |---|---|---|
+| `Unable to access the notebook .../src/ml/11-features` | o bundle não sincronizou a pasta: ela está no `.gitignore` | o `sync.include` do `databricks.yml` resolve. **Aconteceu no ensaio** |
 | `NameError: name 'montar_features' is not defined` | a função ficou dentro de uma célula que começa com `%md` | falta um `# COMMAND ----------` entre o markdown e o código. **Aconteceu no ensaio** |
 | O topo da fila é só cliente de um pedido só | `F.least()` ignora nulo e devolve o teto | `when(intervalo_medio_dias IS NOT NULL)` em volta. **Eram 80 clientes de 128 no teto** |
 | `Object of type Decimal is not JSON serializable` | soma de receita veio `DECIMAL(18,2)` | `.cast("double")` em todas as features numéricas |

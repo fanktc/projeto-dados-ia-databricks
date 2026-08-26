@@ -116,5 +116,6 @@ FROM lakehouse_rotaperfume.gold.features_treino;
 | A auditoria de metadado quebrou o job | **é o teste da noite 2 funcionando.** Mostre, peça o `COMMENT` e rode de novo |
 | Alguma feature veio de `dim_cliente` | é vazamento — ela agrega a base inteira, sem corte. **Mostre ao vivo:** é o slide 29 (vazamento) acontecendo antes da hora |
 | A recência mínima veio negativa | um filtro `< referencia` escapou. Mesmo caso acima, e vale ouro |
+| `Unable to access the notebook` | o bundle não subiu `src/ml/` — ela está no `.gitignore`. O `sync.include` do `databricks.yml` é o que resolve |
 | `NameError: montar_features is not defined` | a função caiu dentro de uma célula `%md`. Falta `# COMMAND ----------` |
 | O topo por `atraso_relativo` só tem cliente de um pedido | `F.least()` ignora nulo e devolve o teto. Precisa de `when(intervalo IS NOT NULL)` |

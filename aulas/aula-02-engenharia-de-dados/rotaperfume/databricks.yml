@@ -15,6 +15,16 @@ include:
 
 # Catálogo e warehouse ficam em variável para que o mesmo código rode em dev e
 # em prod sem uma linha editada. É o mínimo que separa "script" de "projeto".
+# src/ml/ está no .gitignore de propósito: a pasta nasce vazia toda vez, para
+# que os três prompts da noite 3 tenham o que construir ao vivo.
+#
+# Só que o bundle RESPEITA o .gitignore ao sincronizar — sem este sync.include,
+# o notebook nunca chega ao workspace e a tarefa falha com "Unable to access
+# the notebook", que não diz nada sobre gitignore.
+sync:
+  include:
+    - src/ml/**
+
 variables:
   catalog:
     description: Catálogo do Unity Catalog onde as três camadas moram

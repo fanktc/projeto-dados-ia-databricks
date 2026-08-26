@@ -25,10 +25,22 @@ echo "job $JOB_ID · rodando só a tarefa $TAREFA"
 echo
 
 # A CLI não tem flag para isto, mas a API de jobs aceita o campo `only`.
-databricks jobs run-now \
-  --json "{\"job_id\": $JOB_ID, \"only\": [\"$TAREFA\"]}" \
-  --profile "$PROFILE" -o json \
-  | python3 -c "
+# A saída vai para arquivo: quando a tarefa falha, a CLI escreve o erro em
+# texto e sai com código != 0 — e o parser de JSON estouraria em cima disso,
+# escondendo a mensagem que interessa.
+SAIDA=$(mktemp)
+if ! databricks jobs run-now \
+     --json "{\"job_id\": $JOB_ID, \"only\": [\"$TAREFA\"]}" \
+     --profile "$PROFILE" -o json > "$SAIDA" 2>&1; then
+  echo "A TAREFA FALHOU:"
+  echo
+  grep -iE "error|failed|exception|unable" "$SAIDA" | head -5 || tail -5 "$SAIDA"
+  echo
+  echo "Saída completa em: $SAIDA"
+  exit 1
+fi
+
+python3 -c "
 import sys, json
 r = json.load(sys.stdin)
 estado = r.get('state', {})
@@ -37,4 +49,4 @@ for t in r.get('tasks', []):
     s = t.get('state', {})
     print(f\"  {t['task_key']}: {s.get('result_state', s.get('life_cycle_state','?'))}\")
     if s.get('state_message'): print('   ', s['state_message'][:200])
-"
+" < "$SAIDA"

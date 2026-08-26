@@ -148,3 +148,17 @@ resources:
             warehouse_id: ${var.warehouse_id}
             file:
               path: ../src/gold/10-auditoria-metadado.sql
+
+        # ── 7. ML: o pipeline para de contar o passado ────────────────
+        # A noite 3 entra aqui, no MESMO job. Não é projeto à parte: é mais uma
+        # camada, com os mesmos testes que quebram e a mesma auditoria.
+        #
+        # ml_features vem DEPOIS de testes_de_qualidade de propósito — não se
+        # treina modelo sobre dado que ainda não passou na conferência.
+        - task_key: ml_features
+          depends_on: [{ task_key: testes_de_qualidade }]
+          notebook_task:
+            notebook_path: ../src/ml/11-features.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+

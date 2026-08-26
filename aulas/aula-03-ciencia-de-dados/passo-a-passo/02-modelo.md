@@ -61,7 +61,18 @@ Slides **24 a 37**, nesta ordem:
 
 ---
 
-## 4 · Quando terminar: onde clicar
+## 4 · Rode só a tarefa (35s, não 3m30)
+
+```bash
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
+bash scripts/rodar-tarefa.sh <perfil> ml_modelo
+```
+
+O job completo fica para o fim da noite, quando você vai mostrar o DAG inteiro.
+
+---
+
+## 5 · Quando terminar: onde clicar
 
 - [ ] **Leia a saída da tarefa em voz alta** — o baseline está impresso lá.
       É o momento da noite: *"ligue para quem sumiu" deu abaixo de 0,50.*
@@ -75,7 +86,7 @@ Slides **24 a 37**, nesta ordem:
 
 ---
 
-## 5 · A query que prova
+## 6 · A query que prova
 
 ```sql
 -- 1. A RESPOSTA DO DIRETOR, em uma linha
@@ -98,7 +109,7 @@ score ordena — e ninguém precisa saber o que é curva ROC para conferir.
 
 ---
 
-## 6 · Quebre um teste de propósito (2 min, vale a noite)
+## 7 · Quebre um teste de propósito (2 min, vale a noite)
 
 Mostre a linha no código:
 
@@ -117,7 +128,7 @@ dois modelos idênticos, um com o filtro de data e outro sem. **~0,867 contra
 
 ---
 
-## 7 · Emenda para o próximo
+## 8 · Emenda para o próximo
 
 > *"Cliente 1847, score 0,8412. O vendedor não faz nada com isso. Falta o
 > último metro."*

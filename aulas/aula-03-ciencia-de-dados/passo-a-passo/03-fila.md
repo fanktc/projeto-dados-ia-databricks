@@ -55,7 +55,18 @@ Slides **39 a 42**:
 
 ---
 
-## 4 · Quando terminar: onde clicar
+## 4 · Rode só a tarefa (35s, não 3m30)
+
+```bash
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
+bash scripts/rodar-tarefa.sh <perfil> ml_fila
+```
+
+O job completo fica para o fim da noite, quando você vai mostrar o DAG inteiro.
+
+---
+
+## 5 · Quando terminar: onde clicar
 
 - [ ] **Catalog** → `gold` → `fila_semanal` → **Sample data**
 - [ ] Ainda em `gold`, role até **Functions**: as quatro estão lá,
@@ -67,7 +78,7 @@ Slides **39 a 42**:
 
 ---
 
-## 5 · A query que prova
+## 6 · A query que prova
 
 ```sql
 -- 1. A LISTA. É o slide 42 saindo do banco.
@@ -91,7 +102,7 @@ SELECT * FROM lakehouse_rotaperfume.gold.priorizar_carteira('<nome do vendedor>'
 
 ---
 
-## 6 · O agente, no Genie (5 min)
+## 7 · O agente, no Genie (5 min)
 
 Abra o Genie e pergunte **com as palavras do vendedor**:
 
@@ -103,7 +114,7 @@ resposta tem query embaixo.
 
 ---
 
-## 7 · O fechamento
+## 8 · O fechamento
 
 Slides **43 a 45**: o antes e o depois, o arco das três noites, a frase.
 

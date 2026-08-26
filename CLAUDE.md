@@ -81,6 +81,16 @@ databricks bundle run rotaperfume_pipeline --target dev --profile <perfil>
 A ordem importa duas vezes: o catálogo antes do deploy (que cria os schemas), e o
 deploy antes do upload (que precisa do Volume existindo).
 
+Para testar UMA tarefa sem rodar o job inteiro (3m30 → 35s):
+
+```bash
+bash scripts/rodar-tarefa.sh <perfil> ml_features
+```
+
+Cada tarefa serverless paga o próprio tempo de partida, e o job inteiro paga
+treze vezes. **É o padrão do projeto ao vivo:** rode a tarefa enquanto
+constrói, e o `bundle run` completo só no fim, para mostrar o DAG verde.
+
 Para zerar tudo e recomeçar do nada:
 
 ```bash

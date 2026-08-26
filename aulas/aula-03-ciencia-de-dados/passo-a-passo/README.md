@@ -46,12 +46,17 @@ O mesmo três vezes. Se decorar isto, não precisa olhar mais nada:
 1. **Mostre o problema** — uma query que não responde a pergunta
 2. **Cole o prompt** no Claude Code
 3. **Fale enquanto ele trabalha** — os slides do bloco existem para isso
-4. **Abra o DAG** quando o deploy terminar
+4. **Rode só a tarefa nova** — `bash scripts/rodar-tarefa.sh <perfil> <tarefa>`,
+   35s. O job inteiro leva 3m30 e você não precisa dele para testar
 5. **Rode a query que prova** o número
 6. **Diga o que vem no próximo** e emende
 
 > **A regra que não muda:** nunca rode o prompt seguinte sem ter mostrado o
 > número do anterior na tela. É o número que segura a atenção, não o código.
+
+> **A segunda regra:** o `bundle run` do pipeline completo é para o **fim** —
+> uma vez, para mostrar o DAG verde. Usar ele como forma de testar custa 3m30
+> por tentativa, e são três prompts.
 
 ---
 

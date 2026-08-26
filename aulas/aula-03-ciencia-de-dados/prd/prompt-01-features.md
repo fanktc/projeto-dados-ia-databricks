@@ -154,6 +154,7 @@ razao_social, canal, categoria e marca — não precisa de join para isso:
   Mix
     skus_distintos          = count(distinct sku)
     categorias_distintas    = count(distinct categoria)
+    marcas_distintas        = count(distinct marca)
     concentracao_marca_top  = receita da marca top / nullif(valor_total, 0)
     comprou_lancamento      = 1 se comprou algum SKU cuja data_lancamento
                               (de gold.dim_produto) esteja nos 120 dias
@@ -176,6 +177,16 @@ TODAS as features numéricas, senão o registro do modelo quebra depois com
 Cliente sem oportunidade ou sem visita fica com 0, não com NULL — só as
 features de ritmo podem ser NULL, para cliente com um pedido só.
 
+CUIDADO com o teto do atraso_relativo: F.least() no Spark IGNORA nulo e
+devolve o menor dos não-nulos. Escrito direto, os clientes de um pedido só —
+que não têm intervalo — recebem 10, o teto, e vão para o TOPO da fila.
+Envolva num when(intervalo_medio_dias IS NOT NULL AND > 0).
+
+CUIDADO com as células do notebook: uma célula que começa com # MAGIC %md é
+markdown INTEIRA. Se a função vier logo abaixo do bloco de markdown, sem um
+# COMMAND ---------- entre os dois, ela nunca é definida e a tarefa morre com
+NameError.
+
 Nada de current_date() em lugar nenhum: o "hoje" deste dataset é 2026-08-31.
 
 Toda tabela e toda coluna com COMMENT em português — a auditoria de metadado
@@ -184,7 +195,32 @@ da noite 2 quebra o job se faltar.
 Depois registre a tarefa ml_features em resources/pipeline.job.yml, rodando
 depois de testes_de_qualidade — modelo não se treina com dado que ainda não
 passou nos testes — e faça o deploy.
+
+NÃO rode o job inteiro para testar: rode só a tarefa nova, com
+bash scripts/rodar-tarefa.sh <perfil> ml_features — o job completo leva 3m30 e
+a tarefa sozinha 35s.
 ```
+
+
+---
+
+## Como rodar, e por que NÃO o job inteiro
+
+```bash
+bash scripts/rodar-tarefa.sh <perfil> ml_features
+```
+
+| | Tempo |
+|---|---|
+| `bundle run rotaperfume_pipeline` — as 13 tarefas | **~3m30** |
+| só a tarefa nova | **~35s** |
+
+Cada tarefa serverless paga o próprio tempo de partida, e o job inteiro paga
+treze vezes. **Ao vivo, é a diferença entre a sala esperar três minutos e meio
+a cada tentativa, ou trinta segundos.**
+
+O job completo continua valendo — **uma vez, no fim**, quando a tarefa já
+funciona e você quer mostrar o DAG inteiro verde. Não como forma de testar.
 
 ---
 
@@ -200,7 +236,7 @@ SELECT '_cliente', COUNT(*), MIN(_referencia)
 FROM lakehouse_rotaperfume.gold.features_cliente;
 ```
 
-2.809 e 2.810 clientes, com `2026-08-01` e `2026-08-31`
+2.815 e 2.816 clientes, com `2026-08-01` e `2026-08-31`
 declarados na própria linha. **A data de corte não é comentário no código: é
 coluna na tabela.**
 
@@ -213,8 +249,8 @@ SELECT COUNT(*)                                   AS clientes,
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**Tem que dar 2.809 clientes e taxa base de 10,11%** — conferido no workspace
-hoje. Ou seja, **20 de cada 200 ligações às cegas viram pedido.**
+**Tem que dar 2.815 clientes e taxa base de 10,12%** — rodado de ponta a
+ponta no workspace. Ou seja, **20 de cada 200 ligações às cegas viram pedido.**
 
 > **Anote os dois números no quadro.** É o "20" do slide *Não é acurácia*, e todo o prompt 2 é
 > a tentativa de superá-lo.
@@ -249,6 +285,8 @@ negativa é a assinatura do vazamento** — é o que o notebook
 
 | Sintoma | Causa | Saída |
 |---|---|---|
+| `NameError: name 'montar_features' is not defined` | a função ficou dentro de uma célula que começa com `%md` | falta um `# COMMAND ----------` entre o markdown e o código. **Aconteceu no ensaio** |
+| O topo da fila é só cliente de um pedido só | `F.least()` ignora nulo e devolve o teto | `when(intervalo_medio_dias IS NOT NULL)` em volta. **Eram 80 clientes de 128 no teto** |
 | `Object of type Decimal is not JSON serializable` | soma de receita veio `DECIMAL(18,2)` | `.cast("double")` em todas as features numéricas |
 | `atraso_relativo` com valores absurdos (10.000) | cliente com um pedido só: intervalo 0 | `NULLIF` no denominador e teto em 10 |
 | A auditoria de metadado quebrou o job | faltou `COMMENT` em coluna nova | é o teste da noite 2 funcionando — peça o comentário e rode de novo |

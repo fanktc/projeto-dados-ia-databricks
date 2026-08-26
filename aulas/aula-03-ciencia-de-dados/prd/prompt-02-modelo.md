@@ -21,8 +21,8 @@ usa já existe** — nenhuma fonte precisa ser criada antes:
 
 | Tabela | O que este prompt lê dela |
 |---|---|
-| `gold.features_treino` | 2.809 clientes, alvo `comprou_em_7d`, taxa base 10,11% |
-| `gold.features_cliente` | 2.810 clientes, corte 2026-08-31 |
+| `gold.features_treino` | 2.815 clientes, alvo `comprou_em_7d`, taxa base 10,12% |
+| `gold.features_cliente` | 2.816 clientes, corte 2026-08-31 |
 
 Não há modelo registrado em `gold` — a limpeza levou o `propensao_compra`
 antigo e as duas versões dele. O registro vai nascer deste prompt.
@@ -53,7 +53,7 @@ SELECT ROUND(100 * AVG(comprou_em_7d), 2) AS taxa_base_pct
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**10,11%.** Vinte de cada duzentas.
+**10,12%.** Vinte de cada duzentas.
 
 > *"Se eu sortear 200 nomes num chapéu, essa é a fração que compra sozinha.
 > Qualquer coisa que a gente construir hoje precisa ganhar disso — senão o
@@ -171,7 +171,32 @@ Tabelas e colunas com COMMENT em português.
 
 Registre a tarefa ml_modelo em resources/pipeline.job.yml, depois de
 ml_features, e faça o deploy.
+
+NÃO rode o job inteiro para testar: rode só a tarefa nova, com
+bash scripts/rodar-tarefa.sh <perfil> ml_modelo — o job completo leva 3m30 e
+a tarefa sozinha 35s.
 ```
+
+
+---
+
+## Como rodar, e por que NÃO o job inteiro
+
+```bash
+bash scripts/rodar-tarefa.sh <perfil> ml_modelo
+```
+
+| | Tempo |
+|---|---|
+| `bundle run rotaperfume_pipeline` — as 13 tarefas | **~3m30** |
+| só a tarefa nova | **~35s** |
+
+Cada tarefa serverless paga o próprio tempo de partida, e o job inteiro paga
+treze vezes. **Ao vivo, é a diferença entre a sala esperar três minutos e meio
+a cada tentativa, ou trinta segundos.**
+
+O job completo continua valendo — **uma vez, no fim**, quando a tarefa já
+funciona e você quer mostrar o DAG inteiro verde. Não como forma de testar.
 
 ---
 

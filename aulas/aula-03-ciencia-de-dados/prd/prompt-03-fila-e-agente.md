@@ -20,7 +20,7 @@ usa já existe** — nenhuma fonte precisa ser criada antes:
 
 | Tabela | O que este prompt lê dela |
 |---|---|
-| `gold.score_propensao` | criada no prompt 2 — 2.810 clientes com nota |
+| `gold.score_propensao` | criada no prompt 2 — 2.816 clientes com nota |
 | `gold.features_cliente` | as features, para escrever o motivo |
 | `gold.dim_cliente` | `razao_social`, `cidade`, `uf` |
 | `silver.carteira` | `vigente` e `orfao_vendedor_desligado` — os dois são filtro |
@@ -170,7 +170,32 @@ Tabelas, colunas e funções com COMMENT em português.
 
 Registre a tarefa ml_fila em resources/pipeline.job.yml, depois de ml_modelo,
 e faça o deploy.
+
+NÃO rode o job inteiro para testar: rode só a tarefa nova, com
+bash scripts/rodar-tarefa.sh <perfil> ml_fila — o job completo leva 3m30 e
+a tarefa sozinha 35s.
 ```
+
+
+---
+
+## Como rodar, e por que NÃO o job inteiro
+
+```bash
+bash scripts/rodar-tarefa.sh <perfil> ml_fila
+```
+
+| | Tempo |
+|---|---|
+| `bundle run rotaperfume_pipeline` — as 13 tarefas | **~3m30** |
+| só a tarefa nova | **~35s** |
+
+Cada tarefa serverless paga o próprio tempo de partida, e o job inteiro paga
+treze vezes. **Ao vivo, é a diferença entre a sala esperar três minutos e meio
+a cada tentativa, ou trinta segundos.**
+
+O job completo continua valendo — **uma vez, no fim**, quando a tarefa já
+funciona e você quer mostrar o DAG inteiro verde. Não como forma de testar.
 
 ---
 

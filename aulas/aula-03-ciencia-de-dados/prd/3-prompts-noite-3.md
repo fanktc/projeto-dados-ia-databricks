@@ -98,14 +98,14 @@ A aula inteira converge para uma tabela só, e ela é a do slide *Não é acurá
 | **Ligar para os 200 de maior score** | **~0,85** | **75** — 3,7× |
 
 Medidos no dataset com `seed 42`, corte `2026-08-01`, janela de **7 dias** e
-score *out-of-fold* sobre os 2.809 clientes. A medição de referência usou 12
+score *out-of-fold* sobre os 2.815 clientes. A medição de referência usou 12
 das 20 features, fora do Databricks: **os números da sua execução saem
 impressos na tarefa `ml_modelo`, e são esses que vão para a tela.**
 
 | Onde | Número |
 |---|---|
-| Clientes em `features_treino` | 2.809 |
-| Taxa base da semana | **10,11%** |
+| Clientes em `features_treino` | 2.815 |
+| Taxa base da semana | **10,12%** |
 | Feature nº 1 por permutação | `atraso_relativo` |
 | Demonstração de vazamento | honesto ~0,867 → vazado **~0,9998** |
 

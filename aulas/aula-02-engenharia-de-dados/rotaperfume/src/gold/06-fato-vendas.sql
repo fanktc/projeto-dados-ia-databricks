@@ -28,9 +28,30 @@ CREATE OR REPLACE TABLE lakehouse_rotaperfume.gold.fato_vendas
 PARTITIONED BY (ano, mes)
 COMMENT 'Fato de vendas no grão de item de pedido. Exclui pedido cancelado; inclui devolução com valor negativo e flag. Soma exatamente a receita da silver.'
 AS
+-- O cliente do pedido nem sempre é o cliente que sobreviveu à limpeza.
+--
+-- A silver deduplicou 40 CNPJs recadastrados com id novo e manteve o cadastro
+-- mais antigo. Os pedidos feitos com o id descartado continuam apontando para
+-- ele — e um JOIN direto com a dimensão jogaria essas vendas fora. São 153
+-- itens e R$ 71.451,60 que sumiriam sem erro nenhum.
+--
+-- Foi para isto que a silver guardou `cliente_ids_duplicados`. Aqui ela deixa
+-- de ser rastreabilidade e vira chave: o pedido órfão é remapeado para o
+-- cadastro certo, e a venda entra no fato no cliente a que pertence.
+--
+-- Quem denuncia se isto sair é o teste 1 — receita da gold = receita da
+-- silver. Um fato de vendas que perde venda não pode passar despercebido.
+WITH mapa_cliente AS (
+  SELECT explode(cliente_ids_duplicados) AS id_antigo,
+         cliente_id                      AS id_atual
+  FROM lakehouse_rotaperfume.silver.clientes
+  WHERE size(cliente_ids_duplicados) > 0
+)
 SELECT
-    -- chaves
-    i.item_id, i.pedido_id, p.cliente_id, p.vendedor_id, i.sku,
+    -- chaves. cliente_id é o RESOLVIDO: pedido órfão entra no cadastro certo.
+    i.item_id, i.pedido_id,
+    COALESCE(m.id_atual, p.cliente_id) AS cliente_id,
+    p.vendedor_id, i.sku,
 
     -- dimensões de tempo
     p.data_pedido, p.ano, p.mes,
@@ -54,7 +75,8 @@ SELECT
 FROM lakehouse_rotaperfume.silver.itens_pedido i
 JOIN lakehouse_rotaperfume.silver.pedidos   p  ON p.pedido_id  = i.pedido_id
 JOIN lakehouse_rotaperfume.silver.produtos  pr ON pr.sku       = i.sku
-JOIN lakehouse_rotaperfume.gold.dim_cliente c  ON c.cliente_id = p.cliente_id
+LEFT JOIN mapa_cliente                      m  ON m.id_antigo = p.cliente_id
+JOIN lakehouse_rotaperfume.gold.dim_cliente c  ON c.cliente_id = COALESCE(m.id_atual, p.cliente_id)
 WHERE NOT p.cancelado;
 
 ALTER TABLE lakehouse_rotaperfume.gold.fato_vendas ALTER COLUMN receita

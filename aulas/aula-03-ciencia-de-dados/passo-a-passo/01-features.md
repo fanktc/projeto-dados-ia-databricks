@@ -52,7 +52,18 @@ Slides **17 a 22**, nesta ordem:
 
 ---
 
-## 4 · Quando terminar: onde clicar
+## 4 · Rode só a tarefa (35s, não 3m30)
+
+```bash
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
+bash scripts/rodar-tarefa.sh <perfil> ml_features
+```
+
+O job completo fica para o fim da noite, quando você vai mostrar o DAG inteiro.
+
+---
+
+## 5 · Quando terminar: onde clicar
 
 - [ ] **Catalog** (menu da esquerda) → `lakehouse_rotaperfume` → `gold`
       → as tabelas `features_treino` e `features_cliente` apareceram
@@ -64,7 +75,7 @@ Slides **17 a 22**, nesta ordem:
 
 ---
 
-## 5 · A query que prova
+## 6 · A query que prova
 
 ```sql
 -- 1. os dois cortes, declarados na própria tabela
@@ -81,14 +92,14 @@ SELECT COUNT(*)                             AS clientes,
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**Tem que dar 2.809 clientes e 10,11%.**
+**Tem que dar 2.815 clientes e 10,12%.**
 
 > **Escreva "20 de 200" no quadro.** É a taxa base: de cada 200 ligações às
 > cegas, 20 viram pedido. Todo o prompt 2 é a tentativa de superar isso.
 
 ---
 
-## 6 · Emenda para o próximo
+## 8 · Emenda para o próximo
 
 > *"Agora eu tenho 3.000 clientes descritos em 20 colunas. Só que descrever
 > não é ordenar. Quem decide quais 200?"*
@@ -103,3 +114,5 @@ FROM lakehouse_rotaperfume.gold.features_treino;
 | A auditoria de metadado quebrou o job | **é o teste da noite 2 funcionando.** Mostre, peça o `COMMENT` e rode de novo |
 | Alguma feature veio de `dim_cliente` | é vazamento — ela agrega a base inteira, sem corte. **Mostre ao vivo:** é o slide 29 (vazamento) acontecendo antes da hora |
 | A recência mínima veio negativa | um filtro `< referencia` escapou. Mesmo caso acima, e vale ouro |
+| `NameError: montar_features is not defined` | a função caiu dentro de uma célula `%md`. Falta `# COMMAND ----------` |
+| O topo por `atraso_relativo` só tem cliente de um pedido | `F.least()` ignora nulo e devolve o teto. Precisa de `when(intervalo IS NOT NULL)` |

@@ -39,51 +39,57 @@ vazia toda vez, e é isso que faz os prompts terem o que construir.
 
 ## O que mostrar antes
 
-**1 · A gold sabe tudo sobre ontem e nada sobre a semana que vem**
+**1 · A gold responde tudo sobre ontem — e nada sobre a semana que vem**
 
 ```sql
--- tudo que já aconteceu
+-- tudo que já aconteceu, no grão de ITEM de pedido
 SELECT COUNT(*) AS linhas, ROUND(SUM(receita), 2) AS receita
 FROM lakehouse_rotaperfume.gold.fato_vendas;
 
--- e a pergunta que ela NÃO responde: quais destes 3.000 eu ligo?
-SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.dim_cliente;
-```
-
-> *"Duas noites de trabalho responderam tudo sobre o passado. O diretor não
-> perguntou nada sobre o passado. Ele perguntou quais 200."*
-
-**2 · O formato que o modelo precisa, e que a gold não tem**
-
-```sql
--- o fato tem uma linha por ITEM. O modelo precisa de uma linha por CLIENTE.
+-- o modelo precisa de uma linha por CLIENTE. Hoje são muitas por cliente:
 SELECT cliente_id, COUNT(*) AS linhas_no_fato
 FROM lakehouse_rotaperfume.gold.fato_vendas
 GROUP BY cliente_id ORDER BY 2 DESC LIMIT 5;
 ```
 
-**3 · Os dois clientes do slide *Dois clientes, a mesma recência*, no dado real**
+> *"Duas noites de trabalho responderam tudo sobre o passado. O diretor não
+> perguntou nada sobre o passado — ele perguntou quais 200. E modelo não come
+> tabela fato: ele come uma linha por coisa que você quer prever."*
 
-Rode antes de colar o prompt. É o argumento inteiro da noite em uma query:
+**2 · Dois clientes, a mesma recência — o argumento da noite numa tela**
+
+Rode **antes** de colar o prompt:
 
 ```sql
 WITH ritmo AS (
-  SELECT cliente_id,
-         DATEDIFF('2026-08-31', MAX(data_pedido))                     AS recencia,
-         DATEDIFF(MAX(data_pedido), MIN(data_pedido))
-           / NULLIF(COUNT(DISTINCT pedido_id) - 1, 0)                 AS intervalo
-  FROM lakehouse_rotaperfume.gold.fato_vendas
-  GROUP BY cliente_id HAVING COUNT(DISTINCT pedido_id) >= 5)
-SELECT cliente_id, recencia, ROUND(intervalo, 1) AS intervalo_medio,
-       ROUND(recencia / intervalo, 1)            AS atraso_relativo
-FROM ritmo
-WHERE recencia BETWEEN 18 AND 22    -- a MESMA recência
-ORDER BY atraso_relativo DESC LIMIT 6;
+  SELECT f.cliente_id, c.razao_social,
+         DATEDIFF(DATE'2026-08-31', MAX(f.data_pedido)) AS recencia,
+         ROUND(DATEDIFF(MAX(f.data_pedido), MIN(f.data_pedido))
+           / NULLIF(COUNT(DISTINCT f.pedido_id) - 1, 0), 0) AS ciclo
+  FROM lakehouse_rotaperfume.gold.fato_vendas f
+  JOIN lakehouse_rotaperfume.gold.dim_cliente c USING (cliente_id)
+  GROUP BY f.cliente_id, c.razao_social
+  HAVING COUNT(DISTINCT f.pedido_id) >= 5),
+alvo AS (SELECT * FROM ritmo WHERE recencia BETWEEN 25 AND 32)
+-- os dois de ciclo mais CURTO e os dois de ciclo mais LONGO, todos com
+-- praticamente a mesma recência. É o contraste que faz o ponto.
+(SELECT razao_social, recencia, ciclo, ROUND(recencia/ciclo, 1) AS atraso
+   FROM alvo ORDER BY ciclo ASC  LIMIT 2)
+UNION ALL
+(SELECT razao_social, recencia, ciclo, ROUND(recencia/ciclo, 1)
+   FROM alvo ORDER BY ciclo DESC LIMIT 2);
 ```
 
-Dois clientes com a mesma recência e atrasos relativos opostos aparecem na
-mesma tela. **Pare aqui e deixe a sala olhar.** Ordenar por recência colocaria
-os dois na mesma posição da fila.
+Sai assim:
+
+| Cliente | Sem comprar | Compra a cada | Atraso |
+|---|---|---|---|
+| Perfumaria Prime | 28 dias | 24 dias | **1,2×** |
+| Aroma Rosa dos Ventos | 26 dias | 139 dias | **0,2×** |
+
+**Pare aqui e deixe a sala olhar.** Os dois sumiram há quase o mesmo tempo. Um
+está atrasado, o outro está adiantado. **Ordenar por recência colocaria os dois
+na mesma posição da fila** — e é isso que a empresa faz hoje.
 
 ---
 
@@ -123,10 +129,9 @@ data dela na primeira linha da leitura, sem exceção:
   silver.oportunidades    data_abertura < referencia
   silver.visitas          data_visita   < referencia
 
-NÃO use gold.dim_cliente para feature nenhuma. Ela tem dias_sem_comprar,
-receita_acumulada e total_pedidos calculados sobre a base INTEIRA, sem corte —
-usar qualquer uma delas é vazamento, e é o erro que o notebook 02 demonstra.
-dim_cliente só entra no prompt 3, para pegar nome e cidade.
+NÃO leia gold.dim_cliente: dias_sem_comprar, receita_acumulada e
+total_pedidos agregam a base INTEIRA, sem corte — usar qualquer uma é
+vazamento. Ela só entra no prompt 3, para nome e cidade.
 
 Vinte features, em quatro grupos. Tudo sai de gold.fato_vendas, que já traz
 razao_social, canal, categoria e marca — não precisa de join para isso:
@@ -140,14 +145,17 @@ razao_social, canal, categoria e marca — não precisa de join para isso:
     margem_percentual    = margem_total / nullif(valor_total, 0)
 
   Ritmo
-    intervalo_medio_dias   = datediff(max, min) / (pedidos distintos - 1)
-    desvio_intervalo_dias  = desvio padrão dos intervalos entre pedidos
+    intervalo_medio_dias   = média dos intervalos entre pedidos consecutivos
+    desvio_intervalo_dias  = desvio padrão desses mesmos intervalos
+                             (calcule os gaps uma vez, com lag() sobre as datas
+                              distintas de pedido, e tire média e desvio dali)
     atraso_relativo        = recencia_dias / intervalo_medio_dias,
                              com NULLIF no denominador e teto em 10
     pedidos_ultimos_90d    = pedidos distintos nos 90 dias antes do corte
 
   CRM
-    oportunidades_abertas  = etapa não fechada, de silver.oportunidades
+    oportunidades_abertas  = nem ganha nem perdida (as duas são colunas
+                             booleanas em silver.oportunidades)
     oportunidades_ganhas   = coluna ganha
     taxa_ganho             = ganhas / nullif(total de oportunidades, 0)
     visitas_90d            = visitas nos 90 dias antes do corte
@@ -164,12 +172,10 @@ razao_social, canal, categoria e marca — não precisa de join para isso:
 
 Grave duas tabelas, chamando a MESMA função duas vezes:
 
-  gold.features_treino   referencia = 2026-08-01, mais a coluna alvo
-                         comprou_em_7d = 1 se o cliente fez pedido entre
-                         2026-08-01 e 2026-08-07 — a janela é de UMA SEMANA,
-                         porque a fila que o time vai atacar é semanal
-  gold.features_cliente  referencia = 2026-08-31, sem alvo — é o que vai
-                         ser pontuado
+  gold.features_treino   referencia = 2026-08-01, mais o alvo comprou_em_7d
+                         = 1 se fez pedido entre 2026-08-01 e 2026-08-07
+  gold.features_cliente  referencia = 2026-08-31, sem alvo — é o que será
+                         pontuado
 
 As duas gravam uma coluna _referencia com a data de corte usada. Toda soma de
 receita ou margem sai da gold como DECIMAL(18,2): use cast para double em
@@ -179,30 +185,29 @@ TODAS as features numéricas, senão o registro do modelo quebra depois com
 Cliente sem oportunidade ou sem visita fica com 0, não com NULL — só as
 features de ritmo podem ser NULL, para cliente com um pedido só.
 
-CUIDADO com o teto do atraso_relativo: F.least() no Spark IGNORA nulo e
-devolve o menor dos não-nulos. Escrito direto, os clientes de um pedido só —
-que não têm intervalo — recebem 10, o teto, e vão para o TOPO da fila.
-Envolva num when(intervalo_medio_dias IS NOT NULL AND > 0).
-
-CUIDADO com as células do notebook: uma célula que começa com # MAGIC %md é
-markdown INTEIRA. Se a função vier logo abaixo do bloco de markdown, sem um
-# COMMAND ---------- entre os dois, ela nunca é definida e a tarefa morre com
-NameError.
-
 Nada de current_date() em lugar nenhum: o "hoje" deste dataset é 2026-08-31.
 
-Toda tabela e toda coluna com COMMENT em português — a auditoria de metadado
-da noite 2 quebra o job se faltar.
+COMMENT em português NA TABELA — as duas. A auditoria de metadado da noite 2
+quebra o job se faltar. Ela não exige comentário nas colunas destas tabelas, e
+saveAsTable não grava comment de tabela: rode COMMENT ON TABLE em seguida.
 
 Depois registre a tarefa ml_features em resources/pipeline.job.yml, rodando
 depois de testes_de_qualidade — modelo não se treina com dado que ainda não
 passou nos testes — e faça o deploy.
 
-NÃO rode o job inteiro para testar: rode só a tarefa nova, com
-bash scripts/rodar-tarefa.sh <perfil> ml_features — o job completo leva 3m30 e
-a tarefa sozinha 35s.
+DUAS ARMADILHAS MEDIDAS — as duas quebraram na preparação:
+  1. F.least() IGNORA nulo e devolve o outro valor: no teto do atraso_relativo,
+     os 80 clientes de um pedido só recebem 10 e vão para o TOPO da fila.
+     Envolva num when(intervalo_medio_dias IS NOT NULL AND > 0).
+  2. Célula que começa com # MAGIC %md é markdown INTEIRA — sem um
+     # COMMAND ---------- antes do código, a função não é definida (NameError).
 ```
 
+
+> **Se travar e a sala estiver esperando:** existe um gabarito testado em
+> [`../gabarito/11-features.py`](../gabarito/11-features.py). Copie para
+> `rotaperfume/src/ml/`, faça o deploy e siga. Não é derrota — é o que qualquer
+> um faz quando o relógio aperta.
 
 ---
 

@@ -169,7 +169,9 @@ Crie src/ml/12-modelo.py — um notebook Python para serverless. Nesta ordem:
                             score_medio, calculados no holdout — é a prova do
                             slide *Não é acurácia*, e a única que o comercial confere sozinho
 
-Tabelas e colunas com COMMENT em português.
+COMMENT em português NA TABELA, nas três que este prompt cria. A auditoria da
+noite 2 quebra o job se faltar, e saveAsTable não grava comment de tabela:
+rode COMMENT ON TABLE em seguida.
 
 Registre a tarefa ml_modelo em resources/pipeline.job.yml, depois de
 ml_features, e faça o deploy.

@@ -71,6 +71,35 @@ FROM   lakehouse_rotaperfume.gold.fato_vendas;
 
 ---
 
+## Antes do prompt 1 — o contraste que abre a noite
+
+Dois clientes que sumiram há quase o mesmo tempo, e estão em situações opostas:
+
+```sql
+WITH ritmo AS (
+  SELECT f.cliente_id, c.razao_social,
+         DATEDIFF(DATE'2026-08-31', MAX(f.data_pedido)) AS recencia,
+         ROUND(DATEDIFF(MAX(f.data_pedido), MIN(f.data_pedido))
+           / NULLIF(COUNT(DISTINCT f.pedido_id) - 1, 0), 0) AS ciclo
+  FROM lakehouse_rotaperfume.gold.fato_vendas f
+  JOIN lakehouse_rotaperfume.gold.dim_cliente c USING (cliente_id)
+  GROUP BY f.cliente_id, c.razao_social
+  HAVING COUNT(DISTINCT f.pedido_id) >= 5),
+alvo AS (SELECT * FROM ritmo WHERE recencia BETWEEN 25 AND 32)
+(SELECT razao_social, recencia, ciclo, ROUND(recencia/ciclo, 1) AS atraso
+   FROM alvo ORDER BY ciclo ASC  LIMIT 2)
+UNION ALL
+(SELECT razao_social, recencia, ciclo, ROUND(recencia/ciclo, 1)
+   FROM alvo ORDER BY ciclo DESC LIMIT 2);
+```
+
+**Perfumaria Prime: 28 dias sem comprar, ciclo de 24 → atraso 1,2×.
+Aroma Rosa dos Ventos: 26 dias, ciclo de 139 → atraso 0,2×.**
+Mesma recência, situações opostas. Esta roda **antes** do prompt 1 — só depende
+da noite 2.
+
+---
+
 ## Depois do prompt 1 — as features
 
 ```sql

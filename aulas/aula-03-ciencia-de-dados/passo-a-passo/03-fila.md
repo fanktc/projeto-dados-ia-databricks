@@ -95,14 +95,72 @@ FROM lakehouse_rotaperfume.gold.fila_semanal;
 -- desligados com carteira vinculada: a sujeira nº 9 cobrando o preço.
 
 -- 3. A ferramenta, chamada como o agente chamaria
-SELECT * FROM lakehouse_rotaperfume.gold.priorizar_carteira('<nome do vendedor>', 5);
+SELECT * FROM lakehouse_rotaperfume.gold.priorizar_carteira('Débora Souza', 5);
 ```
 
 **Leia a primeira linha da lista em voz alta e pare.** É o fim do argumento.
 
 ---
 
-## 7 · O agente, no Genie (5 min)
+## 7 · ONDE O VENDEDOR VÊ OS 200
+
+Três portas para o mesmo dado. Mostre nesta ordem:
+
+### a) O dashboard — a tela dele
+
+**Dashboards** (menu da esquerda) → *Rota do Perfume · Comercial* → aba
+**Fila da semana**. Escolha um vendedor no filtro: aparecem os contatos dele,
+em ordem, com motivo e sugestão.
+
+> É a resposta literal ao que o diretor pediu no slide 2. **Abra em tela cheia
+> e deixe a sala ler uma linha.**
+
+### b) A query — o plano B, e o que está por trás
+
+**Se o dashboard não abrir, não carregar ou o filtro travar**, cole isto no
+**SQL Editor**. É exatamente o que o dashboard faz:
+
+```sql
+-- A FILA DE UM VENDEDOR. Troque o nome e pronto.
+SELECT ordem                     AS `#`,
+       razao_social              AS cliente,
+       cidade,
+       ROUND(score, 2)           AS nota,
+       faixa,
+       motivo                    AS por_que_ligar,
+       sugestao                  AS o_que_oferecer
+FROM   lakehouse_rotaperfume.gold.fila_semanal
+WHERE  vendedor = 'Débora Souza'       -- ← troque aqui
+ORDER  BY ordem;
+```
+
+E, se não souber o nome de nenhum vendedor, comece por esta — ela mostra quem
+tem mais contatos na semana:
+
+```sql
+-- QUEM RECEBEU QUANTOS CONTATOS
+SELECT vendedor,
+       COUNT(*)               AS contatos,
+       ROUND(AVG(score), 2)   AS nota_media
+FROM   lakehouse_rotaperfume.gold.fila_semanal
+GROUP  BY vendedor
+ORDER  BY contatos DESC;
+```
+
+```sql
+-- A FILA INTEIRA, do maior score para o menor — os 200, de uma vez
+SELECT vendedor, ordem, razao_social, ROUND(score,2) AS nota, motivo
+FROM   lakehouse_rotaperfume.gold.fila_semanal
+ORDER  BY score DESC;
+```
+
+> **Deixe estas três queries abertas numa aba do SQL Editor antes de começar a
+> noite.** Se o dashboard falhar ao vivo, você troca de aba e continua sem
+> perder o fio.
+
+### c) O Genie — a pergunta em português
+
+#### E aí sim, o agente (5 min)
 
 Abra o Genie e pergunte **com as palavras do vendedor**:
 

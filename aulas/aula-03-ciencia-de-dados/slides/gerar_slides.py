@@ -372,19 +372,14 @@ nota(s, "Todos medidos no workspace com seed 42, corte 2026-08-01, janela de 7 "
 
 # ── 8 · três prompts, três deploys ────────────────────────────────────
 s, y = cabecalho("Como a gente vai construir", "Três prompts, três deploys")
-cartoes(s, y, 2.72, [
-    ("PROMPT 1\nFeatures",
-     "Uma linha por cliente, 20 colunas que\ndescrevem o comportamento dele.\n\n"
-     "→ gold.features_cliente\n→ gold.features_treino"),
-    ("PROMPT 2\nModelo",
-     "Baseline, treino, MLflow, registro no\nUnity Catalog e a nota de cada um.\n\n"
-     "→ o modelo no catálogo\n→ gold.score_propensao"),
-    ("PROMPT 3\nA fila",
-     "Os 200 da semana, com motivo em\nportuguês e o que oferecer.\n\n"
-     "→ gold.fila_semanal\n→ as 4 ferramentas", "destaque"),
-], tam_rot=19, tam_corpo=12.5)
-bloco(s, y + 2.98, "Cada prompt termina em DEPLOY. Não é protótipo que vira produção\n"
-                    "depois: já nasce dentro do pipeline que roda sozinho todo dia.",
+tabela(s, y,
+       ["", "O QUE SAI DE CADA UM", "ONDE ISSO FICA"],
+       [["PROMPT 1", "Uma tabela com uma linha por cliente", "gold.features_cliente"],
+        ["PROMPT 2", "Uma nota de 0 a 1 para cada cliente", "gold.score_propensao"],
+        ["PROMPT 3", "A lista dos 200, com nome e motivo", "gold.fila_semanal"]],
+       larguras=[2.0, 5.9, 3.93], tam=14, alt=0.85, destaque=2)
+bloco(s, y + 3.3, "Cada prompt termina em DEPLOY, e o de baixo é a resposta do diretor.\n"
+                   "Não é protótipo que vira produção depois: já nasce no pipeline.",
       h=1.05, tam=16)
 nota(s, "Deploy não é etapa de fim de projeto — é o que acontece toda vez que "
         "você termina alguma coisa. Por isso são três, e não um no final.")
@@ -849,6 +844,24 @@ tabela(s, y,
        larguras=[3.3, 1.2, 7.33], tam=12.5, alt=0.66)
 bloco(s, y + 2.7, "O vendedor não recebe um número. Recebe um nome, uma ordem\n"
                    "e uma frase que ele entende antes de discar.", h=1.0, tam=16)
+
+# ── NOVO · onde a lista aparece ───────────────────────────────────────
+s, y = cabecalho("A pergunta que todo mundo faz",
+                 "E onde eu vejo esses 200?")
+cartoes(s, y, 2.5, [
+    ("1 · No dashboard",
+     "A aba 'Fila da semana'.\nO vendedor escolhe o\nnome dele no filtro e vê\na lista em ordem.\n\nÉ a tela dele.", "destaque"),
+    ("2 · Numa query",
+     "SELECT * FROM\nfila_semanal\nWHERE vendedor = '...'\n\nÉ uma tabela como\nqualquer outra."),
+    ("3 · Perguntando",
+     "'Quem eu ligo essa\nsemana?'\n\nO Genie responde em\nportuguês — e mostra\no SQL que gerou."),
+], tam_rot=18, tam_corpo=12.5)
+bloco(s, y + 2.75, "As três leem a MESMA tabela. Nenhuma delas tem número inventado:\n"
+                    "o que muda é só a porta de entrada.", h=1.05, tam=16)
+nota(s, "Abra o dashboard primeiro — é o que responde a pergunta do diretor. "
+        "A query é o plano B se algo não carregar ao vivo, e está pronta no "
+        "passo-a-passo. O Genie fica por último, porque é o mais impressionante "
+        "e o menos previsível.")
 
 # ── 22 · o agente ─────────────────────────────────────────────────────
 s, y = cabecalho("A última camada", "Ele não inventa. Ele consulta.")

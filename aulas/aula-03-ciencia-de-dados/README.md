@@ -223,6 +223,23 @@ metro é onde os projetos de ML morrem**, e é o que o prompt 3 resolve.
 
 ---
 
+## 👀 Onde a lista dos 200 aparece
+
+A pergunta que a noite inteira responde termina numa tela. São três portas para
+a mesma tabela:
+
+| Porta | Onde | Para quem |
+|---|---|---|
+| **Dashboard** | *Rota do Perfume · Comercial* → aba **Fila da semana**, com filtro por vendedor | O vendedor. É a tela dele |
+| **Query** | `SELECT * FROM gold.fila_semanal WHERE vendedor = '...'` | Você, e é o plano B se o dashboard não carregar ao vivo |
+| **Genie** | *"Quem eu ligo essa semana?"* | Quem prefere perguntar em português |
+
+As três leem a **mesma tabela**. As queries prontas estão em
+[`passo-a-passo/03-fila.md`](passo-a-passo/03-fila.md) — deixe-as abertas numa
+aba antes de começar a noite.
+
+---
+
 ## 🧪 Notebooks para conferir o resultado
 
 Para abrir **depois** que o pipeline rodou. São de leitura — não alteram nada.

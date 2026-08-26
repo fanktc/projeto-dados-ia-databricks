@@ -160,7 +160,16 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
    - nenhuma linha com motivo nulo ou vazio
    - nenhum score fora do intervalo [0, 1]
 
-4. Some gold.fila_semanal e gold.score_propensao ao Genie Space que já existe
+4. Acrescente uma PÁGINA ao dashboard da noite 2
+   (resources/dashboard-comercial.lvdash.json), chamada "Fila da semana":
+   um filtro de vendedor e a tabela com ordem, cliente, cidade, nota, faixa,
+   motivo e sugestão. É onde o vendedor vai ver a lista — sem isso, os 200
+   ficam numa tabela que ele nunca abre.
+
+   NÃO renomeie a chave do recurso do dashboard: trocar a chave faz o bundle
+   apagar e recriar, com URL nova.
+
+5. Some gold.fila_semanal e gold.score_propensao ao Genie Space que já existe
    em resources/ (genie.genie_space.yml e o comercial.geniespace.json), com a
    instrução:
    "Use sempre as tabelas e funções deste espaço. Nunca invente número,

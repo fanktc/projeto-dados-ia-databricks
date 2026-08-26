@@ -18,13 +18,18 @@ quando faz sentido e exemplos numerados em progressão.
 | `aulas/aula-02-engenharia-de-dados/` | Noite 2: **6 prompts, 6 deploys**. O bundle `rotaperfume/` nasce vazio e vira raw → bronze → silver → gold → dashboard → Genie |
 | `aulas/aula-02-engenharia-de-dados/prd/` | Os 6 prompts (+ o reset 00), o `CLAUDE.md` do projeto e o roteiro da noite |
 | `aulas/aula-02-engenharia-de-dados/slides/` | `gerar_slides.py` — os slides como código, no design da noite 1 |
+| `aulas/aula-03-ciencia-de-dados/` | Noite 3: **6 prompts, 6 deploys**. O mesmo bundle da noite 2 ganha `src/ml/` e o job vai de 12 para 18 tarefas |
+| `aulas/aula-03-ciencia-de-dados/prd/` | Os 6 prompts da noite 3 e o roteiro |
+| `aulas/aula-03-ciencia-de-dados/notebooks/` | Notebooks de conferência do resultado (leitura), incluindo a demonstração de vazamento de dado |
 | `material/` | PRD (a especificação canônica das 4 noites), gerador do dataset, zip de referência, slides antigos |
 | `scripts/run_sql.py` | Executa um `.sql` no warehouse, statement por statement |
 | `dados/` | Dataset gerado, **não versionado**. `python3 material/gerar_dataset.py --saida ./dados --seed 42` |
 
-**As aulas 03 e 04 foram removidas.** A 04 (deploy) morreu por desenho: deploy
-não é etapa de fim de projeto, é o que acontece toda vez que você termina algo —
-por isso a noite 2 faz seis. A 03 será reescrita no mesmo formato de prompts.
+**A aula 04 foi removida por desenho:** deploy não é etapa de fim de projeto, é
+o que acontece toda vez que você termina algo — por isso a noite 2 faz seis. A
+**aula 03 foi reescrita** no mesmo formato de prompts, e o código dela vive
+dentro do bundle da noite 2 (`rotaperfume/src/ml/`): ML é mais uma camada do
+mesmo pipeline, não um projeto à parte.
 
 Ao criar exemplos novos para a aula 01, siga o padrão: `exemplo-NN-tema.sql`,
 com cabeçalho declarando conceito, pergunta de negócio e conexão com a aula
@@ -148,3 +153,28 @@ mesmo fora da pasta `material/`:
 - Referencie tabelas pelo caminho completo (`<catalogo>.silver.pedidos`).
 - Código e comentários escritos para quem assiste ao vivo pela primeira vez: prefira SQL legível
   a SQL esperto.
+
+## ML na Free Edition — o que NÃO funciona
+
+Medido contra o workspace. Não tente estes caminhos: os quatro primeiros falham,
+e três deles só falham na tarefa seguinte.
+
+- **`mlflow.pyfunc.spark_udf` não roda no serverless.** `InvalidVersion:
+  '18.x-aarch64-photon-scala2'`. Use `mlflow.sklearn.load_model` + pandas.
+- **XGBoost treina e registra, mas não carrega de volta** (`__sklearn_tags__`,
+  conflito com scikit-learn 1.6.1). Use `HistGradientBoostingClassifier`.
+- **`mlflow.set_experiment` não cria a pasta pai.** Erro:
+  `BAD_REQUEST: For input string: "None"`. Crie antes com
+  `WorkspaceClient().workspace.mkdirs(...)`.
+- **`pyfunc.predict()` devolve a classe, não a probabilidade.** Para score use
+  `predict_proba()`.
+- **Não há endpoint de modelo próprio** — só os Foundation Models publicados.
+  O consumo do modelo é batch, gravando `gold.score_propensao`.
+- O serverless traz **MLflow 2.22**: `log_model(..., artifact_path=...)`, nunca
+  o `name=` do MLflow 3.
+- A gold usa `DECIMAL(18,2)`; features precisam de `.cast("double")` ou o
+  registro do modelo morre com `Object of type Decimal is not JSON serializable`.
+
+Convenções de ML do projeto: corte de treino **2026-08-01**, janela do rótulo de
+**30 dias**, `random_state=42`, e nada de `current_date()` — o "hoje" do dataset
+é **2026-08-31**.

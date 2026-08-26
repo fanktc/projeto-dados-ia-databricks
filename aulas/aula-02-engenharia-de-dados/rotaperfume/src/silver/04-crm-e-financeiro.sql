@@ -76,8 +76,12 @@ SELECT
     try_to_date(data_visita, 'yyyy-MM-dd') AS data_visita,
     trim(resultado) AS resultado,
     CAST(duracao_min AS INT) AS duracao_min,
-    (trim(resultado) = 'Pedido')      AS gerou_pedido,
-    (trim(resultado) = 'Não atendeu') AS cliente_ausente,
+    -- Os valores vêm do ERP por extenso: 'Pedido realizado', 'Sem pedido',
+    -- 'Cliente ausente', 'Reagendada', 'Apenas relacionamento'. Comparar com
+    -- 'Pedido' faria a flag ser sempre FALSE — e flag sempre falsa não levanta
+    -- erro nenhum: ela só faz o número ficar zero e ninguém perceber.
+    (trim(resultado) = 'Pedido realizado') AS gerou_pedido,
+    (trim(resultado) = 'Cliente ausente')  AS cliente_ausente,
     current_timestamp() AS _processado_em,
     (SELECT count(*) FROM lakehouse_rotaperfume.bronze.visitas) AS _linhas_origem
 FROM lakehouse_rotaperfume.bronze.visitas;

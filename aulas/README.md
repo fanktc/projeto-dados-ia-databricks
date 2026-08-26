@@ -7,7 +7,7 @@ que for preciso para rodar.
 |---|---|---|---|
 | [**01**](aula-01-databricks-sql) · seg 24/08 | Databricks & SQL | Ambiente de pé, dado no catálogo, análise em 3 ambientes | [assistir](https://youtube.com/live/plG6mF-ib_w) |
 | [**02**](aula-02-engenharia-de-dados) · ter 25/08 | Engenharia de dados | 6 prompts, 6 deploys: raw, bronze, silver, gold, dashboard e Genie | [assistir](https://www.youtube.com/watch?v=0KRcn4ZIDPg) |
-| **03** · qua 26/08 | Ciência de dados e agentes | Score de propensão e agente comercial | _a construir_ |
+| [**03**](aula-03-ciencia-de-dados) · qua 26/08 | Ciência de dados | 6 prompts, 6 deploys: features, modelo no UC, score, testes de modelo e a carteira do dia | _ao vivo_ |
 
 ## O fio que liga as noites
 
@@ -15,11 +15,15 @@ que for preciso para rodar.
   noite 1              noite 2              noite 3
   ───────              ───────              ───────
   a query quebra   →   vira camada      →   vira decisão
-  no dado sujo         que roda sozinha     score e agente
+  no dado sujo         que roda sozinha     modelo e carteira
 
-  "qual foi           "como não            "quem eu
-   a receita?"         repetir isso?"       procuro amanhã?"
+  "qual foi           "como não            "com quem meu vendedor
+   a receita?"         repetir isso?"       fala amanhã?"
 ```
+
+O mesmo `rotaperfume_pipeline` atravessa as noites 2 e 3: começa com uma
+tarefa, termina com **dezoito**. ML não ganha repositório novo — entra como
+mais uma camada, com os mesmos testes que quebram o job.
 
 Cada noite existe por causa do problema que a anterior deixou aberto. A noite 1
 termina com uma query que falha por causa de datas em dois formatos — e é

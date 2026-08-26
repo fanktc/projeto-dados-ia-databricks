@@ -14,8 +14,8 @@
 #   3. as funções-ferramenta da gold
 #   4. o modelo registrado no Unity Catalog, com todas as versões
 #   5. o experimento do MLflow
-#   6. o código local: src/ml/ apagado, e pipeline.job.yml e
-#      comercial.geniespace.json restaurados do git
+#   6. o código local: src/ml/ apagado, e o job, o Genie e o dashboard
+#      restaurados do git
 #   7. o redeploy, para o job voltar a 12 tarefas e o Genie parar de
 #      apontar para tabela que não existe mais
 #   8. a verificação: prova na tela que não sobrou nada — e sai com erro
@@ -104,9 +104,13 @@ echo "→ removendo o código local da noite 3..."
 rm -rf "$BUNDLE/src/ml"
 
 REF=$(git -C "$BUNDLE" rev-parse --verify -q noite-2-pronta || echo HEAD)
-echo "→ restaurando pipeline.job.yml e comercial.geniespace.json de $REF..."
+# Três arquivos, porque os três prompts mexem neles: o job (as tarefas), o
+# Genie (as tabelas novas) e o dashboard (a aba "Fila da semana").
+echo "→ restaurando job, Genie e dashboard de $REF..."
 git -C "$BUNDLE" restore --source="$REF" -- \
-    resources/pipeline.job.yml resources/comercial.geniespace.json
+    resources/pipeline.job.yml \
+    resources/comercial.geniespace.json \
+    resources/dashboard-comercial.lvdash.json
 
 # ── 7. o redeploy ─────────────────────────────────────────────────────
 echo "→ redeployando o bundle..."
@@ -174,6 +178,15 @@ fi
 VIEWS_N=$(consulta "SELECT COUNT(*) AS n FROM $CATALOGO.information_schema.views
                     WHERE table_schema='gold'")
 conferir "views de negócio na gold" "6" "$VIEWS_N"
+
+ML_LOCAL=$([ -d "$BUNDLE/src/ml" ] && echo "existe" || echo "não")
+conferir "pasta src/ml/ apagada" "não" "$ML_LOCAL"
+
+FILA_DASH=$(grep -c "Fila da semana" "$BUNDLE/resources/dashboard-comercial.lvdash.json" || true)
+conferir "dashboard sem a aba da fila" "0" "${FILA_DASH:-0}"
+
+SUJO=$(git -C "$BUNDLE" status --porcelain -- resources src | wc -l | tr -d ' ')
+conferir "git limpo no bundle" "0" "$SUJO"
 
 echo
 if [ "$FALHAS" -gt 0 ]; then

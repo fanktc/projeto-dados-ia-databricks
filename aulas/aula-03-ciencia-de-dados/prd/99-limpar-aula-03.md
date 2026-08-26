@@ -29,7 +29,7 @@ sobrou. Rodar duas vezes seguidas dá o mesmo resultado.
 |---|---|---|
 | **1 · features** | `features_treino`, `features_cliente` | `src/ml/11-features.py`, tarefa `ml_features` |
 | **2 · modelo** | `score_propensao`, `modelo_metricas`, `calibragem_holdout`, o modelo `propensao_compra` com versões e alias, o experimento MLflow | `src/ml/12-modelo.py`, tarefa `ml_modelo` |
-| **3 · fila** | `fila_semanal`, as 4 funções | `src/ml/13-fila.sql`, tarefa `ml_fila`, **e o Genie Space** |
+| **3 · fila** | `fila_semanal`, as 4 funções | `src/ml/13-fila.sql`, tarefa `ml_fila`, **o Genie Space e a aba do dashboard** |
 
 > **O Genie é o que mais se esquece.** O prompt 3 adiciona `fila_semanal` e
 > `score_propensao` ao `comercial.geniespace.json`. Se as tabelas somem e o
@@ -46,8 +46,17 @@ Não editando YAML nem JSON: **restaurando do git**.
 ```bash
 rm -rf src/ml
 git restore --source=noite-2-pronta -- \
-    resources/pipeline.job.yml resources/comercial.geniespace.json
+    resources/pipeline.job.yml \
+    resources/comercial.geniespace.json \
+    resources/dashboard-comercial.lvdash.json
 ```
+
+São **três** arquivos porque os três prompts mexem neles: o job ganha tarefas,
+o Genie ganha tabelas e o dashboard ganha a aba *Fila da semana*.
+
+> `rotaperfume/src/ml/` está no `.gitignore` de propósito — a pasta nasce vazia
+> toda vez, e o `rm -rf` não deixa o git sujo. O código que os prompts produzem
+> fica versionado em [`../gabarito/`](../gabarito), como referência.
 
 `noite-2-pronta` é uma tag no commit em que a noite 3 ainda não existia. É
 exata por construção, pega até o que ninguém previu, e continua funcionando se

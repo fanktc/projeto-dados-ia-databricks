@@ -167,7 +167,7 @@ justamente quem não compra agora. Ninguém tinha medido.
 | Ligar aleatório | 20 |
 | **Ligar para quem sumiu há mais tempo** | **0** |
 | Ligar para os maiores | 44 |
-| **Ligar para os 200 de maior score** | **75 — 3,7×** |
+| **Ligar para os 200 de maior score** | **86 — 4,25×** |
 
 Dataset com `seed 42`, corte `2026-08-01`, janela de **7 dias** — a mesma
 semana da ligação — e score *out-of-fold* sobre os 2.815 clientes.
@@ -204,7 +204,7 @@ Três defesas, todas estruturais:
 ### 3 · A métrica que vai para a reunião não é o AUC
 
 AUC é métrica de quem treina. O diretor pergunta **quantos dos 200 compraram** —
-e a resposta é 75 contra 20 —
+e a resposta é 86 contra 20 —
 e isso tem nome: `lift_top200`. É a métrica que o pipeline versiona a cada
 treino, ao lado do AUC, porque é ela que responde a pergunta que pagou o
 projeto.

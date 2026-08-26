@@ -75,9 +75,13 @@ O job completo fica para o fim da noite, quando você vai mostrar o DAG inteiro.
 ## 5 · Quando terminar: onde clicar
 
 - [ ] **Leia a saída da tarefa em voz alta** — o baseline está impresso lá.
-      É o momento da noite: *"ligue para quem sumiu" deu abaixo de 0,50.*
+      É o momento da noite: *"ligue para quem comprou recentemente" deu
+      **0,3522**, muito pior que jogar moeda.*
+- [ ] E o número do diretor: **86 dos 200 compram, contra 20 às cegas —
+      4,25×**
 - [ ] **Catalog** → `lakehouse_rotaperfume` → `gold` → **Models**
       → `propensao_compra`, com a versão 1 e o alias `@prod`
+      (na CLI, só `model-versions get-by-alias` mostra o alias — `list` não)
 - [ ] Clique no modelo → mostre que ele fica **do lado das tabelas**,
       no mesmo catálogo, com o mesmo GRANT
 - [ ] **Experiments** (menu da esquerda) → o run do treino

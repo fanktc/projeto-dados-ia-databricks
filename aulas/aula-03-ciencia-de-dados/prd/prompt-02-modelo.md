@@ -206,19 +206,30 @@ funciona e você quer mostrar o DAG inteiro verde. Não como forma de testar.
 
 Está impresso na saída da tarefa. Leia em voz alta, na ordem:
 
-| A resposta | AUC | Dos 200, quantos compram |
-|---|---|---|
-| "ligue para quem sumiu há mais tempo" | **~0,37 — pior que moeda** | **0** |
-| jogar uma moeda | 0,5000 | 20 |
-| "ligue para quem compra mais" | ~0,62 | 44 |
-| **o modelo** | **~0,85** | **75** |
+| A resposta | AUC |
+|---|---|
+| "ligue para quem comprou recentemente" | **0,3522 — muito pior que a moeda** |
+| jogar uma moeda | 0,5000 |
+| "ligue para quem compra mais" | 0,6410 |
+| "ligue para quem está atrasado" | 0,7842 |
+| **o modelo** | **0,8817** |
 
-> Referência medida fora do Databricks, com 12 das 20 features, `seed 42`,
-> corte `2026-08-01` e janela de 7 dias. **O seu número vai sair na tela da
-> tarefa — é ele que vale.** Se vier na mesma ordem de grandeza, está certo.
+E a mesma coisa na língua do diretor:
 
-**Zero.** Dos 200 clientes que sumiram há mais tempo, nenhum comprou na semana
-seguinte. Não é "um pouco pior": é a lista inteira desperdiçada.
+| Estratégia | Dos 200 abordados, quantos compram |
+|---|---|
+| Ligar às cegas | **20** |
+| **Ligar para os 200 de maior score** | **86** — lift de **4,25×** |
+
+> Rodado de ponta a ponta no workspace, com `seed 42`. **Estes são os números
+> que vão aparecer na sua tela.**
+
+**0,3522.** Não é "um pouco pior que a moeda" — é meio caminho para o
+contrário. Ordenar por recência coloca no topo exatamente quem menos compra.
+
+Repare também no terceiro: **`atraso_relativo` sozinho já dá 0,7842**. A
+coluna que a gente inventou no prompt 1, sem modelo nenhum, ganha de longe das
+duas respostas que a sala deu.
 
 > **A intuição comercial não está imprecisa — está invertida.** Distribuição
 > funciona por ciclo de reposição: quem acabou de receber a mercadoria é
@@ -252,10 +263,15 @@ ORDER BY _treinado_em DESC LIMIT 1;
 ```bash
 databricks registered-models list \
   --catalog-name lakehouse_rotaperfume --schema-name gold --profile <perfil>
+
+# e o alias, que é o que o prompt 3 vai consumir:
+databricks model-versions get-by-alias \
+  lakehouse_rotaperfume.gold.propensao_compra prod --profile <perfil>
 ```
 
-> `SHOW MODELS` **não existe em SQL** — dá `PARSE_SYNTAX_ERROR`. Modelo do
-> Unity Catalog se lista pela CLI ou pela tela do Catalog Explorer.
+> `SHOW MODELS` **não existe em SQL** — dá `PARSE_SYNTAX_ERROR`. E `list`/`get`
+> **não mostram o alias**: só `get-by-alias` prova que o `@prod` está lá. Dá
+> para achar que o alias falhou quando ele está funcionando.
 
 Abra a tela do modelo no workspace ao lado da tela da tabela. **Mesmo
 catálogo, mesma linhagem, mesmo GRANT.** É o slide *“Esse modelo ainda está bom?”* respondido: qual versão

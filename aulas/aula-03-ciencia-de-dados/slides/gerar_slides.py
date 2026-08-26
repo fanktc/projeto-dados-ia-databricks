@@ -323,14 +323,15 @@ faixas(s, y, [
     ("Ligar aleatório",                  "20     ·  a taxa base da semana"),
     ("Ligar para quem sumiu há mais tempo", "0     ·  esses já foram embora", "alerta"),
     ("Ligar para os maiores",            "44"),
-    ("Ligar para os 200 de maior score", "75     ·  3,7× o aleatório", "destaque"),
+    ("Ligar para os 200 de maior score", "86     ·  4,25× o aleatório", "destaque"),
 ], alt=0.62, larg_esq=6.4,
    cabecalho_=("ESTRATÉGIA", "DOS 200 ABORDADOS, QUANTOS COMPRAM"))
 bloco(s, 5.78, "Isso tem nome: LIFT. Quantas vezes melhor que o aleatório.\n"
                 "É o número que você leva para a reunião — não o AUC.", h=1.0, tam=16)
-nota(s, "Todos medidos no dataset com seed 42, corte 2026-08-01, janela de 7 dias, "
-        "score out-of-fold. O zero da segunda linha é o melhor número da aula: "
-        "a intuição mais comum do comercial acerta nenhum dos 200.")
+nota(s, "Todos medidos no workspace com seed 42, corte 2026-08-01, janela de 7 "
+        "dias, score out-of-fold. O zero da segunda linha é o melhor número da "
+        "aula: a intuição mais comum do comercial acerta nenhum dos 200. E "
+        "ordenar pelo atraso puro, sem modelo, acerta 1.")
 
 # ══════════════════════════════════════════════════════════════════════
 #  BLOCO 2 · O PLANO DA NOITE                            slides 8–9
@@ -651,10 +652,10 @@ texto(s, "Sorteie dois clientes: um que comprou e um que não.\n"
       MARGEM + 0.5, y + 0.32, UTIL - 1.0, 1.0, 18, BRANCO, True, entrelinha=1.3)
 for (x, yy, w, h), (valor, quem, desc, marca) in zip(
         grade(y + 1.6, 2.4, 4),
-        [("0,37", "quem sumiu", "a fila está INVERTIDA:\nseguir o contrário\nseria melhor", "alerta"),
+        [("0,35", "quem sumiu", "a fila está INVERTIDA:\nseguir o contrário\nseria melhor", "alerta"),
          ("0,50", "a moeda", "acerta a ordem\nmetade das vezes.\nnão sabe nada", None),
-         ("0,62", "os maiores", "acerta 62 de cada\n100 pares. melhor\nque nada", None),
-         ("0,85", "o modelo", "quem comprou vem\nna frente em 85\nde cada 100 pares", "destaque")]):
+         ("0,64", "os maiores", "acerta 64 de cada\n100 pares. melhor\nque nada", None),
+         ("0,88", "o modelo", "quem comprou vem\nna frente em 88\nde cada 100 pares", "destaque")]):
     cor = ALERTA if marca == "alerta" else (ACENTO if marca == "destaque" else BORDA)
     cartao(s, x, yy, w, h, tom=CARD_2 if marca else CARD, borda=cor,
            largura_borda=1.5 if marca else 1.25)
@@ -890,7 +891,7 @@ for rot, antes, depois, marca in [
         ("Ordem",     "Aleatória", "Por probabilidade", None),
         ("Contexto",  "“Faz tempo que não falo\ncom ele”",
                       "Atraso relativo, histórico,\nsugestão", None),
-        ("Resultado medido", "20 vendas", "75 vendas", "destaque")]:
+        ("Resultado medido", "20 vendas", "86 vendas", "destaque")]:
     alt = 0.84 if "\n" in antes else 0.6
     cor_b = ACENTO if marca else BORDA
     cartao(s, MARGEM, yy, UTIL, alt, tom=CARD_2 if marca else CARD, borda=cor_b,
@@ -901,7 +902,7 @@ for rot, antes, depois, marca in [
     texto(s, depois, MARGEM + 8.14, yy + 0.16, 3.5, alt, 13.5,
           BRANCO if marca else CINZA, marca is not None, entrelinha=1.25)
     yy += alt + 0.12
-bloco(s, 6.28, "Mesmo time. Mesmas 200 ligações. Quase quatro vezes mais resultado.",
+bloco(s, 6.28, "Mesmo time. Mesmas 200 ligações. Mais de quatro vezes o resultado.",
       h=0.68, tam=16)
 
 # ── 25 · o arco de três noites ────────────────────────────────────────

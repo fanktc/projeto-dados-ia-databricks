@@ -93,20 +93,27 @@ A aula inteira converge para uma tabela só, e ela é a do slide *Não é acurá
 | Estratégia | AUC | Dos 200 abordados, quantos compram |
 |---|---|---|
 | Ligar aleatório | 0,5000 | **20** |
-| Ligar para quem sumiu há mais tempo | **~0,37** | **0** |
-| Ligar para os maiores | ~0,62 | 44 |
-| **Ligar para os 200 de maior score** | **~0,85** | **75** — 3,7× |
+| Ligar para quem sumiu há mais tempo | **0,3522** | **0** |
+| Ligar para os maiores | 0,6410 | 44 |
+| Ligar para os mais atrasados | 0,7842 | 1 |
+| **Ligar para os 200 de maior score** | **0,8817** | **86** — 4,25× |
 
-Medidos no dataset com `seed 42`, corte `2026-08-01`, janela de **7 dias** e
-score *out-of-fold* sobre os 2.815 clientes. A medição de referência usou 12
-das 20 features, fora do Databricks: **os números da sua execução saem
-impressos na tarefa `ml_modelo`, e são esses que vão para a tela.**
+Rodado de ponta a ponta no workspace, com `seed 42`, corte `2026-08-01`,
+janela de **7 dias** e score *out-of-fold* sobre os 2.815 clientes. **São os
+números que saem impressos na tarefa `ml_modelo`.**
+
+Repare na quarta linha: `atraso_relativo` sozinho, sem modelo nenhum, dá AUC de
+0,7842 — ganha das duas respostas que a sala dá. Mas ordenar por ele puro
+coloca só 1 comprador entre os 200, porque o topo é de cliente que já foi
+embora. **É a diferença entre uma boa feature e uma boa fila**, e é o que o
+modelo resolve.
 
 | Onde | Número |
 |---|---|
 | Clientes em `features_treino` | 2.815 |
 | Taxa base da semana | **10,12%** |
 | Feature nº 1 por permutação | `atraso_relativo` |
+| Calibragem no holdout | Fria 0% → Morna 0,6% → Quente 8,0% → **Muito quente 31,8%** |
 | Demonstração de vazamento | honesto ~0,867 → vazado **~0,9998** |
 
 > **Por que a janela é de 7 dias e não de 30.** O rótulo precisa ter o mesmo

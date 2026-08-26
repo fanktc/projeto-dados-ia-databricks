@@ -162,3 +162,10 @@ resources:
             base_parameters:
               catalog: "{{job.parameters.catalog}}"
 
+        - task_key: ml_modelo
+          depends_on: [{ task_key: ml_features }]
+          notebook_task:
+            notebook_path: ../src/ml/12-modelo.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+

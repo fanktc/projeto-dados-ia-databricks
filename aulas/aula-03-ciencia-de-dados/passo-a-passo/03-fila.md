@@ -2,6 +2,8 @@
 
 **Slides 38 a 45 · ~18 minutos · 3º deploy da noite**
 
+> Todas as queries deste passo, prontas para colar: [`QUERIES.md`](QUERIES.md)
+
 ## O que este prompt faz
 
 Pega os 200 maiores scores da base inteira, cruza com a carteira de cada

@@ -234,9 +234,16 @@ a mesma tabela:
 | **Query** | `SELECT * FROM gold.fila_semanal WHERE vendedor = '...'` | Você, e é o plano B se o dashboard não carregar ao vivo |
 | **Genie** | *"Quem eu ligo essa semana?"* | Quem prefere perguntar em português |
 
-As três leem a **mesma tabela**. As queries prontas estão em
-[`passo-a-passo/03-fila.md`](passo-a-passo/03-fila.md) — deixe-as abertas numa
-aba antes de começar a noite.
+As três leem a **mesma tabela**. A query direta é esta:
+
+```sql
+SELECT vendedor, ordem, razao_social, ROUND(score,2) AS nota, motivo, sugestao
+FROM   lakehouse_rotaperfume.gold.fila_semanal
+ORDER  BY score DESC;
+```
+
+Todas as outras estão em [`passo-a-passo/QUERIES.md`](passo-a-passo/QUERIES.md)
+— deixe o arquivo aberto numa aba antes de começar a noite.
 
 ---
 

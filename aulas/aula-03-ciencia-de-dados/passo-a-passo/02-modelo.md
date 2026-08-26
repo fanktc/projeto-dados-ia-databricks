@@ -2,6 +2,8 @@
 
 **Slides 23 a 37 · ~29 minutos · 2º deploy da noite**
 
+> Todas as queries deste passo, prontas para colar: [`QUERIES.md`](QUERIES.md)
+
 ## O que este prompt faz
 
 Mede as respostas da sala **antes** de treinar, treina, registra o modelo no

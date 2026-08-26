@@ -2,6 +2,8 @@
 
 **Slides 16 a 22 · ~17 minutos · 1º deploy da noite**
 
+> Todas as queries deste passo, prontas para colar: [`QUERIES.md`](QUERIES.md)
+
 ## O que este prompt faz
 
 Transforma o fato de vendas, que tem uma linha por **item**, em uma tabela com

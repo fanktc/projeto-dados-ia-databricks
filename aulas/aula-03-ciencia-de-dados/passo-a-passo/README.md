@@ -3,6 +3,10 @@
 Um arquivo por prompt, curto, com o que fazer e onde clicar. Deixe esta pasta
 aberta numa aba ao lado do Claude Code.
 
+> ⭐ **[`QUERIES.md`](QUERIES.md) — todas as queries de conferência num lugar
+> só, na ordem dos prompts.** Deixe aberto numa aba do SQL Editor antes de
+> começar: é o plano B para qualquer tela que não carregar ao vivo.
+
 | Ordem | Arquivo | Entrega | Slides |
 |---|---|---|---|
 | 1º | [`01-features.md`](01-features.md) | as features dos 3.000 clientes | 16–22 |

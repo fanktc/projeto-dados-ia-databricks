@@ -26,7 +26,9 @@ usa já existe** — nenhuma fonte precisa ser criada antes:
 | `silver.oportunidades` | `data_abertura`, `etapa`, `ganha` |
 | `silver.visitas` | `data_visita`, `gerou_pedido` |
 
-O job está com **12 tarefas** e o `bundle deploy` passa limpo.
+O job está com **12 tarefas** e o `bundle deploy` passa limpo. A pasta
+`rotaperfume/src/ml/` **não existe** — ela está no `.gitignore` para nascer
+vazia toda vez, e é isso que faz os prompts terem o que construir.
 
 > **No deploy, se aparecer pedido de confirmação para APAGAR O DASHBOARD:
 > recuse e me chame.** O dashboard é da noite 2 e a chave do recurso

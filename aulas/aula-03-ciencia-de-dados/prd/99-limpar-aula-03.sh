@@ -170,7 +170,9 @@ LINHAS=$(consulta "SELECT COUNT(*) AS n FROM $CATALOGO.gold.fato_vendas")
 DIVERGENCIA=$(consulta "SELECT ROUND(ABS(
     (SELECT SUM(receita) FROM $CATALOGO.gold.fato_vendas) -
     (SELECT SUM(valor_liquido) FROM $CATALOGO.silver.pedidos WHERE NOT cancelado)), 2) AS n")
-if [ "$DIVERGENCIA" != "0" ] && [ "$DIVERGENCIA" != "0.0" ] && [ "$DIVERGENCIA" != "?" ]; then
+# Comparação NUMÉRICA: "0.00" não é igual a "0" como texto, e o aviso
+# disparava com divergência zero.
+if [ "$DIVERGENCIA" != "?" ] && awk "BEGIN{exit !(${DIVERGENCIA:-0} > 0.01)}"; then
   echo "  AVISO receita gold x silver diverge em R\$ $DIVERGENCIA"
   echo "        O teste 1 da noite 2 vai quebrar o job. Isto não é da noite 3."
 fi

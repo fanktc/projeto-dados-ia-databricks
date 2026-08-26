@@ -6,7 +6,8 @@
 
 Pega os 200 maiores scores da base inteira, cruza com a carteira de cada
 vendedor e escreve a lista da semana **em português**: quem ligar, por quê e o
-que oferecer. Cria também as quatro funções que o agente consulta.
+que oferecer. Cria as quatro funções que o agente consulta, **e a aba do
+dashboard onde o vendedor vê a lista**.
 
 No fim existe `gold.fila_semanal` — e ela é a resposta literal ao que o diretor
 perguntou no slide 2.

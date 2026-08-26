@@ -21,6 +21,8 @@ O texto completo de cada prompt, com o que falar e as armadilhas, está em
 - [ ] **Limpe a noite 3**, se você já ensaiou. Um comando, e ele confere
       sozinho que não sobrou nada:
       `bash ../prd/99-limpar-aula-03.sh <perfil> --apagar`
+- [ ] **Confira que `rotaperfume/src/ml/` NÃO existe.** Ela nasce vazia: está
+      no `.gitignore` justamente para isso. Se existir, a limpeza apaga
 - [ ] **Confira que a noite 2 está de pé** — é de onde tudo parte:
 
 ```bash
@@ -36,6 +38,25 @@ noite 2 e não adianta seguir.
       1. **Catalog** → `lakehouse_rotaperfume` → `gold`
       2. **Jobs & Pipelines** → `rotaperfume_pipeline` (pode aparecer como *Workflows*)
       3. **SQL Editor**, com uma query em branco
+
+---
+
+## Se travar no meio da aula
+
+Cada prompt tem um **gabarito** em [`../gabarito/`](../gabarito): o arquivo que
+funciona, já rodado contra o workspace. Se o Claude Code empacar e a sala
+estiver esperando:
+
+```bash
+cp aulas/aula-03-ciencia-de-dados/gabarito/11-features.py \
+   aulas/aula-02-engenharia-de-dados/rotaperfume/src/ml/
+cd aulas/aula-02-engenharia-de-dados/rotaperfume
+databricks bundle deploy --target dev --profile <perfil>
+bash scripts/rodar-tarefa.sh <perfil> ml_features
+```
+
+Não é derrota: é o que qualquer pessoa faz quando o relógio aperta. Diga isso
+em voz alta e siga.
 
 ---
 

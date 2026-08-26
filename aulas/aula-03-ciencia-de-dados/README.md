@@ -80,7 +80,7 @@ funções que o agente consulta, e ensina o Genie a nunca inventar número.
 > **Entrega:** `gold.fila_semanal` com `motivo` e `sugestao` por cliente, mais
 > `priorizar_carteira`, `contexto_cliente`, `sugerir_produtos` e
 > `checar_disponibilidade` como funções do Unity Catalog.
-> **O número da vez:** **200 contatos entre ~42 vendedores, de 2 a 10 cada** —
+> **O número da vez:** **200 contatos entre ~36 vendedores, de 2 a 10 cada** —
 > e três testes que quebram o job se a fila vier torta.
 
 O roteiro da noite, com cronograma e as falas:

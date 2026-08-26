@@ -80,10 +80,17 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
                             desligado não recebe ligação para fazer.
      silver.vendedores      vendedor_id -> nome. A carteira só tem o id.
 
-   Os 200 clientes de maior score da BASE INTEIRA — ORDER BY score DESC
-   LIMIT 200, depois de já ter juntado a carteira — e só então divida por
-   vendedor, com ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY score DESC)
-   para dar a ordem de ligação de cada um.
+   A ORDEM DAS OPERAÇÕES IMPORTA, e é o erro mais fácil de cometer aqui:
+
+     1º  junte a carteira e DESCARTE quem não é elegível
+         (sem carteira vigente, ou vendedor desligado)
+     2º  ORDER BY score DESC LIMIT 200
+     3º  ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY score DESC)
+
+   Se o descarte vier DEPOIS do LIMIT, a fila sai com ~172 linhas em vez de
+   200 — seis dos 42 vendedores estão desligados e levam junto os clientes
+   deles — e o teste 1 quebra o job. Filtrando antes, sobram 2.393 clientes
+   elegíveis e a fila fecha em 200 exatas, distribuídas em ~36 vendedores.
    Não use cota igual por vendedor: a carteira de um é mais quente que a do
    outro, e cota fixa obriga a gastar ligação com cliente frio.
 
@@ -170,8 +177,10 @@ FROM lakehouse_rotaperfume.gold.fila_semanal
 GROUP BY vendedor ORDER BY ligacoes DESC;
 ```
 
-**200 contatos em ~42 vendedores, de 2 a 10 ligações cada.** O vendedor do topo
-não é o melhor vendedor — é o que tem a carteira mais quente. E isso é uma
+**200 contatos em ~36 vendedores, de 2 a 10 ligações cada.** São 36 e não 42
+porque seis vendedores estão desligados com carteira ainda vinculada — a nona
+das dez sujeiras da noite 2, aparecendo de novo. O vendedor do topo não é o
+melhor vendedor — é o que tem a carteira mais quente. E isso é uma
 conversa de negócio que só existe porque agora tem número.
 
 **3 · A ferramenta, chamada como o agente chamaria**
@@ -204,6 +213,6 @@ resposta tem query embaixo.
 |---|---|---|
 | `CREATE FUNCTION` falha com coluna ambígua | parâmetro com o mesmo nome de uma coluna | prefixe com `p_` — está no prompt, mas acontece |
 | `CREATE FUNCTION ... RETURNS TABLE` recusado | função de tabela indisponível no workspace | plano B: crie as quatro como **views** (`gold.ferramenta_*`) e mostre o Genie consultando; o argumento da aula é o mesmo |
-| A fila veio com menos de 200 linhas | cliente sem vendedor na carteira, ou carteira com vendedor desligado | é uma das dez sujeiras da noite 2 — mostre, e decida na hora: excluir ou atribuir ao gerente |
+| A fila veio com ~172 linhas | o descarte de vendedor desligado rodou DEPOIS do `LIMIT 200` | é o erro previsto no prompt: peça para filtrar antes de limitar. **Mostre a sujeira nº 9 da noite 2 cobrando o preço dela** |
 | `motivo` com `NULL` no meio | faltou o `ELSE` no `CASE WHEN` | o teste 2 pegou. É o teste funcionando |
 | O Genie inventou um número | a instrução não entrou no espaço | mostre o antes e o depois da instrução — vale mais que dez slides sobre alucinação |

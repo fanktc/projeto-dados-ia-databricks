@@ -80,6 +80,8 @@ ORDER BY ordem;
 -- 2. A conta fecha, e a distribuição conta uma história
 SELECT COUNT(DISTINCT vendedor) AS vendedores, COUNT(*) AS ligacoes
 FROM lakehouse_rotaperfume.gold.fila_semanal;
+-- 200 ligações em ~36 vendedores. São 36 e não 42 porque seis estão
+-- desligados com carteira vinculada: a sujeira nº 9 cobrando o preço.
 
 -- 3. A ferramenta, chamada como o agente chamaria
 SELECT * FROM lakehouse_rotaperfume.gold.priorizar_carteira('<nome do vendedor>', 5);
@@ -118,6 +120,6 @@ Slides **43 a 45**: o antes e o depois, o arco das três noites, a frase.
 |---|---|
 | `CREATE FUNCTION` falha com coluna ambígua | parâmetro com nome igual ao de uma coluna — peça o prefixo `p_` |
 | `RETURNS TABLE` recusado no workspace | plano B: as quatro viram **views** `gold.ferramenta_*`. O argumento é o mesmo |
-| A fila veio com menos de 200 linhas | cliente sem carteira vigente, ou vendedor desligado. **É dado real** — mostre e explique |
+| A fila veio com ~172 linhas | o descarte de vendedor desligado rodou depois do `LIMIT 200`. Peça para filtrar antes de limitar |
 | `motivo` com `NULL` no meio | faltou o `ELSE` no `CASE WHEN`. O teste 2 pegou: é o teste funcionando |
 | O Genie inventou um número | a instrução não entrou no espaço. Mostre o antes e o depois — vale mais que dez slides sobre alucinação |

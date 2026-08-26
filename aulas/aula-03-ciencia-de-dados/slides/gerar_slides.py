@@ -238,6 +238,39 @@ def fluxo(s, y, etapas, h=0.95, quebrado=False, tam=13):
                   alinha=PP_ALIGN.CENTER)
 
 
+
+# ── arquétipo 6: tabela de dados ──────────────────────────────────────
+def tabela(s, y, colunas, linhas, larguras=None, tam=13, alt=0.58,
+           destaque=None, cor_destaque=None):
+    """Uma tabela com dados reais. colunas: lista de rótulos. linhas: lista de
+    listas. destaque: índice da linha a realçar."""
+    n = len(colunas)
+    larguras = larguras or [UTIL / n] * n
+    xs, acum = [], MARGEM
+    for w in larguras:
+        xs.append(acum); acum += w
+
+    for x, w, rot in zip(xs, larguras, colunas):
+        texto(s, rot, x + 0.22, y, w - 0.3, 0.3, 11, ACENTO, True, spc=120)
+    yy = y + 0.4
+    for i, linha in enumerate(linhas):
+        marcada = destaque is not None and i == destaque
+        cor = cor_destaque or ACENTO
+        cartao(s, MARGEM, yy, UTIL, alt,
+               tom=CARD_2 if marcada else CARD,
+               borda=cor if marcada else BORDA,
+               largura_borda=1.5 if marcada else 1.25)
+        for x, w, val in zip(xs, larguras, linha):
+            negrito = marcada or x == xs[0]
+            cor_txt = (cor if marcada and x != xs[0] else
+                       (BRANCO if x == xs[0] else CINZA))
+            texto(s, str(val), x + 0.22, yy + (alt - tam / 72 * 1.3) / 2,
+                  w - 0.3, alt, tam, cor_txt, negrito,
+                  fonte=MONO if x != xs[0] else SERIF)
+        yy += alt + 0.1
+    return yy
+
+
 # ══════════════════════════════════════════════════════════════════════
 #  BLOCO 1 · A PERGUNTA DOS 200                            slides 1–7
 # ══════════════════════════════════════════════════════════════════════
@@ -540,6 +573,22 @@ bloco(s, 5.68, "Mesma recência. Situações opostas.\n"
                 "Ordenar por recência coloca os dois na mesma posição da fila.",
       h=1.05, tom=CARD_2, borda=ALERTA, cor=BRANCO, tam=16)
 
+# ── NOVO · uma linha por cliente, com dado de verdade ─────────────────
+s, y = cabecalho("O que a tabela de features tem dentro",
+                 "Uma linha por cliente. Só isso.",
+                 "Três clientes reais da base, com as colunas que o modelo vai ler.")
+tabela(s, y,
+       ["CLIENTE", "COMPROU HÁ", "COMPRA A CADA", "ATRASO", "PEDIDOS", "TOTAL"],
+       [["Casa de Fragrâncias Sublime", "10 dias", "50 dias", "0,2", "15", "R$ 38 mil"],
+        ["Bella Diva", "29 dias", "30 dias", "0,95", "11", "R$ 52 mil"],
+        ["Comercial Lumiar", "545 dias", "43 dias", "10,0", "9", "R$ 61 mil"]],
+       larguras=[3.9, 1.7, 2.0, 1.3, 1.4, 1.53], destaque=2, cor_destaque=ALERTA)
+bloco(s, y + 2.5, "São 20 colunas assim. Nenhuma delas é opinião —\n"
+                   "todas saem de somar e dividir o que já aconteceu.", h=1.0, tam=16)
+nota(s, "O terceiro cliente está há 545 dias sem comprar, com ciclo de 43. Dez "
+        "vezes atrasado. Pergunte para a sala se vale ligar para ele — a "
+        "resposta intuitiva é sim, e o slide seguinte mostra que é não.")
+
 # ── 12 · a feature que muda o jogo ────────────────────────────────────
 s, y = cabecalho("Conhecimento de negócio virando coluna", "Atraso relativo")
 cartao(s, MARGEM, y, UTIL, 1.0, tom=CARD, borda=ACENTO, largura_borda=1.5)
@@ -576,6 +625,21 @@ codigo(s, y + 1.98,
 divisor("Prompt 2 de 3 · segundo passo", "O modelo",
         "E o erro que mata projeto em produção.")
 
+# ── NOVO · treino e teste, com os números reais ───────────────────────
+s, y = cabecalho("Como se sabe se o modelo é bom",
+                 "Esconda parte dos clientes.\nDepois confira.")
+mono(s, y, "2.815 clientes que já compraram\n"
+           "  │\n"
+           "  ├──  2.111  TREINO   o modelo vê. É olhando para eles que aprende\n"
+           "  │\n"
+           "  └──    704  TESTE    o modelo NÃO vê. Guardados no cofre", tam=13, h=2.3)
+faixas(s, y + 2.55, [
+    ("Por que esconder", "Nota tirada no treino é prova com o gabarito na mão."),
+    ("O que se mede", "Dos 704 escondidos, o modelo acertou quem ia comprar?", "destaque"),
+], alt=0.66, larg_esq=4.0)
+bloco(s, y + 4.15, "Todo número que a gente levar para a tela hoje sai dos 704.",
+      h=0.7, tam=16)
+
 # ── 15 · o problema, escrito direito ──────────────────────────────────
 s, y = cabecalho("Especificação", "Antes de codar, escreva em uma frase")
 cartao(s, MARGEM, y, UTIL, 1.42, tom=CARD_2, borda=ACENTO, largura_borda=1.5)
@@ -609,40 +673,23 @@ bloco(s, y + 3.9, "Estas três linhas são iguais em qualquer empresa do mundo.\
 nota(s, "É aqui que a sala espera a aula ficar difícil, e é o slide mais curto "
         "da noite. Diga isso em voz alta.")
 
-# ── 26 · como a árvore aprende ────────────────────────────────────────
-s, y = cabecalho("O que acontece dentro do fit()", "Como a árvore aprende")
-mono(s, y, "palpite inicial      10,1% para todo mundo   (a taxa base)\n"
-           "  + árvore 1         \"atraso entre 1 e 2?\"     corrige o erro que sobrou\n"
-           "  + árvore 2         \"visitou nos últimos 30d?\" corrige o que ainda sobrou\n"
-           "  + ... 200 árvores rasas, cada uma consertando a anterior\n"
-           "  = score do cliente", tam=12.5, h=2.35)
-faixas(s, y + 2.6, [
-    ("Uma árvore é",   "uma sequência de perguntas sim/não sobre as colunas."),
-    ("Boosting é",     "somar centenas delas, cada uma treinada no erro que sobrou.", "destaque"),
-    ("Por que serve aqui", "acha os pontos de corte sozinha, aguenta nulo e não liga para escala."),
-], alt=0.62, larg_esq=4.4)
-nota(s, "O 'Hist' do HistGradientBoosting é o truque de velocidade: em vez de "
-        "testar todo valor possível de corte, agrupa cada coluna em ~255 faixas. "
-        "Treina em segundos no serverless.")
-
-# ── 27 · havia outros caminhos ────────────────────────────────────────
-s, y = cabecalho("A pergunta que vem da sala", "Por que árvore, e não Poisson?")
-faixas(s, y, [
-    ("Regressão logística",
-     "Um coeficiente por coluna, fácil de explicar. Assume relação de linha reta — e atraso 1,5 é ótimo enquanto atraso 5 é péssimo."),
-    ("Poisson / BG-NBD\n+ Monte Carlo",
-     "Modela a TAXA de compra de cada cliente e simula a semana. É o mais fiel ao ciclo de reposição e diz QUANTOS pedidos, não só se compra."),
-    ("Uplift",
-     "Responde 'quem muda de comportamento SE eu ligar'. É a pergunta certa quando há desconto — e exige teste A/B: metade da lista sem contato."),
-    ("Árvore  ·  a escolha",
-     "Acha sozinha que atraso perto de 1,5 é ouro. Aceita as 20 colunas como vieram, sem transformar nada.", "destaque"),
-], alt=0.86, larg_esq=3.9, tam=12.5)
-bloco(s, y + 3.9, "Nenhum está errado. O critério foi: qual usa TODO o dado que a gente\n"
-                   "limpou ontem — e cabe em três linhas, ao vivo.", h=1.0, tam=15)
-nota(s, "O BG/NBD é o modelo clássico de compra recorrente: cada cliente compra a "
-        "uma taxa própria e, a cada compra, tem uma chance de parar de ser cliente. "
-        "É lindo e é honesto. O custo é que ele lê só recência e frequência — "
-        "CRM, visitas e mix ficam de fora, e foi metade do trabalho do prompt 1.")
+# ── NOVO · quem comprou ontem vale zero ───────────────────────────────
+s, y = cabecalho("Dois clientes reais, dois extremos",
+                 "Quem comprou ontem\nnão compra hoje")
+tabela(s, y,
+       ["CLIENTE", "COMPROU HÁ", "COMPRA A CADA", "NOTA DO MODELO"],
+       [["Bella Diva", "29 dias", "30 dias", "0,97"],
+        ["Comercial Sublime", "1 dia", "51 dias", "0,00"]],
+       larguras=[4.2, 2.4, 2.6, 2.63], tam=15, alt=0.78)
+bloco(s, y + 2.2,
+      "O que comprou ONTEM vale zero. O que está há um mês, no ritmo dele,\n"
+      "vale 0,97. É por isso que \"ligue para quem sumiu\" não funciona.",
+      h=1.1, tam=17)
+texto(s, "Distribuição funciona por ciclo de reposição: o varejista acabou de "
+         "receber a mercadoria — ele não compra de novo agora.",
+      MARGEM, y + 3.5, UTIL, 0.9, 15, ACENTO_CLR, entrelinha=1.3)
+nota(s, "Este é o slide para parar e deixar a sala olhar. Os dois números saíram "
+        "do modelo treinado, não são exemplo inventado.")
 
 # ── 26 · o que é AUC, e a régua da sala ───────────────────────────────
 s, y = cabecalho("A palavra que vai aparecer a noite inteira", "O que é AUC")
@@ -755,18 +802,6 @@ texto(s, "Repare no lift_top200. Essa é a métrica que responde a pergunta do "
          "diretor — e é ela que a gente versiona.",
       MARGEM, 6.62, UTIL, 0.4, 13.5, ACENTO_CLR)
 
-# ── 34 · anatomia de um run ───────────────────────────────────────────
-s, y = cabecalho("O que fica guardado a cada treino", "A anatomia de um run")
-faixas(s, y, [
-    ("params",       "o que VOCÊ escolheu: max_iter, learning_rate, a data de corte, a janela."),
-    ("metrics",      "o que SAIU: auc, lift_top200, acertos_top200, a taxa base."),
-    ("artifacts",    "o modelo serializado, e qualquer gráfico ou arquivo que você anexar."),
-    ("signature",    "o schema de entrada e saída. É o que impede alguém de pontuar com as colunas trocadas.", "destaque"),
-    ("source + tags", "qual notebook rodou, qual job, qual commit, quem disparou e quando."),
-], alt=0.58, larg_esq=3.2)
-bloco(s, 6.02, "Um run por treino. Vinte treinos viram uma tabela de vinte linhas\n"
-                "que você ordena por lift — sem abrir um notebook sequer.", h=1.0, tam=15)
-
 # ── 35 · por que usamos MLflow aqui ───────────────────────────────────
 s, y = cabecalho("Por que isso importa NESTE projeto",
                  "Três motivos concretos,\nnão boas práticas")
@@ -783,39 +818,11 @@ codigo(s, y + 2.9, "# quem consome nunca precisa saber o número da versão\n"
 texto(s, "Sem isso, \"o modelo está pior esse mês\" é uma conversa sem prova de "
          "nenhum dos dois lados.", MARGEM, 6.6, UTIL, 0.4, 13.5, ACENTO_CLR)
 
-# ── 36 · o modelo vira objeto de catálogo ─────────────────────────────
-s, y = cabecalho("O que o Databricks entrega aqui",
-                 "O modelo do lado das tabelas")
-faixas(s, y, [
-    ("Mesmo catálogo",   "lakehouse_rotaperfume.gold.propensao_compra. Mesmo GRANT, mesma auditoria."),
-    ("Linhagem inteira", "Do CSV que chegou às 6h até a lista que o vendedor abre às 8h."),
-    ("Alias, não estágio", "@prod é um apelido móvel. Promover e reverter é um comando.", "destaque"),
-    ("Um run por treino", "'Por que o número mudou?' vira uma tela, não arqueologia."),
-], alt=0.68, larg_esq=4.8)
-codigo(s, y + 3.1, "modelo = mlflow.sklearn.load_model(\n"
-                    "    \"models:/lakehouse_rotaperfume.gold.propensao_compra@prod\")", tam=13)
-texto(s, "Quem consome escreve @prod e nunca precisa saber o número da versão.",
-      MARGEM, 6.6, UTIL, 0.4, 13.5, ACENTO_CLR)
-
 # ══════════════════════════════════════════════════════════════════════
 #  BLOCO 8 · A FILA  ·  prompt 3 rodando                slides 33–37
 # ══════════════════════════════════════════════════════════════════════
 
 divisor("Prompt 3 de 3 · quarto passo", "Os 200", "Do score à ligação.")
-
-# ── 34 · batch, e não endpoint ────────────────────────────────────────
-s, y = cabecalho("A pergunta técnica que sempre aparece",
-                 "Batch ou tempo real?")
-faixas(s, y, [
-    ("A pergunta da noite", "'Com quem eu falo essa semana?' Isso não muda a cada clique."),
-    ("Endpoint serve para", "Fraude na autorização. Recomendação no carregamento da página. 50ms."),
-    ("Aqui seria",          "Infraestrutura ligada 24h para responder o que só muda de manhã.", "destaque"),
-    ("O tamanho do dado",   "3.000 clientes cabem na memória. Spark serve para o que não cabe."),
-], alt=0.68, larg_esq=4.8)
-bloco(s, y + 3.15, "O score vira TABELA — e tabela o dashboard lê, o Genie lê,\n"
-                    "o agente lê e o vendedor lê. Endpoint só o código lê.", h=1.05, tam=16)
-nota(s, "E, honestamente: o Free Edition não oferece endpoint de modelo próprio. "
-        "A escolha é técnica E é a conta.")
 
 # ── 21 · o gap que mata projetos ──────────────────────────────────────
 s, y = cabecalho("Onde os projetos de ML morrem",
@@ -829,6 +836,19 @@ texto(s, "“Já vi empresa com modelo excelente rodando há dois anos, AUC de 0
       MARGEM + 0.5, y + 1.85, UTIL - 1.0, 1.3, 16, BRANCO, entrelinha=1.35)
 texto(s, "O último metro é o mais difícil. E é o que o agente resolve.",
       MARGEM, y + 3.55, UTIL, 0.4, 16, ACENTO_CLR, True)
+
+# ── NOVO · a fila que saiu do banco ───────────────────────────────────
+s, y = cabecalho("O que o pipeline entregou",
+                 "A lista de segunda-feira",
+                 "Três linhas da fila_semanal, exatamente como saíram da tabela.")
+tabela(s, y,
+       ["CLIENTE", "NOTA", "POR QUE ESTÁ NA LISTA"],
+       [["Essência Nova Era", "0,90", "Comprou lançamento recente. Alta chance de repetir."],
+        ["Perfumaria Aurora", "0,88", "4 pedidos nos últimos 90 dias. Ciclo curto — não esfrie."],
+        ["Bella Vita", "0,87", "Mais da metade das visitas viram pedido (67%). Vale a ida."]],
+       larguras=[3.3, 1.2, 7.33], tam=12.5, alt=0.66)
+bloco(s, y + 2.7, "O vendedor não recebe um número. Recebe um nome, uma ordem\n"
+                   "e uma frase que ele entende antes de discar.", h=1.0, tam=16)
 
 # ── 22 · o agente ─────────────────────────────────────────────────────
 s, y = cabecalho("A última camada", "Ele não inventa. Ele consulta.")
@@ -879,6 +899,22 @@ nota(s, "Se perguntarem por que não é a mesma cota para todo mundo: porque a "
 # ══════════════════════════════════════════════════════════════════════
 #  FECHO                                                 slides 38–40
 # ══════════════════════════════════════════════════════════════════════
+
+# ── NOVO · os seis motivos da lista ───────────────────────────────────
+s, y = cabecalho("A lista não repete a mesma desculpa",
+                 "Seis motivos, 200 contatos")
+tabela(s, y,
+       ["MOTIVO", "CONTATOS", "O QUE O VENDEDOR FAZ"],
+       [["Comprou lançamento", "67", "Oferece o resto da linha nova"],
+        ["Ciclo curto", "60", "Mantém a cadência, não deixa esfriar"],
+        ["Visita converte", "38", "Marca visita em vez de ligar"],
+        ["Cliente grande", "19", "Relacionamento, não empurra produto"],
+        ["Manutenção", "12", "Contato rápido de rotina"],
+        ["Atrasado", "4", "Liga hoje — risco de perder"]],
+       larguras=[3.6, 1.7, 6.53], tam=12.5, alt=0.5, destaque=5, cor_destaque=ALERTA)
+texto(s, "Se os 200 saíssem com o mesmo motivo, a lista viraria enfeite. "
+         "A ordem das regras é que garante isso.",
+      MARGEM, 6.5, UTIL, 0.4, 14, ACENTO_CLR, True)
 
 # ── 24 · o antes e o depois ───────────────────────────────────────────
 s, y = cabecalho("A resposta completa", "Quais 200?")

@@ -1,6 +1,6 @@
 # Prompt 3 · A fila e o agente
 
-**Slides que acompanham:** 38 a 45 (divisor *"Os 200"*, batch ou tempo real, o
+**Slides que acompanham:** 37 a 45 (divisor *"Os 200"*, batch ou tempo real, o
 gap que mata projetos, as ferramentas do agente, a resposta para o diretor, o
 antes e o depois, o arco de três noites, a frase da noite).
 

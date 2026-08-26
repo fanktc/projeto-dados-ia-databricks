@@ -44,9 +44,9 @@ métricas não sumiram — foram para dentro dos três prompts, onde pertencem:
 
 | # | Entrega | Slides | Arquivo |
 |---|---|---|---|
-| 1 | **Features** — o que descreve um cliente | 16–22 | [`prompt-01-features.md`](prompt-01-features.md) |
-| 2 | **Modelo e MLflow** — o baseline que choca | 23–37 | [`prompt-02-modelo.md`](prompt-02-modelo.md) |
-| 3 | **A fila e o agente** — os 200, com motivo | 38–45 | [`prompt-03-fila-e-agente.md`](prompt-03-fila-e-agente.md) |
+| 1 | **Features** — o que descreve um cliente | 16–23 | [`prompt-01-features.md`](prompt-01-features.md) |
+| 2 | **Modelo e MLflow** — o baseline que choca | 24–36 | [`prompt-02-modelo.md`](prompt-02-modelo.md) |
+| 3 | **A fila e o agente** — os 200, com motivo | 37–45 | [`prompt-03-fila-e-agente.md`](prompt-03-fila-e-agente.md) |
 
 E, para ensaiar quantas vezes quiser:
 [`99-limpar-aula-03.md`](99-limpar-aula-03.md) — apaga só a noite 3 e devolve
@@ -62,27 +62,23 @@ o ambiente ao fim da noite 2.
 | 8–9 | O plano da noite: três prompts, três deploys | 4 |
 | 10–12 | A gold de ontem — a matéria-prima, com query na tela | 6 |
 | 13–15 | **As premissas de ML** — o que é modelo, o vocabulário, o que assumimos | 7 |
-| 16–22 | Feature engineering e as features · **prompt 1 rodando** | 19 |
-| 23–30 | O modelo, o boosting, as alternativas, o AUC e o vazamento | 16 |
-| 31–37 | **MLflow** — o que é, a anatomia de um run, por que aqui · **prompt 2 rodando** | 16 |
-| 38–42 | A fila e o agente · **prompt 3 rodando** | 18 |
+| 16–23 | Feature engineering e as features · **prompt 1 rodando** | 18 |
+| 24–31 | O modelo, treino × teste, o AUC e o vazamento | 14 |
+| 32–36 | **MLflow** — o que é e por que aqui · **prompt 2 rodando** | 10 |
+| 37–42 | A fila e o agente · **prompt 3 rodando** | 16 |
 | 43–45 | Fecho | 5 |
 
-**Total: ~105 min de conteúdo técnico.** Boa parte disso é fala enquanto o
-Claude Code trabalha — os slides de conceito não são intervalo, são o que
-preenche os três deploys.
+**Total: ~94 min.** Cinco slides são de **dado real do workspace**, não de
+conceito: a tabela de features (21), os dois clientes extremos (28), treino ×
+teste (25), a fila que saiu do banco (39) e os seis motivos (42). Com 70% da
+sala leiga, são eles que carregam a explicação.
 
-### O deck curto (~85 min)
+### O que saiu, e continua disponível para o Q&A
 
-Se o relógio apertar, corte nesta ordem. Nenhum deles quebra o argumento:
-
-| Slide | Por que sai primeiro |
-|---|---|
-| 10 e 11 | Fique só com o 12, que é o que amarra a limpeza na feature |
-| 27 · Por que árvore e não Poisson | Vale mais como resposta quando a pergunta vem da sala |
-| 35 · A anatomia de um run | Mostre a tela do MLflow no lugar — é mais convincente |
-| 39 · Batch ou tempo real | Também é resposta de Q&A |
-| 26 · Como a árvore aprende | Só se for necessário: é o slide que tira o mistério do `fit()` |
+Como a árvore aprende, por que árvore e não Poisson, a anatomia de um run,
+batch × tempo real e o modelo do lado das tabelas. São as cinco perguntas que
+o pessoal técnico faz — e valem mais respondidas quando alguém pergunta do que
+como slide corrido.
 
 ---
 

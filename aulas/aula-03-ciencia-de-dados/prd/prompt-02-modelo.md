@@ -1,6 +1,6 @@
 # Prompt 2 · O modelo e o MLflow
 
-**Slides que acompanham:** 23 a 37 (divisor *"O modelo"*, o problema escrito em
+**Slides que acompanham:** 24 a 36 (divisor *"O modelo"*, o problema escrito em
 uma frase, o algoritmo em três linhas, **por que árvore e não Poisson**, **o que
 é AUC**, vazamento de dado, o teste que quase ninguém escreve, divisor
 *"MLflow"*, a pergunta de daqui a seis meses, o que o MLflow resolve, o modelo

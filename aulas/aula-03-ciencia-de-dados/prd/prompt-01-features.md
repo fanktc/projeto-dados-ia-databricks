@@ -1,6 +1,6 @@
 # Prompt 1 · Features — o que descreve um cliente
 
-**Slides que acompanham:** 16 a 22 (divisor *"O que descreve um cliente"*, **o
+**Slides que acompanham:** 16 a 23 (divisor *"O que descreve um cliente"*, **o
 que é feature engineering**, de *"O que descreve um cliente"*, de
 onde vêm as features, RFM, os dois clientes com a mesma recência, atraso
 relativo, os quatro grupos).

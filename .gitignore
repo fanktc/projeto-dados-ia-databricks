@@ -6,3 +6,7 @@ dados/
 *.png
 __pycache__/
 .venv/
+
+# O código da noite 3 NÃO é versionado dentro do bundle: ele nasce dos três
+# prompts, ao vivo. O resultado esperado fica em aulas/aula-03-.../gabarito/.
+aulas/aula-02-engenharia-de-dados/rotaperfume/src/ml/

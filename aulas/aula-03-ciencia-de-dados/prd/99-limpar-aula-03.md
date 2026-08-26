@@ -15,9 +15,17 @@ bash aulas/aula-03-ciencia-de-dados/prd/99-limpar-aula-03.sh <perfil>           
 bash aulas/aula-03-ciencia-de-dados/prd/99-limpar-aula-03.sh <perfil> --apagar   # apaga
 ```
 
-O script não mexe no `pipeline.job.yml` — tirar as três tarefas e redeployar é
-o último passo, e ele avisa. Se preferir que o Claude Code faça isso também,
-use o prompt abaixo.
+**O script não mexe no `pipeline.job.yml`, e esse é o passo que falta.** Ele
+apaga o que está no workspace e a pasta `src/ml/`, mas as tarefas de ML
+continuam declaradas no YAML apontando para arquivos que não existem mais — e
+aí o próximo `bundle deploy` falha.
+
+Hoje são **oito** tarefas a remover: `ml_features`, `ml_modelo`, `ml_fila` (a
+versão atual) e `ml_treino`, `ml_promocao`, `ml_score`, `ml_testes`,
+`ml_carteira_do_dia` (a anterior). O script lista todas ao terminar.
+
+> **Se você não quiser fazer isso à mão, use o prompt abaixo em vez do
+> script** — ele cuida do YAML e do redeploy também.
 
 ---
 

@@ -86,6 +86,34 @@ No fim, confirme na tela:
 
 ---
 
+## O estado esperado depois — conferido no workspace
+
+Depois de limpar e redeployar, é isto que tem que estar de pé. Se algum número
+não bater, **não comece a noite 3**: o problema é da noite 2.
+
+| O quê | Valor |
+|---|---|
+| `gold.fato_vendas` | 191.080 linhas · R$ 102.303.828,05 |
+| Clientes com pedido antes de 2026-08-01 | 2.809 |
+| Clientes com pedido antes de 2026-08-31 | 2.810 |
+| `gold.dim_produto` | 292 SKUs |
+| Views de negócio na gold | 6 (`receita_mensal`, `ranking_marcas`, `margem_por_categoria`, `clientes_em_risco`, `efeito_lancamento`, `ruptura_por_marca`) |
+| Tarefas no `rotaperfume_pipeline` | 12 |
+| Modelos registrados em `gold` | nenhum |
+| Funções em `gold` | nenhuma |
+
+> **As seis views são pré-requisito do Genie Space.** Se faltar qualquer uma,
+> o `bundle deploy` falha com `PERMISSION_DENIED ... Table ... does not exist`
+> — e a mensagem não deixa nada óbvio. Recrie com:
+>
+> ```bash
+> python3 scripts/run_sql.py \
+>   aulas/aula-02-engenharia-de-dados/rotaperfume/src/gold/09-metricas-negocio.sql \
+>   --profile <perfil> --continuar
+> ```
+
+---
+
 ## Como conferir que sobrou só o que devia
 
 ```sql

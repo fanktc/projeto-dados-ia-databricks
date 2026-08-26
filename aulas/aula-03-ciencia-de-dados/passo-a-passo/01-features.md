@@ -81,7 +81,7 @@ SELECT COUNT(*)                             AS clientes,
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**Tem que dar ~2.815 clientes e ~10,1%.**
+**Tem que dar 2.809 clientes e 10,11%.**
 
 > **Escreva "20 de 200" no quadro.** É a taxa base: de cada 200 ligações às
 > cegas, 20 viram pedido. Todo o prompt 2 é a tentativa de superar isso.

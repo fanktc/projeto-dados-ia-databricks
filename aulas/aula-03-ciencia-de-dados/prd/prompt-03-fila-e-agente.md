@@ -13,6 +13,31 @@ e o que oferecer — mais as quatro ferramentas que o agente consulta.
 
 ---
 
+## O ambiente, conferido hoje
+
+Rodado contra `lakehouse_rotaperfume` no workspace. **Tudo o que este prompt
+usa já existe** — nenhuma fonte precisa ser criada antes:
+
+| Tabela | O que este prompt lê dela |
+|---|---|
+| `gold.score_propensao` | criada no prompt 2 — 2.810 clientes com nota |
+| `gold.features_cliente` | as features, para escrever o motivo |
+| `gold.dim_cliente` | `razao_social`, `cidade`, `uf` |
+| `silver.carteira` | `vigente` e `orfao_vendedor_desligado` — os dois são filtro |
+| `silver.vendedores` | `nome` e `ativo`. A carteira só tem `vendedor_id` |
+| `silver.estoque` | snapshot semanal: `data_snapshot`, `saldo`, `ruptura` |
+
+Não há nenhuma função SQL em `gold` — as quatro ferramentas nascem aqui.
+
+O job está com **12 tarefas** e o `bundle deploy` passa limpo.
+
+> **No deploy, se aparecer pedido de confirmação para APAGAR O DASHBOARD:
+> recuse e me chame.** O dashboard é da noite 2 e a chave do recurso
+> (`dashboard_comercial`) não pode ser renomeada — trocar a chave faz o bundle
+> apagar e recriar, com URL nova. **Nunca use `--auto-approve` aqui.**
+
+---
+
 ## O que mostrar antes
 
 **1 · O score, cru, como ele sai do modelo**

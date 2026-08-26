@@ -170,7 +170,7 @@ justamente quem não compra agora. Ninguém tinha medido.
 | **Ligar para os 200 de maior score** | **75 — 3,7×** |
 
 Dataset com `seed 42`, corte `2026-08-01`, janela de **7 dias** — a mesma
-semana da ligação — e score *out-of-fold* sobre os 2.815 clientes.
+semana da ligação — e score *out-of-fold* sobre os 2.809 clientes.
 
 **É o melhor momento da noite e ele acontece no prompt 2.** Não entregue antes.
 

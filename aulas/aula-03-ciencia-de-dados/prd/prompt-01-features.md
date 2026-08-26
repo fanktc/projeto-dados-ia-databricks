@@ -14,6 +14,27 @@ mesma função com datas diferentes. **Deploy nº 1 da noite.**
 
 ---
 
+## O ambiente, conferido hoje
+
+Rodado contra `lakehouse_rotaperfume` no workspace. **Tudo o que este prompt
+usa já existe** — nenhuma fonte precisa ser criada antes:
+
+| Tabela | O que este prompt lê dela |
+|---|---|
+| `gold.fato_vendas` | 191.080 linhas · R$ 102.303.828,05 · já traz `categoria`, `marca`, `canal` e `devolucao` |
+| `gold.dim_produto` | 292 SKUs, com `data_lancamento` |
+| `silver.oportunidades` | `data_abertura`, `etapa`, `ganha` |
+| `silver.visitas` | `data_visita`, `gerou_pedido` |
+
+O job está com **12 tarefas** e o `bundle deploy` passa limpo.
+
+> **No deploy, se aparecer pedido de confirmação para APAGAR O DASHBOARD:
+> recuse e me chame.** O dashboard é da noite 2 e a chave do recurso
+> (`dashboard_comercial`) não pode ser renomeada — trocar a chave faz o bundle
+> apagar e recriar, com URL nova. **Nunca use `--auto-approve` aqui.**
+
+---
+
 ## O que mostrar antes
 
 **1 · A gold sabe tudo sobre ontem e nada sobre a semana que vem**
@@ -179,7 +200,7 @@ SELECT '_cliente', COUNT(*), MIN(_referencia)
 FROM lakehouse_rotaperfume.gold.features_cliente;
 ```
 
-Aproximadamente 2.800 clientes em cada, com `2026-08-01` e `2026-08-31`
+2.809 e 2.810 clientes, com `2026-08-01` e `2026-08-31`
 declarados na própria linha. **A data de corte não é comentário no código: é
 coluna na tabela.**
 
@@ -192,8 +213,8 @@ SELECT COUNT(*)                                   AS clientes,
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**Tem que dar ~2.815 clientes e taxa base de ~10,1%** — ou seja, **20 de cada
-200 ligações às cegas viram pedido.**
+**Tem que dar 2.809 clientes e taxa base de 10,11%** — conferido no workspace
+hoje. Ou seja, **20 de cada 200 ligações às cegas viram pedido.**
 
 > **Anote os dois números no quadro.** É o "20" do slide *Não é acurácia*, e todo o prompt 2 é
 > a tentativa de superá-lo.

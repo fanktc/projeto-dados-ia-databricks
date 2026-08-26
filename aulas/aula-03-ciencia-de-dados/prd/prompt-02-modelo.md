@@ -14,6 +14,28 @@ os 3.000 clientes com nota. **Deploy nº 2 da noite.**
 
 ---
 
+## O ambiente, conferido hoje
+
+Rodado contra `lakehouse_rotaperfume` no workspace. **Tudo o que este prompt
+usa já existe** — nenhuma fonte precisa ser criada antes:
+
+| Tabela | O que este prompt lê dela |
+|---|---|
+| `gold.features_treino` | 2.809 clientes, alvo `comprou_em_7d`, taxa base 10,11% |
+| `gold.features_cliente` | 2.810 clientes, corte 2026-08-31 |
+
+Não há modelo registrado em `gold` — a limpeza levou o `propensao_compra`
+antigo e as duas versões dele. O registro vai nascer deste prompt.
+
+O job está com **12 tarefas** e o `bundle deploy` passa limpo.
+
+> **No deploy, se aparecer pedido de confirmação para APAGAR O DASHBOARD:
+> recuse e me chame.** O dashboard é da noite 2 e a chave do recurso
+> (`dashboard_comercial`) não pode ser renomeada — trocar a chave faz o bundle
+> apagar e recriar, com URL nova. **Nunca use `--auto-approve` aqui.**
+
+---
+
 ## O que mostrar antes
 
 **1 · Peça a resposta da sala — e escreva no quadro**
@@ -31,7 +53,7 @@ SELECT ROUND(100 * AVG(comprou_em_7d), 2) AS taxa_base_pct
 FROM lakehouse_rotaperfume.gold.features_treino;
 ```
 
-**~10,1%.** Vinte de cada duzentas.
+**10,11%.** Vinte de cada duzentas.
 
 > *"Se eu sortear 200 nomes num chapéu, essa é a fração que compra sozinha.
 > Qualquer coisa que a gente construir hoje precisa ganhar disso — senão o

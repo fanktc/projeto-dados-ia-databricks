@@ -70,41 +70,57 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
 
 1. A TABELA DA SEMANA: gold.fila_semanal
 
-   Junte score_propensao com features_cliente, dim_cliente e silver.carteira.
+   As fontes e como juntar:
+     gold.score_propensao   cliente_id, score, faixa, versao
+     gold.features_cliente  as features, para escrever o motivo
+     gold.dim_cliente       razao_social, cidade, uf
+     silver.carteira        cliente_id -> vendedor_id.
+                            FILTRE por vigente = true, e descarte
+                            orfao_vendedor_desligado = true: vendedor
+                            desligado não recebe ligação para fazer.
+     silver.vendedores      vendedor_id -> nome. A carteira só tem o id.
+
    Os 200 clientes de maior score da BASE INTEIRA — ORDER BY score DESC
-   LIMIT 200 — e só depois divida por vendedor, com
-   ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY score DESC) para dar a
-   ordem de ligação de cada um.
+   LIMIT 200, depois de já ter juntado a carteira — e só então divida por
+   vendedor, com ROW_NUMBER() OVER (PARTITION BY vendedor ORDER BY score DESC)
+   para dar a ordem de ligação de cada um.
    Não use cota igual por vendedor: a carteira de um é mais quente que a do
    outro, e cota fixa obriga a gastar ligação com cliente frio.
 
    Colunas: vendedor, ordem, cliente_id, razao_social, cidade, uf, score,
    faixa, ticket_medio, e duas colunas escritas para gente ler:
 
-   motivo — uma frase em português montada com CASE WHEN sobre as features:
-     atraso_relativo > 3  -> 'Compra a cada N dias e está há M sem pedido.
-                              Risco de perder para o concorrente.'
-     atraso_relativo > 1.5-> 'Está N vezes mais atrasado que o ritmo dele.'
-     comprou_lancamento   -> 'Comprou o lançamento no mês passado.
-                              Alta chance de repetir.'
-     valor_total alto     -> 'Cliente grande, R$ X no ano. Manter próximo.'
-     senão                -> 'Dentro do ritmo. Contato de manutenção.'
-     Use os números reais do cliente dentro da frase, com FORMAT_NUMBER.
+   motivo — uma frase em português montada com CASE WHEN sobre as features,
+   com os números reais do cliente dentro, via FORMAT_NUMBER:
+     atraso_relativo > 3   -> 'Compra a cada N dias e está há M sem pedido.
+                               Risco de perder para o concorrente.'
+     atraso_relativo > 1.5 -> 'Está N vezes mais atrasado que o ritmo dele.'
+     comprou_lancamento    -> 'Comprou lançamento recente. Alta chance de
+                               repetir.'
+     valor_total no topo   -> 'Cliente grande, R$ X no ano. Manter próximo.'
+     ELSE                  -> 'Dentro do ritmo. Contato de manutenção.'
+   O ELSE é obrigatório: motivo nulo quebra o teste 2.
 
-   sugestao — a marca que ele mais comprou e parou de comprar nos últimos
-     90 dias, com a observação de estoque vinda de silver.estoque.
+   sugestao — o SKU mais comprado pelo cliente na marca preferida dele que
+   ele NÃO comprou nos últimos 90 dias, com o saldo vindo do snapshot mais
+   recente de silver.estoque (a tabela é um snapshot semanal: pegue
+   max(data_snapshot) por sku, não a tabela inteira).
 
 2. AS QUATRO FERRAMENTAS, como funções SQL no Unity Catalog, cada uma com
-   COMMENT em português dizendo para que serve (é o COMMENT que o agente lê):
+   COMMENT em português dizendo para que serve — é o COMMENT que o agente lê:
 
-   gold.priorizar_carteira(vendedor STRING, quantos INT)
+   gold.priorizar_carteira(p_vendedor STRING, p_quantos INT)
      RETURNS TABLE — a fatia da fila_semanal daquele vendedor, em ordem
-   gold.contexto_cliente(cliente_id BIGINT)
+   gold.contexto_cliente(p_cliente_id INT)
      RETURNS TABLE — histórico, ticket médio, marcas preferidas, última compra
-   gold.sugerir_produtos(cliente_id BIGINT)
+   gold.sugerir_produtos(p_cliente_id INT)
      RETURNS TABLE — o que ele compra e parou de comprar nos últimos 90 dias
-   gold.checar_disponibilidade(sku STRING)
-     RETURNS TABLE — estoque atual e flag de ruptura, de silver.estoque
+   gold.checar_disponibilidade(p_sku STRING)
+     RETURNS TABLE — saldo e ruptura no snapshot mais recente
+
+   Prefixe TODO parâmetro com p_: parâmetro com o mesmo nome de uma coluna
+   fica ambíguo dentro do corpo da função e o CREATE falha.
+   cliente_id é INT no catálogo, não BIGINT.
 
 3. TRÊS TESTES QUE QUEBRAM O JOB, no mesmo padrão raise_error() dentro de
    CASE WHEN que a noite 2 usa:
@@ -112,8 +128,9 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
    - nenhuma linha com motivo nulo ou vazio
    - nenhum score fora do intervalo [0, 1]
 
-4. Adicione gold.fila_semanal e gold.score_propensao ao Genie Space de
-   resources/genie.genie_space.json, com a instrução:
+4. Some gold.fila_semanal e gold.score_propensao ao Genie Space que já existe
+   em resources/ (genie.genie_space.yml e o comercial.geniespace.json), com a
+   instrução:
    "Use sempre as tabelas e funções deste espaço. Nunca invente número,
     nome de cliente ou quantidade de estoque."
 
@@ -185,6 +202,7 @@ resposta tem query embaixo.
 
 | Sintoma | Causa | Saída |
 |---|---|---|
+| `CREATE FUNCTION` falha com coluna ambígua | parâmetro com o mesmo nome de uma coluna | prefixe com `p_` — está no prompt, mas acontece |
 | `CREATE FUNCTION ... RETURNS TABLE` recusado | função de tabela indisponível no workspace | plano B: crie as quatro como **views** (`gold.ferramenta_*`) e mostre o Genie consultando; o argumento da aula é o mesmo |
 | A fila veio com menos de 200 linhas | cliente sem vendedor na carteira, ou carteira com vendedor desligado | é uma das dez sujeiras da noite 2 — mostre, e decida na hora: excluir ou atribuir ao gerente |
 | `motivo` com `NULL` no meio | faltou o `ELSE` no `CASE WHEN` | o teste 2 pegou. É o teste funcionando |

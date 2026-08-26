@@ -76,14 +76,18 @@ Crie src/ml/12-modelo.py — um notebook Python para serverless. Nesta ordem:
 
 1. BASELINE, antes de treinar qualquer coisa.
    Separe 25% de gold.features_treino como holdout, com random_state=42 e
-   estratificado pelo alvo. No holdout, calcule AUC ordenando por:
-     a) recencia_dias crescente   ("ligue para quem comprou recentemente")
-     b) valor_total decrescente   ("ligue para quem compra mais")
-     c) atraso_relativo decrescente
+   estratificado pelo alvo. No holdout, calcule roc_auc_score do alvo contra
+   cada regra simples, usada como se fosse o score:
+     a) -recencia_dias      ("ligue para quem comprou recentemente")
+     b)  valor_total        ("ligue para quem compra mais")
+     c)  atraso_relativo    ("ligue para quem está atrasado")
    Imprima os três lado a lado, com 0,5000 (a moeda) na mesma tabela.
+   Guarde o melhor deles: é a régua do teste 1.
 
 2. TREINO.
    HistGradientBoostingClassifier do scikit-learn, random_state=42.
+   NÃO impute NULL: este algoritmo trata NaN nativamente, e as features de
+   ritmo são NULL de propósito para quem tem um pedido só.
    NÃO use XGBoost: ele treina e registra, mas falha ao carregar de volta no
    serverless por conflito com scikit-learn 1.6.1 (__sklearn_tags__), e o erro
    só aparece uma tarefa depois.
@@ -125,8 +129,11 @@ Crie src/ml/12-modelo.py — um notebook Python para serverless. Nesta ordem:
    NÃO use mlflow.pyfunc.spark_udf: não roda no serverless
    (InvalidVersion: '18.x-aarch64-photon-scala2'). Traga para pandas: 3.000
    clientes cabem na memória com folga.
-   Grave gold.score_propensao com cliente_id, score, a faixa (fria, morna,
-   quente, muito quente por quartil), _referencia e a versão do modelo.
+   Pontue com EXATAMENTE as colunas do treino, na mesma ordem, lendo
+   modelo.feature_names_in_ — não confie na ordem das colunas da tabela.
+   Grave gold.score_propensao com cliente_id (INT), score, a faixa
+   (NTILE(4) sobre o score: Fria, Morna, Quente, Muito quente), _referencia e
+   a versao do modelo — o número que veio do registro no UC.
 
 8. AS MÉTRICAS TAMBÉM VIRAM TABELA — o Genie não lê MLflow, e daqui a seis
    meses ninguém abre a interface de experimento:

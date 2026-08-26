@@ -9,12 +9,13 @@
 #       Sem --apagar ele só MOSTRA o que faria.
 #
 # O que apaga:
-#   1. as quatro tabelas de ML da gold
-#   2. as quatro funções-ferramenta da gold
-#   3. o modelo registrado no Unity Catalog, com todas as versões
-#   4. o experimento do MLflow
-#   5. os arquivos locais src/ml/ e as três tarefas do pipeline.job.yml
-#   6. redeploy do bundle, para o job voltar a ter 12 tarefas
+#   1. as tabelas de ML da gold — das DUAS versões da noite 3
+#   2. as views de decisão (DROP TABLE não derruba view)
+#   3. as funções-ferramenta da gold
+#   4. o modelo registrado no Unity Catalog, com todas as versões
+#   5. o experimento do MLflow
+#   6. os arquivos locais src/ml/ e as tarefas de ML do pipeline.job.yml
+#   7. redeploy do bundle, para o job voltar a ter 12 tarefas
 set -euo pipefail
 
 PROFILE="${1:?uso: bash prd/99-limpar-aula-03.sh <profile> [--apagar]}"
@@ -24,15 +25,23 @@ CATALOGO="${CATALOGO:-lakehouse_rotaperfume}"
 AULA="$(cd "$(dirname "$0")/.." && pwd)"
 BUNDLE="$(cd "$AULA/../aula-02-engenharia-de-dados/rotaperfume" && pwd)"
 
+# Cobre as DUAS versões da noite 3: a de 3 prompts (atual) e a de 6 prompts
+# (anterior), porque o workspace pode estar em qualquer uma das duas.
 TABELAS=(features_treino features_cliente score_propensao fila_semanal
-         modelo_metricas calibragem_holdout)
+         modelo_metricas calibragem_holdout
+         modelo_importancia modelo_promocoes modelo_validacao)
+VIEWS=(carteira_do_dia oportunidade_por_faixa receita_em_risco)
 FUNCOES=(priorizar_carteira contexto_cliente sugerir_produtos checar_disponibilidade)
 MODELO="$CATALOGO.gold.propensao_compra"
+TAREFAS=(ml_features ml_modelo ml_fila
+         ml_treino ml_promocao ml_score ml_testes ml_carteira_do_dia)
 
 echo "profile:   $PROFILE"
 echo "catálogo:  $CATALOGO   (a noite 2 NÃO é tocada)"
 echo "tabelas:   ${TABELAS[*]}"
+echo "views:     ${VIEWS[*]}"
 echo "funções:   ${FUNCOES[*]}"
+echo "tarefas:   ${TAREFAS[*]}"
 echo "modelo:    $MODELO"
 echo "bundle:    $BUNDLE"
 echo
@@ -47,6 +56,9 @@ sql() { echo "$1" | databricks experimental aitools tools query --profile "$PROF
 
 echo "→ dropando as tabelas de ML..."
 for t in "${TABELAS[@]}"; do sql "DROP TABLE IF EXISTS $CATALOGO.gold.$t"; done
+
+echo "→ dropando as views de decisão..."
+for v in "${VIEWS[@]}"; do sql "DROP VIEW IF EXISTS $CATALOGO.gold.$v"; done
 
 echo "→ dropando as funções-ferramenta..."
 for f in "${FUNCOES[@]}"; do sql "DROP FUNCTION IF EXISTS $CATALOGO.gold.$f"; done
@@ -65,8 +77,9 @@ rm -rf "$BUNDLE/src/ml"
 
 echo
 echo "Falta um passo, e ele é seu:"
-echo "  1. tire as tarefas ml_features, ml_modelo e ml_fila de"
+echo "  1. tire TODAS as tarefas de ML de"
 echo "     $BUNDLE/resources/pipeline.job.yml"
+echo "     (${TAREFAS[*]})"
 echo "  2. cd $BUNDLE && databricks bundle deploy --target dev --profile $PROFILE"
 echo
 echo "Aí o job volta para 12 tarefas e os três prompts de hoje têm que"

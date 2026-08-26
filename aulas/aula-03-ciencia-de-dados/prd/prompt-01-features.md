@@ -93,28 +93,50 @@ A gold está pronta, testada e com metadado auditado. Começa a camada de ML.
 Crie src/ml/11-features.py — um notebook Python para serverless.
 
 Defina UMA função montar_features(referencia) que devolve uma linha por
-cliente com tudo que se sabia dele ATÉ essa data. Toda fonte é filtrada por
-data < referencia na primeira linha da leitura — sem exceção.
+cliente com tudo que se sabia dele ATÉ essa data. Cada fonte é filtrada pela
+data dela na primeira linha da leitura, sem exceção:
 
-Vinte features, em quatro grupos:
+  gold.fato_vendas        data_pedido   < referencia
+  silver.oportunidades    data_abertura < referencia
+  silver.visitas          data_visita   < referencia
 
-  RFM (de gold.fato_vendas)
-    recencia_dias, frequencia_pedidos, valor_total, ticket_medio,
-    margem_total, margem_percentual
+NÃO use gold.dim_cliente para feature nenhuma. Ela tem dias_sem_comprar,
+receita_acumulada e total_pedidos calculados sobre a base INTEIRA, sem corte —
+usar qualquer uma delas é vazamento, e é o erro que o notebook 02 demonstra.
+dim_cliente só entra no prompt 3, para pegar nome e cidade.
 
-  Ritmo (de gold.fato_vendas)
-    intervalo_medio_dias, desvio_intervalo_dias, atraso_relativo,
-    pedidos_ultimos_90d
-    atraso_relativo = recencia_dias / intervalo_medio_dias, com NULLIF no
-    denominador e teto em 10 para não explodir com cliente de um pedido só
+Vinte features, em quatro grupos. Tudo sai de gold.fato_vendas, que já traz
+razao_social, canal, categoria e marca — não precisa de join para isso:
 
-  CRM (de silver.oportunidades e silver.visitas)
-    oportunidades_abertas, oportunidades_ganhas, taxa_ganho,
-    visitas_90d, conversao_visita
+  RFM
+    recencia_dias        = datediff(referencia, max(data_pedido))
+    frequencia_pedidos   = count(distinct pedido_id)
+    valor_total          = sum(receita)   -- devolução já entra negativa
+    ticket_medio         = valor_total / frequencia_pedidos
+    margem_total         = sum(margem)
+    margem_percentual    = margem_total / nullif(valor_total, 0)
 
-  Mix (de gold.fato_vendas com gold.dim_produto)
-    skus_distintos, categorias_distintas, concentracao_marca_top,
-    comprou_lancamento
+  Ritmo
+    intervalo_medio_dias   = datediff(max, min) / (pedidos distintos - 1)
+    desvio_intervalo_dias  = desvio padrão dos intervalos entre pedidos
+    atraso_relativo        = recencia_dias / intervalo_medio_dias,
+                             com NULLIF no denominador e teto em 10
+    pedidos_ultimos_90d    = pedidos distintos nos 90 dias antes do corte
+
+  CRM
+    oportunidades_abertas  = etapa não fechada, de silver.oportunidades
+    oportunidades_ganhas   = coluna ganha
+    taxa_ganho             = ganhas / nullif(total de oportunidades, 0)
+    visitas_90d            = visitas nos 90 dias antes do corte
+    conversao_visita       = visitas com gerou_pedido / nullif(visitas, 0)
+
+  Mix
+    skus_distintos          = count(distinct sku)
+    categorias_distintas    = count(distinct categoria)
+    concentracao_marca_top  = receita da marca top / nullif(valor_total, 0)
+    comprou_lancamento      = 1 se comprou algum SKU cuja data_lancamento
+                              (de gold.dim_produto) esteja nos 120 dias
+                              anteriores ao corte. É o único join necessário.
 
 Grave duas tabelas, chamando a MESMA função duas vezes:
 
@@ -130,13 +152,17 @@ receita ou margem sai da gold como DECIMAL(18,2): use cast para double em
 TODAS as features numéricas, senão o registro do modelo quebra depois com
 "Object of type Decimal is not JSON serializable".
 
+Cliente sem oportunidade ou sem visita fica com 0, não com NULL — só as
+features de ritmo podem ser NULL, para cliente com um pedido só.
+
 Nada de current_date() em lugar nenhum: o "hoje" deste dataset é 2026-08-31.
 
 Toda tabela e toda coluna com COMMENT em português — a auditoria de metadado
 da noite 2 quebra o job se faltar.
 
 Depois registre a tarefa ml_features em resources/pipeline.job.yml, rodando
-depois de gold_marts, e faça o deploy.
+depois de testes_de_qualidade — modelo não se treina com dado que ainda não
+passou nos testes — e faça o deploy.
 ```
 
 ---
@@ -205,4 +231,5 @@ negativa é a assinatura do vazamento** — é o que o notebook
 | `Object of type Decimal is not JSON serializable` | soma de receita veio `DECIMAL(18,2)` | `.cast("double")` em todas as features numéricas |
 | `atraso_relativo` com valores absurdos (10.000) | cliente com um pedido só: intervalo 0 | `NULLIF` no denominador e teto em 10 |
 | A auditoria de metadado quebrou o job | faltou `COMMENT` em coluna nova | é o teste da noite 2 funcionando — peça o comentário e rode de novo |
+| Alguma feature veio de `dim_cliente` | ela agrega a base inteira, sem corte | é vazamento: peça para refazer a partir do fato. **Mostre ao vivo** — é o slide do vazamento acontecendo |
 | `menor_recencia` negativa | filtro `< referencia` faltou em uma fonte | mostre ao vivo: é o slide *Prever a semana que vem com informação da semana que vem* acontecendo |

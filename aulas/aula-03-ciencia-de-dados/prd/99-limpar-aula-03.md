@@ -31,12 +31,19 @@ tabelas gold que não são de ML, no dashboard nem no Genie Space.
 
 Use o profile <perfil>.
 
-1. No catálogo lakehouse_rotaperfume, na gold:
+1. No catálogo lakehouse_rotaperfume, na gold. Apague o que QUALQUER versão
+   da noite 3 possa ter criado — o workspace pode estar na versão de três
+   prompts ou na anterior, de seis:
+
      DROP TABLE    features_treino, features_cliente, score_propensao,
-                   fila_semanal, modelo_metricas, calibragem_holdout
+                   fila_semanal, modelo_metricas, calibragem_holdout,
+                   modelo_importancia, modelo_promocoes, modelo_validacao
+     DROP VIEW     carteira_do_dia, oportunidade_por_faixa, receita_em_risco
      DROP FUNCTION priorizar_carteira, contexto_cliente, sugerir_produtos,
                    checar_disponibilidade
+
    Todos com IF EXISTS — isto vai rodar de novo em cima do que já não existe.
+   DROP TABLE não derruba view: as três precisam de DROP VIEW mesmo.
 
 2. Apague o modelo registrado lakehouse_rotaperfume.gold.propensao_compra,
    com todas as versões e aliases:
@@ -46,9 +53,11 @@ Use o profile <perfil>.
 
 4. Remova a pasta local src/ml/ inteira.
 
-5. Em resources/pipeline.job.yml, remova as tarefas ml_features, ml_modelo e
-   ml_fila, e qualquer depends_on que aponte para elas. O job tem que voltar a
-   terminar em auditoria_de_metadado, com 12 tarefas.
+5. Em resources/pipeline.job.yml, remova TODAS as tarefas de ML — as da versão
+   atual (ml_features, ml_modelo, ml_fila) e as da anterior (ml_treino,
+   ml_promocao, ml_score, ml_testes, ml_carteira_do_dia) — e qualquer
+   depends_on que aponte para elas. O job tem que voltar a terminar em
+   auditoria_de_metadado, com 12 tarefas.
 
 6. databricks bundle validate e depois deploy no target dev.
 
@@ -68,6 +77,8 @@ No fim, confirme na tela:
 SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*features*';
 SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*score*';
 SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*fila*';
+SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*modelo*';
+SHOW VIEWS   IN lakehouse_rotaperfume.gold LIKE '*carteira*';
 SHOW MODELS  IN lakehouse_rotaperfume.gold;
 
 -- e a noite 2 tem que continuar em pé

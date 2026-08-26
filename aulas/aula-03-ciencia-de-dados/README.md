@@ -86,6 +86,10 @@ funções que o agente consulta, e ensina o Genie a nunca inventar número.
 O roteiro da noite, com cronograma e as falas:
 [`3-prompts-noite-3.md`](prd/3-prompts-noite-3.md).
 
+**Para seguir ao vivo, com onde clicar em cada passo:**
+[`passo-a-passo/`](passo-a-passo) — um arquivo curto por prompt, para deixar
+aberto numa aba ao lado do Claude Code.
+
 **Para ensaiar quantas vezes quiser:**
 [`99-limpar-aula-03.md`](prd/99-limpar-aula-03.md) apaga só a noite 3 e devolve
 o ambiente ao fim da noite 2.

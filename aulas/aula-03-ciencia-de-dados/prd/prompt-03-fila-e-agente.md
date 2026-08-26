@@ -227,7 +227,7 @@ FROM lakehouse_rotaperfume.gold.fila_semanal
 GROUP BY vendedor ORDER BY ligacoes DESC;
 ```
 
-**200 contatos em ~36 vendedores, de 2 a 10 ligações cada.** São 36 e não 42
+**200 contatos em 35 vendedores, de 1 a 12 ligações cada.** São 36 e não 42
 porque seis vendedores estão desligados com carteira ainda vinculada — a nona
 das dez sujeiras da noite 2, aparecendo de novo. O vendedor do topo não é o
 melhor vendedor — é o que tem a carteira mais quente. E isso é uma
@@ -261,6 +261,10 @@ resposta tem query embaixo.
 
 | Sintoma | Causa | Saída |
 |---|---|---|
+| `INVALID_LIMIT_LIKE_EXPRESSION` no `CREATE FUNCTION` | `LIMIT p_quantos` — o Databricks exige LIMIT constante | filtre por `ordem <= p_quantos`, que a fila já vem numerada. **Aconteceu no ensaio** |
+| `data_sources.tables must be sorted by identifier` | o Genie exige as tabelas em ordem alfabética | ordene a lista — e as `column_configs` de cada uma também |
+| `text_instructions must contain at most one item` | o Genie aceita **uma** instrução de texto | funda o texto novo na instrução que já existe, não crie outra |
+| 176 dos 200 contatos com o mesmo motivo | a ordem do `CASE WHEN` | vá do sinal mais **raro** para o mais comum, senão o mais comum come todos |
 | `CREATE FUNCTION` falha com coluna ambígua | parâmetro com o mesmo nome de uma coluna | prefixe com `p_` — está no prompt, mas acontece |
 | `CREATE FUNCTION ... RETURNS TABLE` recusado | função de tabela indisponível no workspace | plano B: crie as quatro como **views** (`gold.ferramenta_*`) e mostre o Genie consultando; o argumento da aula é o mesmo |
 | A fila veio com ~172 linhas | o descarte de vendedor desligado rodou DEPOIS do `LIMIT 200` | é o erro previsto no prompt: peça para filtrar antes de limitar. **Mostre a sujeira nº 9 da noite 2 cobrando o preço dela** |

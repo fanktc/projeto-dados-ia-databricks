@@ -134,3 +134,4 @@ Slides **43 a 45**: o antes e o depois, o arco das três noites, a frase.
 | A fila veio com ~172 linhas | o descarte de vendedor desligado rodou depois do `LIMIT 200`. Peça para filtrar antes de limitar |
 | `motivo` com `NULL` no meio | faltou o `ELSE` no `CASE WHEN`. O teste 2 pegou: é o teste funcionando |
 | O Genie inventou um número | a instrução não entrou no espaço. Mostre o antes e o depois — vale mais que dez slides sobre alucinação |
+| O deploy do Genie reclama de ordenação | tabelas e colunas do `geniespace.json` têm que estar em ordem alfabética, e só pode haver **uma** instrução de texto |

@@ -169,3 +169,10 @@ resources:
             base_parameters:
               catalog: "{{job.parameters.catalog}}"
 
+        - task_key: ml_fila
+          depends_on: [{ task_key: ml_modelo }]
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/ml/13-fila.sql
+

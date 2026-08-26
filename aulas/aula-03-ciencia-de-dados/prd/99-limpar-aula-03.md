@@ -53,8 +53,12 @@ Use o profile <perfil>.
    Todos com IF EXISTS — isto vai rodar de novo em cima do que já não existe.
    DROP TABLE não derruba view: as três precisam de DROP VIEW mesmo.
 
-2. Apague o modelo registrado lakehouse_rotaperfume.gold.propensao_compra,
-   com todas as versões e aliases:
+2. Apague o modelo registrado lakehouse_rotaperfume.gold.propensao_compra.
+   O delete do modelo RECUSA enquanto houver versão viva — o erro é
+   "Function ... is not empty. The function has N model versions(s)".
+   Então apague as versões primeiro:
+     databricks model-versions list <nome> --profile <perfil>
+     databricks model-versions delete <nome> <versao> --profile <perfil>
      databricks registered-models delete <nome> --profile <perfil>
 
 3. Apague o experimento do MLflow criado no treino, e a pasta que o continha.
@@ -68,10 +72,14 @@ Use o profile <perfil>.
    auditoria_de_metadado, com 12 tarefas.
 
 6. databricks bundle validate e depois deploy no target dev.
+   Se o deploy pedir confirmação para APAGAR O DASHBOARD, pare e me avise:
+   o dashboard é da noite 2 e não faz parte desta limpeza. Nunca use
+   --auto-approve para passar por cima disso.
 
 No fim, confirme na tela:
   - SHOW TABLES IN lakehouse_rotaperfume.gold  não lista nenhuma tabela de ML
-  - SHOW MODELS IN lakehouse_rotaperfume.gold  não lista nada
+  - databricks registered-models list --catalog-name lakehouse_rotaperfume
+      --schema-name gold  devolve lista vazia
   - o job aparece com 12 tarefas
   - gold.fato_vendas continua respondendo
 ```
@@ -87,11 +95,17 @@ SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*score*';
 SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*fila*';
 SHOW TABLES  IN lakehouse_rotaperfume.gold LIKE '*modelo*';
 SHOW VIEWS   IN lakehouse_rotaperfume.gold LIKE '*carteira*';
-SHOW MODELS  IN lakehouse_rotaperfume.gold;
 
 -- e a noite 2 tem que continuar em pé
 SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.fato_vendas;
 SELECT COUNT(*) FROM lakehouse_rotaperfume.gold.dim_cliente;
+```
+
+`SHOW MODELS` não existe em SQL — modelo do Unity Catalog se lista pela CLI:
+
+```bash
+databricks registered-models list \
+  --catalog-name lakehouse_rotaperfume --schema-name gold --profile <perfil>
 ```
 
 ---

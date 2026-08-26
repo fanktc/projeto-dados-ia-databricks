@@ -100,5 +100,10 @@ UNION ALL
 SELECT 'score_propensao',  MIN(_referencia), COUNT(*)
 FROM lakehouse_rotaperfume.gold.score_propensao;
 
--- E o modelo, do lado das tabelas, no mesmo catálogo:
-SHOW MODELS IN lakehouse_rotaperfume.gold;
+-- E o modelo, do lado das tabelas, no mesmo catálogo. Não existe SHOW MODELS
+-- em SQL: abra Catalog > lakehouse_rotaperfume > gold > Models, ou use a CLI
+--   databricks registered-models list --catalog-name lakehouse_rotaperfume \
+--     --schema-name gold --profile <perfil>
+SELECT versao AS versao_em_producao, _treinado_em
+FROM lakehouse_rotaperfume.gold.modelo_metricas
+ORDER BY _treinado_em DESC LIMIT 1;

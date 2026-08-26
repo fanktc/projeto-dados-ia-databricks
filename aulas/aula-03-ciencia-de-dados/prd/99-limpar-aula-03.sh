@@ -63,7 +63,18 @@ for v in "${VIEWS[@]}"; do sql "DROP VIEW IF EXISTS $CATALOGO.gold.$v"; done
 echo "→ dropando as funções-ferramenta..."
 for f in "${FUNCOES[@]}"; do sql "DROP FUNCTION IF EXISTS $CATALOGO.gold.$f"; done
 
-echo "→ apagando o modelo registrado (todas as versões)..."
+# O delete do modelo RECUSA enquanto houver versão viva:
+#   "Function ... is not empty. The function has 2 model versions(s)"
+# Por isso as versões saem primeiro, uma a uma.
+echo "→ apagando as versões do modelo..."
+VERSOES=$(databricks model-versions list "$MODELO" --profile "$PROFILE" -o json 2>/dev/null \
+          | grep -oE '"version": [0-9]+' | grep -oE '[0-9]+' | sort -u)
+for v in $VERSOES; do
+  echo "   versão $v"
+  databricks model-versions delete "$MODELO" "$v" --profile "$PROFILE" 2>/dev/null || true
+done
+
+echo "→ apagando o modelo registrado..."
 databricks registered-models delete "$MODELO" --profile "$PROFILE" 2>/dev/null || \
   echo "   (modelo não existia — segue)"
 
@@ -81,6 +92,10 @@ echo "  1. tire TODAS as tarefas de ML de"
 echo "     $BUNDLE/resources/pipeline.job.yml"
 echo "     (${TAREFAS[*]})"
 echo "  2. cd $BUNDLE && databricks bundle deploy --target dev --profile $PROFILE"
+echo
+echo "ATENÇÃO no deploy: se ele pedir para apagar o dashboard, RECUSE."
+echo "O dashboard é da noite 2 e não tem nada a ver com esta limpeza."
+echo "Nunca passe --auto-approve aqui."
 echo
 echo "Aí o job volta para 12 tarefas e os três prompts de hoje têm que"
 echo "reconstruir tudo do nada."

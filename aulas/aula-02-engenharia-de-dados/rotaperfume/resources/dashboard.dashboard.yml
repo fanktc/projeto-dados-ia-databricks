@@ -9,9 +9,14 @@
 # nome de tabela puro (`FROM fato_vendas`). É o que deixa o mesmo dashboard
 # apontar para dev ou prod sem uma linha editada.
 
+# A chave do recurso é dashboard_comercial e NÃO pode ser renomeada: o bundle
+# identifica o dashboard por ela. Trocar a chave faz o deploy APAGAR o
+# dashboard existente e criar outro, com URL nova — e todo link compartilhado
+# quebra.
+
 resources:
   dashboards:
-    comercial:
+    dashboard_comercial:
       display_name: Rota do Perfume · Comercial
       file_path: ../resources/dashboard-comercial.lvdash.json
       warehouse_id: ${var.warehouse_id}

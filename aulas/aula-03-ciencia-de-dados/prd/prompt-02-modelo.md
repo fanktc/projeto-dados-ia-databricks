@@ -202,9 +202,13 @@ ORDER BY _treinado_em DESC LIMIT 1;
 
 **3 · O modelo é um objeto do catálogo, não um arquivo**
 
-```sql
-SHOW MODELS IN lakehouse_rotaperfume.gold;
+```bash
+databricks registered-models list \
+  --catalog-name lakehouse_rotaperfume --schema-name gold --profile <perfil>
 ```
+
+> `SHOW MODELS` **não existe em SQL** — dá `PARSE_SYNTAX_ERROR`. Modelo do
+> Unity Catalog se lista pela CLI ou pela tela do Catalog Explorer.
 
 Abra a tela do modelo no workspace ao lado da tela da tabela. **Mesmo
 catálogo, mesma linhagem, mesmo GRANT.** É o slide *“Esse modelo ainda está bom?”* respondido: qual versão

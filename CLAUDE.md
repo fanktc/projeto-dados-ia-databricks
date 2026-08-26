@@ -18,8 +18,8 @@ quando faz sentido e exemplos numerados em progressão.
 | `aulas/aula-02-engenharia-de-dados/` | Noite 2: **6 prompts, 6 deploys**. O bundle `rotaperfume/` nasce vazio e vira raw → bronze → silver → gold → dashboard → Genie |
 | `aulas/aula-02-engenharia-de-dados/prd/` | Os 6 prompts (+ o reset 00), o `CLAUDE.md` do projeto e o roteiro da noite |
 | `aulas/aula-02-engenharia-de-dados/slides/` | `gerar_slides.py` — os slides como código, no design da noite 1 |
-| `aulas/aula-03-ciencia-de-dados/` | Noite 3: **6 prompts, 6 deploys**. O mesmo bundle da noite 2 ganha `src/ml/` e o job vai de 12 para 18 tarefas |
-| `aulas/aula-03-ciencia-de-dados/prd/` | Os 6 prompts da noite 3 e o roteiro |
+| `aulas/aula-03-ciencia-de-dados/` | Noite 3 (**"Quais 200?"**): **3 prompts, 3 deploys**. O mesmo bundle da noite 2 ganha `src/ml/` e o job vai de 12 para 15 tarefas |
+| `aulas/aula-03-ciencia-de-dados/prd/` | Os 3 prompts da noite 3, o roteiro e o `99-limpar-aula-03` (apaga só a noite 3) |
 | `aulas/aula-03-ciencia-de-dados/notebooks/` | Notebooks de conferência do resultado (leitura), incluindo a demonstração de vazamento de dado |
 | `material/` | PRD (a especificação canônica das 4 noites), gerador do dataset, zip de referência, slides antigos |
 | `scripts/run_sql.py` | Executa um `.sql` no warehouse, statement por statement |
@@ -27,9 +27,11 @@ quando faz sentido e exemplos numerados em progressão.
 
 **A aula 04 foi removida por desenho:** deploy não é etapa de fim de projeto, é
 o que acontece toda vez que você termina algo — por isso a noite 2 faz seis. A
-**aula 03 foi reescrita** no mesmo formato de prompts, e o código dela vive
-dentro do bundle da noite 2 (`rotaperfume/src/ml/`): ML é mais uma camada do
-mesmo pipeline, não um projeto à parte.
+**aula 03 foi reescrita** em torno de uma pergunta só — *"tenho 3.000
+clientes e 200 ligações por semana; quais 200?"* — e feita até o fim em três
+prompts: features, modelo/MLflow, fila e agente. O código dela vive dentro do
+bundle da noite 2 (`rotaperfume/src/ml/`): ML é mais uma camada do mesmo
+pipeline, não um projeto à parte.
 
 Ao criar exemplos novos para a aula 01, siga o padrão: `exemplo-NN-tema.sql`,
 com cabeçalho declarando conceito, pergunta de negócio e conexão com a aula
@@ -176,5 +178,12 @@ e três deles só falham na tarefa seguinte.
   registro do modelo morre com `Object of type Decimal is not JSON serializable`.
 
 Convenções de ML do projeto: corte de treino **2026-08-01**, janela do rótulo de
-**30 dias**, `random_state=42`, e nada de `current_date()` — o "hoje" do dataset
+**7 dias** (a mesma semana da fila de ligação — com 30 dias a taxa base sobe de
+10,1% para 39,9% e o ganho do modelo deixa de fazer sentido para o comercial),
+`random_state=42`, e nada de `current_date()` — o "hoje" do dataset
 é **2026-08-31**.
+
+A noite 3 cria seis tabelas na gold — `features_treino`, `features_cliente`,
+`score_propensao`, `modelo_metricas`, `calibragem_holdout` e `fila_semanal` —
+mais o modelo `gold.propensao_compra` no UC e quatro funções-ferramenta. A
+métrica que vai para a reunião é **`lift_top200`**, não o AUC.

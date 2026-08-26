@@ -16,11 +16,16 @@
 # MAGIC
 # MAGIC | Modelo | AUC | O que aconteceu |
 # MAGIC |---|---|---|
-# MAGIC | honesto | **0,8838** | features param no dia do corte |
-# MAGIC | vazado | **1,0000** | um filtro a menos — acerto perfeito |
+# MAGIC | honesto | **~0,867** | features param no dia do corte |
+# MAGIC | vazado | **~0,9998** | um filtro a menos — o modelo leu a resposta |
 # MAGIC
-# MAGIC Repare no 1,0000. Não é "quase perfeito": é **perfeito**. O modelo
-# MAGIC acertou todos os 704 clientes do teste, e é completamente inútil.
+# MAGIC Repare no 0,9998. Não é "um modelo muito bom": é um modelo que leu a
+# MAGIC resposta. Ele ordenou os 704 clientes do teste praticamente sem errar,
+# MAGIC é completamente inútil, e passaria em qualquer revisão de código.
+# MAGIC
+# MAGIC (Os dois números acima foram medidos no dataset com seed 42, janela de
+# MAGIC 7 dias. O valor exato da sua execução sai impresso abaixo — o que
+# MAGIC importa é a distância entre os dois, não a terceira casa.)
 # MAGIC
 # MAGIC > **Como conduzir:** rode a célula do modelo honesto primeiro e deixe o
 # MAGIC > número na tela. Depois rode a do modelo vazado e pergunte à sala qual
@@ -32,7 +37,7 @@ dbutils.widgets.text("catalog", "lakehouse_rotaperfume")
 catalog = dbutils.widgets.get("catalog")
 
 CORTE = "2026-08-01"      # features até aqui
-FIM_JANELA = "2026-08-31"  # rótulo: comprou entre 01/08 e 31/08?
+FIM_JANELA = "2026-08-07"  # rótulo: comprou na semana de 01 a 07/08?
 
 # COMMAND ----------
 
@@ -44,7 +49,7 @@ from sklearn.metrics import roc_auc_score
 fato = spark.table(f"{catalog}.gold.fato_vendas")
 
 rotulo = (fato.filter((F.col("data_pedido") >= CORTE) & (F.col("data_pedido") <= FIM_JANELA))
-              .select("cliente_id").distinct().withColumn("comprou_30d", F.lit(1)))
+              .select("cliente_id").distinct().withColumn("comprou_7d", F.lit(1)))
 
 # COMMAND ----------
 # MAGIC %md
@@ -63,12 +68,12 @@ honesto = (
          F.countDistinct("pedido_id").alias("frequencia"),
          F.sum("receita").cast("double").alias("valor_total"),
          F.countDistinct("sku").alias("skus"))
-    .join(rotulo, "cliente_id", "left").fillna({"comprou_30d": 0})
+    .join(rotulo, "cliente_id", "left").fillna({"comprou_7d": 0})
     .toPandas()
 )
 
 COLS = ["recencia_dias", "frequencia", "valor_total", "skus"]
-X, y = honesto[COLS].astype(float), honesto["comprou_30d"]
+X, y = honesto[COLS].astype(float), honesto["comprou_7d"]
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=.25, stratify=y, random_state=42)
 
 m = HistGradientBoostingClassifier(max_iter=200, random_state=42).fit(X_tr, y_tr)
@@ -99,11 +104,11 @@ vazado = (
          F.countDistinct("pedido_id").alias("frequencia"),
          F.sum("receita").cast("double").alias("valor_total"),
          F.countDistinct("sku").alias("skus"))
-    .join(rotulo, "cliente_id", "left").fillna({"comprou_30d": 0})
+    .join(rotulo, "cliente_id", "left").fillna({"comprou_7d": 0})
     .toPandas()
 )
 
-Xv, yv = vazado[COLS].astype(float), vazado["comprou_30d"]
+Xv, yv = vazado[COLS].astype(float), vazado["comprou_7d"]
 Xv_tr, Xv_te, yv_tr, yv_te = train_test_split(Xv, yv, test_size=.25, stratify=yv, random_state=42)
 
 mv = HistGradientBoostingClassifier(max_iter=200, random_state=42).fit(Xv_tr, yv_tr)
@@ -114,7 +119,7 @@ print(f"AUC do modelo VAZADO:  {auc_vazado:.4f}   ← o que ninguém questiona")
 print()
 print(f"O 'ganho' de {auc_vazado - auc_honesto:+.4f} é inteiramente falso.")
 
-# Com seed 42 o vazado dá 1,0000 — acerto PERFEITO em todos os 704 clientes do
+# Com seed 42 o vazado dá ~0,9998 — quase acerto perfeito nos 704 clientes do
 # teste. Pergunte para a sala qual dos dois eles colocariam em produção antes
 # de rodar a próxima célula.
 
@@ -146,7 +151,7 @@ print()
 print("No modelo vazado, recência negativa significa 'a última compra é DEPOIS")
 print("do corte' — ou seja, é o próprio rótulo entrando pela porta dos fundos.")
 print()
-print("São 1.148 clientes com recência de até -30 dias. O modelo não precisou")
+print("São 1.147 clientes com recência de até -30 dias. O modelo não precisou")
 print("aprender nada: bastou ler a resposta que alguém deixou na mesa.")
 
 # COMMAND ----------

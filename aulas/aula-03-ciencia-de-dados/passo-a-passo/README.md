@@ -18,7 +18,8 @@ O texto completo de cada prompt, com o que falar e as armadilhas, está em
 
 - [ ] **Escolha o profile** e use o MESMO a noite inteira:
       `databricks auth profiles`
-- [ ] **Limpe a noite 3**, se você já ensaiou:
+- [ ] **Limpe a noite 3**, se você já ensaiou. Um comando, e ele confere
+      sozinho que não sobrou nada:
       `bash ../prd/99-limpar-aula-03.sh <perfil> --apagar`
 - [ ] **Confira que a noite 2 está de pé** — é de onde tudo parte:
 

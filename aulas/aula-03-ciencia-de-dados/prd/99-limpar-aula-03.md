@@ -15,17 +15,50 @@ bash aulas/aula-03-ciencia-de-dados/prd/99-limpar-aula-03.sh <perfil>           
 bash aulas/aula-03-ciencia-de-dados/prd/99-limpar-aula-03.sh <perfil> --apagar   # apaga
 ```
 
-**O script não mexe no `pipeline.job.yml`, e esse é o passo que falta.** Ele
-apaga o que está no workspace e a pasta `src/ml/`, mas as tarefas de ML
-continuam declaradas no YAML apontando para arquivos que não existem mais — e
-aí o próximo `bundle deploy` falha.
+**Um comando e acabou.** Ele apaga no workspace, restaura o código local,
+redeploya e **confere na tela** que não sobrou nada — saindo com erro se
+sobrou. Rodar duas vezes seguidas dá o mesmo resultado.
 
-Hoje são **oito** tarefas a remover: `ml_features`, `ml_modelo`, `ml_fila` (a
-versão atual) e `ml_treino`, `ml_promocao`, `ml_score`, `ml_testes`,
-`ml_carteira_do_dia` (a anterior). O script lista todas ao terminar.
+---
 
-> **Se você não quiser fazer isso à mão, use o prompt abaixo em vez do
-> script** — ele cuida do YAML e do redeploy também.
+## O que cada prompt deixa para trás
+
+É isto que a limpeza precisa alcançar. Serve também para conferir à mão:
+
+| Prompt | No workspace | No código |
+|---|---|---|
+| **1 · features** | `features_treino`, `features_cliente` | `src/ml/11-features.py`, tarefa `ml_features` |
+| **2 · modelo** | `score_propensao`, `modelo_metricas`, `calibragem_holdout`, o modelo `propensao_compra` com versões e alias, o experimento MLflow | `src/ml/12-modelo.py`, tarefa `ml_modelo` |
+| **3 · fila** | `fila_semanal`, as 4 funções | `src/ml/13-fila.sql`, tarefa `ml_fila`, **e o Genie Space** |
+
+> **O Genie é o que mais se esquece.** O prompt 3 adiciona `fila_semanal` e
+> `score_propensao` ao `comercial.geniespace.json`. Se as tabelas somem e o
+> JSON continua citando elas, o próximo `bundle deploy` morre com
+> `PERMISSION_DENIED ... Table ... does not exist` — e a mensagem não diz que o
+> problema é o Genie.
+
+---
+
+## Como o script devolve o código ao lugar
+
+Não editando YAML nem JSON: **restaurando do git**.
+
+```bash
+rm -rf src/ml
+git restore --source=noite-2-pronta -- \
+    resources/pipeline.job.yml resources/comercial.geniespace.json
+```
+
+`noite-2-pronta` é uma tag no commit em que a noite 3 ainda não existia. É
+exata por construção, pega até o que ninguém previu, e continua funcionando se
+você commitar o resultado dos prompts no meio da aula. Sem a tag, cai para
+`HEAD`.
+
+**A ordem não é negociável:** apagar no workspace → restaurar o código →
+redeployar. Invertendo, o deploy roda com o JSON ainda citando tabela apagada.
+
+Se o deploy pedir para apagar algo que não é da noite 3 — o dashboard, por
+exemplo — o script **aborta e mostra a saída**. Nunca passe `--auto-approve`.
 
 ---
 

@@ -30,12 +30,12 @@ As três primeiras noites terminaram com o dado certo no lugar certo. E com um
 problema que nenhuma delas resolveu: **tudo que a gente construiu só é acessível
 por quem sabe abrir um SQL Editor.**
 
-| Noite | O que ficou de pé | Quem consegue usar |
+| Noite | O que ficou de pé | O que era preciso saber |
 |---|---|---|
-| 1 | O dado no catálogo | Quem escreve SQL |
-| 2 | O pipeline e o dashboard | Quem escreve SQL, e quem abre o dashboard |
-| 3 | O modelo e a fila dos 200 | Quem escreve SQL |
-| **4** | **O app e o Genie da direção** | **Quem não escreve nada** |
+| 1 | O dado no catálogo | SQL |
+| 2 | O pipeline, o dashboard e o Genie | Python e PySpark |
+| 3 | O modelo e a fila dos 200 | ML e SQL |
+| **4** | **O app e o Genie da direção** | **nada** |
 
 O último metro da noite 3 foi traduzir score em motivo. O último metro **desta**
 noite é entregar uma URL.

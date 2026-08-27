@@ -307,13 +307,13 @@ bloco(s, 6.1, "Essa é a aula de hoje. Duas frases, dois prompts.", h=0.62, tam=
 
 # ── 3 · quem consegue usar o que construímos ──────────────────────────
 s, y = cabecalho("Três noites de trabalho",
-                 "Quem, hoje, consegue usar isso?")
+                 "O que era preciso saber para usar")
 faixas(s, y, [
-    ("Noite 1 · o dado no catálogo", "Quem escreve SQL"),
-    ("Noite 2 · o pipeline que roda sozinho", "Quem escreve SQL"),
-    ("Noite 2 · o dashboard e o Genie", "Quem abre o dashboard — e é a única porta aberta"),
-    ("Noite 3 · o modelo e a fila dos 200", "Quem escreve SQL", "alerta"),
-], alt=0.72, larg_esq=5.6, cabecalho_=("O QUE FICOU DE PÉ", "QUEM CONSEGUE USAR"))
+    ("Noite 1 · o dado no catálogo", "SQL"),
+    ("Noite 2 · o pipeline, o dashboard e o Genie", "Python e PySpark"),
+    ("Noite 3 · o modelo e a fila dos 200", "ML e SQL", "alerta"),
+    ("Noite 4 · o app e o Genie da direção", "nada — e é a aula de hoje", "destaque"),
+], alt=0.72, larg_esq=5.6, cabecalho_=("O QUE FICOU DE PÉ", "O QUE ERA PRECISO SABER"))
 bloco(s, 5.95, "A empresa tem 3.000 clientes, 42 vendedores e um diretor.\n"
                 "Nenhum deles escreve SQL.", h=1.0, tam=16, borda=ALERTA, cor=BRANCO)
 

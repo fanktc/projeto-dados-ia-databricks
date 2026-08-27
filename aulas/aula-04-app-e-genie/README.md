@@ -19,12 +19,12 @@ um projeto de dados vira produto ou vira pasta no Git:
 Três noites de trabalho, e o resultado inteiro estava atrás de uma barreira que
 o time de dados não enxerga porque já está do lado de dentro dela.
 
-| Noite | O que ficou de pé | Quem consegue usar |
+| Noite | O que ficou de pé | O que era preciso saber |
 |---|---|---|
-| 1 | O dado no catálogo | Quem escreve SQL |
-| 2 | O pipeline, o dashboard e o Genie | + quem abre o dashboard |
-| 3 | O modelo e a fila dos 200 | Quem escreve SQL |
-| **4** | **O app e o Genie da direção** | **Quem não escreve nada** |
+| 1 | O dado no catálogo | SQL |
+| 2 | O pipeline, o dashboard e o Genie | Python e PySpark |
+| 3 | O modelo e a fila dos 200 | ML e SQL |
+| **4** | **O app e o Genie da direção** | **nada** |
 
 **Um dado que só o time de dados consegue abrir é um dado que não existe para a
 empresa.** A noite 4 não cria nenhuma tabela de análise nova: ela pega o que já

@@ -15,6 +15,27 @@ Hoje ele passa a responder outra — e é a única que o diretor comercial fez:
 
 ---
 
+## ✅ Rodou — 27/08/2026
+
+A noite 3 foi ao ar e os três prompts entregaram. Estes são os números que
+saíram do workspace, e é a eles que todo o material se refere:
+
+| Etapa | O que ficou de pé |
+|---|---|
+| Noite 2 (base) | `fato_vendas` 191.080 linhas · R$ 102.303.828,05 |
+| **Prompt 1** | `features_treino` 2.815 × 20 · `features_cliente` 2.816 · taxa base **10,12%** |
+| **Prompt 2** | modelo `propensao_compra` **@prod** · AUC **0,8817** · **86 dos 200** contra 20 às cegas · lift **4,25×** |
+| **Prompt 3** | `fila_semanal` **200 contatos · 35 vendedores** · 28 motivos distintos · 4 funções-ferramenta |
+| Pipeline | **15 tarefas**, `TERMINATED SUCCESS` de ponta a ponta |
+
+O baseline, que é o momento da noite: **0,3522** para *"ligue para quem comprou
+recentemente"* — muito pior que jogar uma moeda. E `atraso_relativo` como a
+feature nº 1 por permutação, que era a aposta.
+
+Tudo com `seed 42`: rodando de novo, dá igual.
+
+---
+
 ## 🧠 A ideia da noite: ML é camada, não projeto
 
 A tentação, quando entra machine learning num projeto de dados, é abrir um

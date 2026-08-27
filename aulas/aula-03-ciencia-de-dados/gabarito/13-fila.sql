@@ -144,6 +144,24 @@ ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN motivo
 ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN sugestao
   COMMENT 'O SKU da marca preferida que o cliente parou de comprar, com o saldo em estoque.';
 
+-- As demais também: é o COMMENT que o Genie lê para responder sem inventar.
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN cliente_id
+  COMMENT 'Identificador do cliente, o mesmo de gold.dim_cliente.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN razao_social
+  COMMENT 'Nome do cliente como o vendedor o conhece.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN cidade
+  COMMENT 'Cidade do cliente. Serve para agrupar as visitas de um mesmo dia.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN uf
+  COMMENT 'Unidade federativa do cliente.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN faixa
+  COMMENT 'Faixa do score em quartis: Fria, Morna, Quente, Muito quente.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN ticket_medio
+  COMMENT 'Quanto o cliente gasta por pedido, em média, no histórico dele.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN _referencia
+  COMMENT 'Data de corte usada para montar a fila. O "hoje" do dataset é 2026-08-31.';
+ALTER TABLE lakehouse_rotaperfume.gold.fila_semanal ALTER COLUMN versao
+  COMMENT 'Versão do modelo no Unity Catalog que gerou o score desta linha.';
+
 
 -- ── 2 · AS QUATRO FERRAMENTAS ─────────────────────────────────────────
 --

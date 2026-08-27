@@ -162,6 +162,13 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
    - nenhuma linha com motivo nulo ou vazio
    - nenhum score fora do intervalo [0, 1]
 
+A ORDEM DOS PASSOS 4 E 5 IMPORTA, e é o erro mais fácil de cometer aqui: o
+Genie RECUSA referenciar tabela que ainda não existe. Se o deploy do Genie
+acontecer antes de fila_semanal ser criada, ele morre com
+"PERMISSION_DENIED ... Table ... does not exist" — e a mensagem não diz que o
+problema é ordem. Crie a tabela primeiro (rode a tarefa, ou o SQL pelo
+scripts/run_sql.py), e só então faça o deploy com o Genie atualizado.
+
 4. Acrescente uma PÁGINA ao dashboard da noite 2
    (resources/dashboard-comercial.lvdash.json), chamada "Fila da semana":
    um filtro de vendedor e a tabela com ordem, cliente, cidade, nota, faixa,
@@ -177,7 +184,10 @@ Crie src/ml/13-fila.sql — um arquivo SQL para rodar como sql_task.
    "Use sempre as tabelas e funções deste espaço. Nunca invente número,
     nome de cliente ou quantidade de estoque."
 
-Tabelas, colunas e funções com COMMENT em português.
+COMMENT em português na TABELA (a auditoria quebra o job sem ele) e TAMBÉM em
+todas as colunas de fila_semanal: é o comentário de coluna que o Genie lê para
+responder sem inventar. Nas funções, o COMMENT é o que diz ao agente quando
+usar cada uma.
 
 Registre a tarefa ml_fila em resources/pipeline.job.yml, depois de ml_modelo,
 e faça o deploy.
@@ -279,6 +289,7 @@ resposta tem query embaixo.
 
 | Sintoma | Causa | Saída |
 |---|---|---|
+| `PERMISSION_DENIED ... Table 'fila_semanal' does not exist` no deploy | o Genie foi atualizado antes de a tabela existir | crie a tabela primeiro, depois deploye. **Aconteceu no ensaio** |
 | `INVALID_LIMIT_LIKE_EXPRESSION` no `CREATE FUNCTION` | `LIMIT p_quantos` — o Databricks exige LIMIT constante | filtre por `ordem <= p_quantos`, que a fila já vem numerada. **Aconteceu no ensaio** |
 | `data_sources.tables must be sorted by identifier` | o Genie exige as tabelas em ordem alfabética | ordene a lista — e as `column_configs` de cada uma também |
 | `text_instructions must contain at most one item` | o Genie aceita **uma** instrução de texto | funda o texto novo na instrução que já existe, não crie outra |

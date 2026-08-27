@@ -7,8 +7,8 @@ que for preciso para rodar.
 |---|---|---|---|
 | [**01**](aula-01-databricks-sql) · seg 24/08 | Databricks & SQL | Ambiente de pé, dado no catálogo, análise em 3 ambientes | [assistir](https://youtube.com/live/plG6mF-ib_w) |
 | [**02**](aula-02-engenharia-de-dados) · ter 25/08 | Engenharia de dados | 6 prompts, 6 deploys: raw, bronze, silver, gold, dashboard e Genie | [assistir](https://www.youtube.com/watch?v=0KRcn4ZIDPg) |
-| [**03**](aula-03-ciencia-de-dados) · qua 26/08 | Ciência de dados | 3 prompts, 3 deploys: features, modelo no UC e a fila dos 200 | _ao vivo_ |
-| [**04**](aula-04-app-e-genie) · qui 27/08 | Apps e agentes | 3 prompts, 3 deploys: o Genie da direção, o app e o retorno da ligação | _ao vivo_ |
+| [**03**](aula-03-ciencia-de-dados) · qua 26/08 | Ciência de dados | 3 prompts, 3 deploys: features, modelo no UC e a fila dos 200 | [assistir](https://youtube.com/live/xAYkMee5OpA) |
+| [**04**](aula-04-app-e-genie) · qui 27/08 | Apps e agentes | 3 prompts, 3 deploys: o Genie da direção, o app e o retorno da ligação | [assistir](https://youtube.com/live/EnBiOrp-0_Q) |
 
 ## O fio que liga as noites
 

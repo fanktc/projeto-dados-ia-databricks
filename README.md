@@ -15,8 +15,8 @@ Empresa fictícia, dado gerado com seed fixa, sujeira proposital.
 |---|---|---|---|
 | **1** | seg 24/08 | Objetivo e a primeira análise | [`aulas/aula-01-databricks-sql`](aulas/aula-01-databricks-sql) · [📺 gravação](https://youtube.com/live/plG6mF-ib_w) |
 | **2** | ter 25/08 | Engenharia de dados: o projeto roda sozinho | [`aulas/aula-02-engenharia-de-dados`](aulas/aula-02-engenharia-de-dados) · [📺 gravação](https://www.youtube.com/watch?v=0KRcn4ZIDPg) |
-| **3** | qua 26/08 | Ciência de dados: o dado vira decisão | [`aulas/aula-03-ciencia-de-dados`](aulas/aula-03-ciencia-de-dados) |
-| **4** | qui 27/08 | Apps e agentes: o projeto ganha uma URL | [`aulas/aula-04-app-e-genie`](aulas/aula-04-app-e-genie) |
+| **3** | qua 26/08 | Ciência de dados: o dado vira decisão | [`aulas/aula-03-ciencia-de-dados`](aulas/aula-03-ciencia-de-dados) · [📺 gravação](https://youtube.com/live/xAYkMee5OpA) |
+| **4** | qui 27/08 | Apps e agentes: o projeto ganha uma URL | [`aulas/aula-04-app-e-genie`](aulas/aula-04-app-e-genie) · [📺 gravação](https://youtube.com/live/EnBiOrp-0_Q) |
 
 Cada pasta é autocontida: tem o próprio README, os exemplos numerados e o que
 for preciso rodar.

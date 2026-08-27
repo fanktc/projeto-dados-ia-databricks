@@ -19,14 +19,18 @@ import {
   TableRow,
 } from '@databricks/appkit-ui/react';
 
+// O warehouse devolve todo número como STRING no JSON. Somar sem Number()
+// concatena: "7" + "12" vira "712", não 19.
+const num = (v: number | string) => Number(v);
+
 export function AcompanhamentoPage() {
   const { data, loading, error } = useAnalyticsQuery('acompanhamento');
 
   const total = data?.reduce(
     (acc, l) => ({
-      na_fila: acc.na_fila + l.na_fila,
-      trabalhados: acc.trabalhados + l.trabalhados,
-      vendeu: acc.vendeu + l.vendeu,
+      na_fila: acc.na_fila + num(l.na_fila),
+      trabalhados: acc.trabalhados + num(l.trabalhados),
+      vendeu: acc.vendeu + num(l.vendeu),
     }),
     { na_fila: 0, trabalhados: 0, vendeu: 0 },
   );

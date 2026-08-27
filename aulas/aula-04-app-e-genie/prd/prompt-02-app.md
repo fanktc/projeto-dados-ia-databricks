@@ -157,6 +157,11 @@ nova.
    Formate em português: R$ com toLocaleString('pt-BR'), score como
    porcentagem inteira. Ninguém decide ligação lendo 0.9740085224443632.
 
+   ATENÇÃO, e isto vale para TODA a tela: o warehouse devolve número como
+   STRING no JSON, mesmo que o tipo gerado diga `number`. Passe por Number()
+   antes de formatar ou somar — senão toLocaleString devolve a string intacta
+   (R$ some e aparece 582799.4988012867) e "7" + "12" vira "712".
+
 4. AS PERMISSÕES — sem isso o app sobe e mostra tela vazia
 
    Depois do primeiro deploy, leia o service principal do app com
@@ -240,3 +245,6 @@ duas portas.
 | `failed to acquire deployment lock` | dois deploys ao mesmo tempo | Espere o primeiro terminar |
 | `Unexpectedly failed to update app's compute size` | erro transitório do Free Edition | Rode o `apps deploy` de novo. Resolveu na segunda tentativa |
 | O chat do Genie não carrega | space id errado no `databricks.yml` | Confira com `databricks genie list-spaces` |
+| Aparece `582799.4988012867` na tela | o valor chegou como string; `toLocaleString` não formatou | `Number(v)` antes de formatar. O tipo diz `number`, o runtime entrega `string` |
+| Uma soma dá `712` em vez de `19` | concatenação de strings | Mesmo motivo: `Number()` antes de somar |
+| Duas colunas escrevem uma por cima da outra | a tabela não tem largura por coluna | `table-fixed` + `w-[..]` em cada `TableHead`, e `whitespace-normal break-words` nas células |

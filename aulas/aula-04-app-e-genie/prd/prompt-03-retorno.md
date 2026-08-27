@@ -90,7 +90,8 @@ o que aconteceu na ligação.
 1. A ROTA QUE ESCREVE — uma só, em server/server.ts, dentro de onPluginsReady
 
    POST /api/retorno, com o corpo validado por Zod ANTES de tocar no banco:
-     cliente_id  int
+     cliente_id  int (use z.coerce.number(): a tela manda o id que veio do
+                 warehouse, e ele chega como STRING mesmo tipado como number)
      vendedor    string não vazia
      status      enum: vendeu | vai_pensar | sem_interesse | nao_atendeu
      comentario  string, no máximo 500 caracteres, opcional
@@ -220,5 +221,6 @@ DELETE FROM lakehouse_rotaperfume.gold.retorno_ligacao;
 | `registrado_por` sempre igual | rodando local, sem OAuth | Em `npm run dev` não há header. No app publicado, vem o e-mail real |
 | O POST devolve 400 sem motivo claro | Zod recusou o corpo | Leia `detalhe` na resposta: ele diz qual campo e o que era esperado |
 | Erro de tipo no `executeStatement` | `serviceDatabricksClient` não existe | O contexto expõe `client` e `warehouseId` |
+| O POST devolve 400 dizendo que `cliente_id` não é número | a tela mandou `"2137"`, string | `z.coerce.number().int()` no servidor e `Number()` na tela |
 | O gráfico do acompanhamento não aparece | ninguém registrou nada ainda | É o estado vazio, e ele está certo. Registre um retorno |
 | Deploy falha na primeira tentativa | erro transitório de compute do Free Edition | Rode o `apps deploy` de novo |

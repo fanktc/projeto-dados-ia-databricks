@@ -227,6 +227,12 @@ Apps **funciona** na Free Edition. Medido contra o workspace em 27/08:
   `OFFLINE` e gera `{}` como tipo, quebrando o `tsc` longe da causa real.
 - `useAnalyticsQuery` **não tem `refetch`**: para recarregar depois de escrever,
   use um parâmetro que não filtra nada (`recarga`) e mude o valor.
+- **O typegen tipa como `number` o que o runtime entrega como `string`** (o
+  warehouse serializa todo número como string no JSON). Sem `Number()`:
+  `toLocaleString` não formata, `+` concatena e um `z.number()` no servidor
+  recusa o id que a tela mandou. Use `z.coerce.number()` do lado do servidor.
+- Tabela larga precisa de `table-fixed` + largura por coluna; sem isso as
+  células transbordam e uma escreve por cima da outra.
 - `Unexpectedly failed to update app's compute size` é transitório no Free
   Edition — rode o `apps deploy` de novo.
 - **Lakebase não está disponível** (`postgres list-projects` volta vazio). Por

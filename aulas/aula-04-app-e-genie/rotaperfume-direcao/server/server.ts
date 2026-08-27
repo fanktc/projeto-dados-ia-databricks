@@ -4,7 +4,7 @@ import { z } from 'zod';
 // Os quatro desfechos possíveis de uma ligação. Qualquer outra coisa é recusada
 // antes de chegar ao banco: o retorno de hoje é o rótulo de treino da semana que vem.
 const RetornoSchema = z.object({
-  cliente_id: z.number().int(),
+  cliente_id: z.coerce.number().int(),   // o warehouse devolve id como string
   vendedor: z.string().min(1),
   status: z.enum(['vendeu', 'vai_pensar', 'sem_interesse', 'nao_atendeu']),
   comentario: z.string().max(500).default(''),

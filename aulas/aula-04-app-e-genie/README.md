@@ -181,6 +181,11 @@ projeto local junto com o app, e os prompts voltam a ter o que construir.
 3. **`useAnalyticsQuery` não tem `refetch`.** Depois de gravar, a tela não se
    atualiza sozinha: use um parâmetro de recarga que muda a chave do cache.
 
+3b. **O tipo diz `number`, o runtime entrega `string`.** O warehouse serializa
+   todo número como string no JSON, e o typegen não sabe disso. Sem `Number()`,
+   `toLocaleString` devolve `582799.4988012867` cru, `"7" + "12"` vira `"712"`
+   e um `z.number()` no servidor recusa o id que a própria tela mandou.
+
 4. **`Unexpectedly failed to update app's compute size`.** Erro transitório do
    Free Edition ao trocar recursos do app. Rode o `apps deploy` de novo.
 

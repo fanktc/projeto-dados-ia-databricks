@@ -37,8 +37,19 @@ const STATUS = [
   { valor: 'nao_atendeu', rotulo: 'Não atendeu' },
 ];
 
-const reais = (v: number) =>
-  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+// O warehouse devolve todo número como STRING no JSON. Sem passar por Number()
+// antes, toLocaleString devolve a string intacta — e a tela mostra
+// 582799.4988012867 em vez de R$ 582.800.
+const num = (v: number | string) => Number(v);
+
+const reais = (v: number | string) =>
+  num(v).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  });
+
+const pct = (v: number | string) => `${Math.round(num(v) * 100)}%`;
 
 function Kpi({
   titulo,
@@ -87,9 +98,12 @@ export function SemanaPage() {
   const fila = useAnalyticsQuery('fila', parametrosFila);
 
   const k = kpis.data?.[0];
-  const conversaoPrevista = k ? (k.acertos_top200 / k.contatos) * 100 : 0;
+  const conversaoPrevista = k ? (num(k.acertos_top200) / num(k.contatos)) * 100 : 0;
 
-  async function registrar(clienteId: number, nomeVendedor: string, status: string) {
+  async function registrar(idBruto: number | string, nomeVendedor: string, status: string) {
+    // Number() uma vez, no ponto de entrada: o tipo gerado diz number, mas o
+    // JSON do warehouse entrega "2137" — e daqui para baixo tudo é número.
+    const clienteId = num(idBruto);
     setGravando(clienteId);
     setAviso(null);
     try {
@@ -150,7 +164,7 @@ export function SemanaPage() {
         <Kpi
           titulo="Conversão prevista"
           valor={k ? `${conversaoPrevista.toFixed(0)}%` : '—'}
-          apoio={k ? `contra ${(k.taxa_base * 100).toFixed(1)}% ligando às cegas` : 'carregando'}
+          apoio={k ? `contra ${(num(k.taxa_base) * 100).toFixed(1)}% ligando às cegas` : 'carregando'}
           carregando={kpis.loading}
         />
         <Kpi
@@ -201,35 +215,49 @@ export function SemanaPage() {
           )}
           {!fila.loading && !fila.error && (fila.data?.length ?? 0) > 0 && (
             <div className="overflow-x-auto">
-              <Table>
+              {/* table-fixed + largura por coluna: sem isso o texto de motivo e
+                  sugestão transborda e uma célula escreve por cima da outra. */}
+              <Table className="table-fixed w-full min-w-[64rem]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">#</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead className="text-right">Chance</TableHead>
-                    <TableHead>Por que ligar</TableHead>
-                    <TableHead>O que oferecer</TableHead>
-                    <TableHead className="w-[26rem]">Como foi a ligação</TableHead>
+                    <TableHead className="w-[3rem]">#</TableHead>
+                    <TableHead className="w-[15rem]">Cliente</TableHead>
+                    <TableHead className="w-[9rem]">Vendedor</TableHead>
+                    <TableHead className="w-[5rem] text-right">Chance</TableHead>
+                    <TableHead className="w-[16rem]">Por que ligar</TableHead>
+                    <TableHead className="w-[14rem]">O que oferecer</TableHead>
+                    <TableHead className="w-[13rem]">Como foi a ligação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {fila.data?.map((linha) => (
-                    <TableRow key={linha.cliente_id}>
-                      <TableCell className="text-muted-foreground">{linha.ordem}</TableCell>
-                      <TableCell>
+                  {fila.data?.map((linha, i) => {
+                    // Uma conversão por linha: daqui para baixo o id é número,
+                    // e as comparações de estado funcionam.
+                    const id = num(linha.cliente_id);
+                    return (
+                    <TableRow key={id} className="align-top">
+                      {/* Com "Todos", a posição é a da fila global; filtrado por
+                          vendedor, é a ordem de ligação daquele vendedor. */}
+                      <TableCell className="text-muted-foreground">
+                        {vendedor === TODOS ? i + 1 : linha.ordem}
+                      </TableCell>
+                      <TableCell className="whitespace-normal break-words">
                         <div className="font-medium">{linha.razao_social}</div>
                         <div className="text-xs text-muted-foreground">
                           {linha.cidade}/{linha.uf} · ticket {reais(linha.ticket_medio)}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{linha.vendedor}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        {(linha.score * 100).toFixed(0)}%
+                      <TableCell className="text-sm whitespace-normal break-words">
+                        {linha.vendedor}
                       </TableCell>
-                      <TableCell className="text-sm max-w-xs">{linha.motivo}</TableCell>
-                      <TableCell className="text-sm max-w-xs">{linha.sugestao}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-right font-medium">{pct(linha.score)}</TableCell>
+                      <TableCell className="text-sm whitespace-normal break-words">
+                        {linha.motivo}
+                      </TableCell>
+                      <TableCell className="text-sm whitespace-normal break-words">
+                        {linha.sugestao}
+                      </TableCell>
+                      <TableCell className="whitespace-normal">
                         {linha.retorno_status ? (
                           <div className="space-y-1">
                             <Badge variant={linha.retorno_status === 'vendeu' ? 'default' : 'secondary'}>
@@ -244,19 +272,20 @@ export function SemanaPage() {
                           <div className="space-y-2">
                             <Input
                               placeholder="o que o cliente disse"
-                              value={comentarios[linha.cliente_id] ?? ''}
+                              value={comentarios[id] ?? ''}
                               onChange={(e) =>
-                                setComentarios((c) => ({ ...c, [linha.cliente_id]: e.target.value }))
+                                setComentarios((c) => ({ ...c, [id]: e.target.value }))
                               }
                             />
-                            <div className="flex flex-wrap gap-1">
+                            <div className="grid grid-cols-2 gap-1">
                               {STATUS.map((s) => (
                                 <Button
                                   key={s.valor}
                                   size="sm"
+                                  className="w-full px-1 text-xs"
                                   variant={s.valor === 'vendeu' ? 'default' : 'outline'}
-                                  disabled={gravando === linha.cliente_id}
-                                  onClick={() => registrar(linha.cliente_id, linha.vendedor, s.valor)}
+                                  disabled={gravando === id}
+                                  onClick={() => registrar(id, linha.vendedor, s.valor)}
                                 >
                                   {s.rotulo}
                                 </Button>
@@ -266,7 +295,8 @@ export function SemanaPage() {
                         )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

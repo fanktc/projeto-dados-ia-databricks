@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   useAnalyticsQuery,
   Alert,
@@ -20,20 +20,20 @@ import {
   TableHeader,
   TableRow,
 } from '@databricks/appkit-ui/react';
-import { sql } from '@databricks/appkit-ui/js';
 import { RefreshCw } from 'lucide-react';
-import { num, sementeDeCache } from '../../lib/dados';
+import { num } from '../../lib/dados';
 
 // A conversão que o modelo previu para os 200: 86 acertos, medidos no holdout.
 // É contra ela que a conversão real desta semana é lida.
 const CONVERSAO_PREVISTA = 43;
 
-export function AcompanhamentoPage() {
-  // Semente nova a cada visita: sem isso a aba serve o resultado cacheado de
-  // antes do último retorno, e o número parece não ter mudado.
-  const [recarga, setRecarga] = useState(sementeDeCache);
-  const parametros = useMemo(() => ({ recarga: sql.number(recarga) }), [recarga]);
-  const { data, loading, error } = useAnalyticsQuery('acompanhamento', parametros);
+/**
+ * A tela é remontada pela `key` do pai a cada "Atualizar". Remontar refaz a
+ * consulta — é o jeito React de recarregar, sem parâmetro inventado no SQL só
+ * para furar cache (que quebra a tela de quem está com o JS antigo aberto).
+ */
+function Conteudo({ onAtualizar }: { onAtualizar: () => void }) {
+  const { data, loading, error } = useAnalyticsQuery('acompanhamento');
 
   const total = data?.reduce(
     (acc, l) => ({
@@ -73,7 +73,7 @@ export function AcompanhamentoPage() {
             O que a fila desta semana virou, vendedor por vendedor
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setRecarga(sementeDeCache())}>
+        <Button variant="outline" size="sm" onClick={onAtualizar}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Atualizar
         </Button>
@@ -241,4 +241,10 @@ export function AcompanhamentoPage() {
       </Card>
     </div>
   );
+}
+
+export function AcompanhamentoPage() {
+  // Trocar a key remonta a tela inteira, e a consulta roda de novo.
+  const [visita, setVisita] = useState(0);
+  return <Conteudo key={visita} onAtualizar={() => setVisita((n) => n + 1)} />;
 }

@@ -1,8 +1,8 @@
 # Prompt 3 · O retorno — o ciclo se fecha
 
-**Slides que acompanham:** 34 a 39 (divisor *"O caminho de volta"*, o dado que
-sai e não volta, o retorno é o rótulo, conversão prevista × real, o arco das
-quatro noites).
+**Slides que acompanham:** 34 a 41 (divisor *"O caminho de volta"*, o dado que
+sai e não volta, o retorno é o rótulo, botão × contrato, o GRANT escopado, o
+teste do ciclo em sete passos e o antes/depois da mesma query).
 
 **Entrega:** os quatro botões que gravam, a aba *Acompanhamento* e a primeira
 linha de `gold.retorno_ligacao` escrita ao vivo. **Deploy nº 3 — o último.**
@@ -125,13 +125,20 @@ o que aconteceu na ligação.
 
 3. A RECARGA — sem isso a tela mente
 
-   useAnalyticsQuery não tem refetch. Acrescente às queries fila.sql e
-   kpis_semana.sql um parâmetro `recarga` que NÃO FILTRA NADA (algo como
-   :recarga >= 0), e um contador na tela que sobe a cada gravação. Mudando o
-   parâmetro, muda a chave do cache, e o dado é pedido de novo.
+   useAnalyticsQuery não tem refetch, e o AppKit guarda o resultado da
+   consulta. Depois de gravar, a tela continua mostrando o número de antes.
 
-   Comente no .sql por que esse parâmetro existe — daqui a um mês ninguém
-   lembra.
+   NÃO resolva isso com um parâmetro falso no SQL (:recarga >= 0). Funciona,
+   mas quem estiver com a página aberta de uma versão anterior passa a mandar
+   a consulta sem o parâmetro, e o warehouse recusa com UNBOUND_SQL_PARAMETER
+   — a tela quebra sozinha depois de um deploy.
+
+   Faça as duas coisas:
+   a) desligue o cache de leitura no createApp: cache: { enabled: false }.
+      São 200 linhas, e todas mudam quando alguém clica
+   b) recarregue em React: guarde filtro e comentários no componente PAI e
+      remonte o filho com uma `key` que muda a cada gravação. Remontar refaz
+      a consulta, sem inventar coluna nem parâmetro
 
 4. A ABA "Acompanhamento" (rota /acompanhamento)
 
@@ -217,7 +224,8 @@ DELETE FROM lakehouse_rotaperfume.gold.retorno_ligacao;
 | Sintoma | Causa | Saída |
 |---|---|---|
 | `PERMISSION_DENIED` ao gravar | falta `MODIFY` na tabela | `GRANT MODIFY ON TABLE ... TO \`<sp>\`` — em TABLE, não em SCHEMA |
-| Grava, mas a tela não muda | o parâmetro de recarga não sobe | O contador tem que entrar nos parâmetros de **as duas** queries |
+| Grava, mas a tela não muda | a `key` não mudou, ou o cache está ligado | `cache: { enabled: false }` + `key` que muda a cada gravação |
+| `UNBOUND_SQL_PARAMETER: recarga` | o SQL pede um parâmetro que a tela não manda — JS antigo no navegador do usuário | Não use parâmetro falso para furar cache. Se já usou, `Ctrl+Shift+R` resolve o sintoma |
 | `registrado_por` sempre igual | rodando local, sem OAuth | Em `npm run dev` não há header. No app publicado, vem o e-mail real |
 | O POST devolve 400 sem motivo claro | Zod recusou o corpo | Leia `detalhe` na resposta: ele diz qual campo e o que era esperado |
 | Erro de tipo no `executeStatement` | `serviceDatabricksClient` não existe | O contexto expõe `client` e `warehouseId` |

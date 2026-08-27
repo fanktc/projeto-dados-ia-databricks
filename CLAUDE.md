@@ -239,8 +239,12 @@ Apps **funciona** na Free Edition. Medido contra o workspace em 27/08:
   `getExecutionContext().client.statementExecution.executeStatement`.
 - `npm run typegen` **exige o warehouse ligado**; parado, degrada para
   `OFFLINE` e gera `{}` como tipo, quebrando o `tsc` longe da causa real.
-- `useAnalyticsQuery` **não tem `refetch`**: para recarregar depois de escrever,
-  use um parâmetro que não filtra nada (`recarga`) e mude o valor.
+- `useAnalyticsQuery` **não tem `refetch`**. Para recarregar depois de escrever:
+  `cache: { enabled: false }` no `createApp` + uma `key` que remonta o
+  componente (o estado que precisa sobreviver fica no pai). **Não** use um
+  parâmetro falso no SQL só para furar cache — o JS antigo de um navegador
+  aberto passa a chamar sem ele e o warehouse recusa com
+  `UNBOUND_SQL_PARAMETER`, quebrando a tela depois de um deploy.
 - **O typegen tipa como `number` o que o runtime entrega como `string`** (o
   warehouse serializa todo número como string no JSON). Sem `Number()`:
   `toLocaleString` não formata, `+` concatena e um `z.number()` no servidor

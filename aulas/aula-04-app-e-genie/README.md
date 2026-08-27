@@ -203,7 +203,10 @@ projeto local junto com o app, e os prompts voltam a ter o que construir.
    a ver com o problema real.
 
 3. **`useAnalyticsQuery` não tem `refetch`.** Depois de gravar, a tela não se
-   atualiza sozinha: use um parâmetro de recarga que muda a chave do cache.
+   atualiza sozinha. A saída é `cache: { enabled: false }` no `createApp` mais
+   uma `key` que remonta o componente. **Não** use um parâmetro falso no SQL
+   para furar o cache: quem estiver com o JS antigo aberto passa a mandar a
+   consulta sem ele, e o warehouse recusa com `UNBOUND_SQL_PARAMETER`.
 
 3b. **O tipo diz `number`, o runtime entrega `string`.** O warehouse serializa
    todo número como string no JSON, e o typegen não sabe disso. Sem `Number()`,

@@ -68,10 +68,10 @@ ambiente ao fim da noite 3.
 | 15–18 | As três portas: dashboard, Genie, app — e quando usar cada uma | 8 |
 | 19–24 | O Genie como produto · **prompt 1 rodando** | 15 |
 | 25–33 | Databricks Apps · **prompt 2 rodando** | 22 |
-| 34–39 | O retorno da ligação · **prompt 3 rodando** | 16 |
-| 40–44 | O ciclo completo, portfólio e fecho | 11 |
+| 34–41 | O retorno da ligação · o teste do ciclo · **prompt 3 rodando** | 18 |
+| 42–47 | O ciclo completo, a documentação, portfólio e fecho | 12 |
 
-**Total: ~100 min.**
+**Total: ~103 min**, em 47 slides.
 
 O bloco 7–14 é o mais importante da noite para quem chegou hoje — e é o único
 lugar do curso onde as três noites são contadas **na língua do negócio**, sem

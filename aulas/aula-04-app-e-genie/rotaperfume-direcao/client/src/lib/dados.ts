@@ -19,15 +19,6 @@ export const reais = (v: number | string) =>
 export const pct = (v: number | string, casas = 0) =>
   `${(num(v) * 100).toFixed(casas)}%`;
 
-/**
- * Semente de cache que muda a cada montagem da tela.
- *
- * `useAnalyticsQuery` guarda o resultado pela chave dos parâmetros e não expõe
- * `refetch`. Sem um valor que mude, quem grava um retorno e volta para a aba
- * continua vendo o número de antes. Em segundos para caber em INT.
- */
-export const sementeDeCache = () => Math.floor(Date.now() / 1000);
-
 /** Os quatro desfechos possíveis, na ordem em que o vendedor pensa neles. */
 export const STATUS = [
   { valor: 'vendeu', rotulo: 'Vendeu', bom: true },

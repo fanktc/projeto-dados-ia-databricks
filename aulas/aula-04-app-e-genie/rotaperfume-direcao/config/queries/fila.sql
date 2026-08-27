@@ -1,5 +1,4 @@
 -- @param vendedor STRING = Todos
--- @param recarga INT = 0
 -- A fila da semana com o último retorno já registrado de cada cliente.
 -- 'Todos' devolve os 200; qualquer outro valor filtra por vendedor.
 WITH ultimo_retorno AS (
@@ -22,8 +21,5 @@ SELECT   f.vendedor,
          r.comentario  AS retorno_comentario
 FROM     lakehouse_rotaperfume.gold.fila_semanal f
 LEFT JOIN ultimo_retorno r ON r.cliente_id = f.cliente_id
--- :recarga não filtra nada: existe para a tela pedir o dado de novo
--- depois de gravar um retorno, sem cache velho no caminho.
-WHERE    (:vendedor = 'Todos' OR f.vendedor = :vendedor)
-  AND    :recarga >= 0
+WHERE    :vendedor = 'Todos' OR f.vendedor = :vendedor
 ORDER BY f.score DESC

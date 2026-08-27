@@ -7,10 +7,7 @@ declare module "@databricks/appkit-ui/react" {
   interface QueryRegistry {
     acompanhamento: {
         name: "acompanhamento";
-        parameters: {
-          /** INT - use sql.int() */
-          recarga: SQLNumberMarker;
-        };
+        parameters: Record<string, never>;
         result: Array<{
           /** Nome do vendedor dono da carteira. Só vendedor ativo entra na fila. */
           vendedor: string;
@@ -33,8 +30,6 @@ declare module "@databricks/appkit-ui/react" {
         parameters: {
           /** STRING - use sql.string() */
           vendedor: SQLStringMarker;
-          /** INT - use sql.int() */
-          recarga: SQLNumberMarker;
         };
         result: Array<{
           /** Nome do vendedor dono da carteira. Só vendedor ativo entra na fila. */
@@ -59,18 +54,15 @@ declare module "@databricks/appkit-ui/react" {
           motivo: string;
           /** O SKU da marca preferida que o cliente parou de comprar, com o saldo em estoque. */
           sugestao: string;
-          /** Resultado da ligacao: vendeu, vai_pensar, sem_interesse ou nao_atendeu */
+          /** Resultado da ligação: vendeu, vai_pensar, sem_interesse ou nao_atendeu. */
           retorno_status: string;
-          /** O que o vendedor escreveu, em texto livre */
+          /** O que o cliente disse, em texto livre, escrito pelo vendedor. */
           retorno_comentario: string;
         }>;
       };
     kpis_semana: {
         name: "kpis_semana";
-        parameters: {
-          /** INT - use sql.int() */
-          recarga: SQLNumberMarker;
-        };
+        parameters: Record<string, never>;
         result: Array<{
           /** @sqlType BIGINT */
           contatos: number;

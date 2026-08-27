@@ -27,7 +27,7 @@ import {
   TableRow,
 } from '@databricks/appkit-ui/react';
 import { sql } from '@databricks/appkit-ui/js';
-import { num, reais, pct, sementeDeCache, STATUS, rotuloStatus } from '../../lib/dados';
+import { num, reais, pct, STATUS, rotuloStatus } from '../../lib/dados';
 
 const TODOS = 'Todos';
 
@@ -59,22 +59,34 @@ function Kpi({
   );
 }
 
-export function SemanaPage() {
-  const [vendedor, setVendedor] = useState<string>(TODOS);
-  const [comentarios, setComentarios] = useState<Record<number, string>>({});
+/**
+ * O conteúdo é remontado pela `key` do pai depois de cada retorno gravado —
+ * remontar refaz as consultas. É o jeito React de recarregar, sem parâmetro
+ * inventado no SQL só para furar cache (que quebra a tela de quem está com o
+ * JS antigo aberto).
+ *
+ * O filtro de vendedor e os comentários digitados ficam no PAI, senão a
+ * remontagem apagaria os dois.
+ */
+function Conteudo({
+  vendedor,
+  setVendedor,
+  comentarios,
+  setComentarios,
+  aoGravar,
+}: {
+  vendedor: string;
+  setVendedor: (v: string) => void;
+  comentarios: Record<number, string>;
+  setComentarios: React.Dispatch<React.SetStateAction<Record<number, string>>>;
+  aoGravar: () => void;
+}) {
   const [gravando, setGravando] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  // Muda a cada montagem da tela E a cada retorno gravado. É o que faz a
-  // consulta ir ao warehouse em vez de servir o cache da visita anterior.
-  const [recarga, setRecarga] = useState(sementeDeCache);
 
-  const parametrosKpis = useMemo(() => ({ recarga: sql.number(recarga) }), [recarga]);
-  const kpis = useAnalyticsQuery('kpis_semana', parametrosKpis);
+  const kpis = useAnalyticsQuery('kpis_semana');
   const vendedores = useAnalyticsQuery('vendedores');
-  const parametrosFila = useMemo(
-    () => ({ vendedor: sql.string(vendedor), recarga: sql.number(recarga) }),
-    [vendedor, recarga],
-  );
+  const parametrosFila = useMemo(() => ({ vendedor: sql.string(vendedor) }), [vendedor]);
   const fila = useAnalyticsQuery('fila', parametrosFila);
 
   const k = kpis.data?.[0];
@@ -99,7 +111,7 @@ export function SemanaPage() {
         }),
       });
       if (!resposta.ok) throw new Error(await resposta.text());
-      setRecarga((n) => n + 1);
+      aoGravar();
     } catch {
       setAviso('Não consegui gravar esse retorno. Tente de novo.');
     } finally {
@@ -283,5 +295,23 @@ export function SemanaPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function SemanaPage() {
+  // Estado que precisa sobreviver à remontagem mora aqui.
+  const [vendedor, setVendedor] = useState<string>(TODOS);
+  const [comentarios, setComentarios] = useState<Record<number, string>>({});
+  const [visita, setVisita] = useState(0);
+
+  return (
+    <Conteudo
+      key={visita}
+      vendedor={vendedor}
+      setVendedor={setVendedor}
+      comentarios={comentarios}
+      setComentarios={setComentarios}
+      aoGravar={() => setVisita((n) => n + 1)}
+    />
   );
 }

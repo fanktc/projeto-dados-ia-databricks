@@ -798,7 +798,45 @@ bloco(s, y + 0.18 + h + 0.32,
       "Em TABLE, não em SCHEMA. Permissão é desenho, não burocracia.",
       h=0.72, tam=16, alinha=PP_ALIGN.CENTER)
 
-# ── 39 · o momento da noite ───────────────────────────────────────────
+# ── 39 · o teste do ciclo, passo a passo ──────────────────────────────
+s, y = cabecalho("Antes de clicar em nada", "O teste que prova o ciclo inteiro",
+                 "Sete passos com o SQL Editor e o app lado a lado. É o que "
+                 "transforma “o app grava” em “eu vi gravar”.")
+tabela(s, y + 0.05,
+       ["PASSO", "ONDE", "O QUE VOCÊ VÊ"],
+       [["1 · o estado inicial", "SQL Editor", "SELECT COUNT(*) em retorno_ligacao → 0"],
+        ["2 · escolher quem ligar", "SQL Editor", "cliente 2137 · Farmácia Serena · score 0,974"],
+        ["3 · o mesmo cliente com LEFT JOIN", "SQL Editor", "retorno e registrado_por vêm NULL"],
+        ["4 · o apontamento", "o app", "comentário + Vendeu. O cartão sobe na hora"],
+        ["5 · a mesma query de novo", "SQL Editor", "a linha existe, com o SEU e-mail"],
+        ["6 · o acompanhamento", "os dois", "o número da tela bate com o do banco"],
+        ["7 · a pergunta ao Genie", "Genie", "ele responde o número novo, sem mudar nada"]],
+       larguras=[4.0, 2.5, 5.333], alt=0.52, destaque=4)
+bloco(s, 6.35, "O passo 5 é o que a sala precisa ver: o NULL de trinta "
+               "segundos atrás virou dado.", h=0.66, tam=15.5)
+nota(s, "O roteiro completo, com as queries prontas, está em "
+        "passo-a-passo/03-retorno.md.")
+
+# ── 40 · o antes e o depois, na mesma query ───────────────────────────
+s, y = cabecalho("O passo 3 e o passo 5", "A mesma query, trinta segundos depois")
+h = codigo(s, y + 0.05,
+     "SELECT f.razao_social, r.status AS retorno, r.registrado_por\n"
+     "FROM   gold.fila_semanal f\n"
+     "LEFT JOIN gold.retorno_ligacao r ON r.cliente_id = f.cliente_id\n"
+     "WHERE  f.cliente_id = 2137;", tam=13)
+y2 = y + h + 0.3
+cartoes(s, y2, 1.75, [
+    ("ANTES do clique",
+     "retorno → NULL\nregistrado_por → NULL\n\nO pipeline sabe a quem ligar e "
+     "não sabe o que aconteceu."),
+    ("DEPOIS do clique",
+     "retorno → vendeu\nregistrado_por → o seu e-mail\n\nO caminho de volta "
+     "existe, e tem nome e hora.", "destaque"),
+])
+bloco(s, 6.3, "Não é o app que impressiona. É o NULL que virou dado.",
+      h=0.66, tam=16, alinha=PP_ALIGN.CENTER)
+
+# ── 41 · o momento da noite ───────────────────────────────────────────
 s, y = cabecalho("Deploy nº 3 · pronto", "Agora clique — e volte para o SQL")
 tabela(s, y + 0.05,
        ["A SEQUÊNCIA", "O QUE A SALA VÊ"],
@@ -817,7 +855,7 @@ nota(s, "É o melhor momento da noite. Não corra: faça os quatro passos "
 #  BLOCO 7 · O FECHO                                       slides 40–44
 # ══════════════════════════════════════════════════════════════════════
 
-# ── 40 · o ciclo completo ─────────────────────────────────────────────
+# ── 42 · o ciclo completo ─────────────────────────────────────────────
 s, y = cabecalho("O que existe agora", "O ciclo fechado")
 h = mono(s, y + 0.2,
      "  CSV  →  bronze  →  silver  →  gold  →  modelo  →  fila  →  app\n"
@@ -829,7 +867,7 @@ bloco(s, y + h + 0.45,
       "Genies e um app.\nE o dado dá a volta inteira.",
       h=1.2, tam=16.5, alinha=PP_ALIGN.CENTER)
 
-# ── 41 · as quatro noites em quatro números ───────────────────────────
+# ── 43 · as quatro noites em quatro números ───────────────────────────
 s, y = cabecalho("Uma query só", "A imersão inteira, em quatro linhas")
 tabela(s, y + 0.1,
        ["ETAPA", "NÚMERO", "O QUE É"],
@@ -841,7 +879,7 @@ tabela(s, y + 0.1,
 bloco(s, 6.0, "A última linha só tem número porque alguém clicou num botão "
                "aqui, agora.", h=0.7, tam=16)
 
-# ── 42 · o que você leva ──────────────────────────────────────────────
+# ── 44 · o que você leva ──────────────────────────────────────────────
 s, y = cabecalho("Não é um curso que você assistiu", "O que fica com você")
 cartoes(s, y + 0.1, 2.5, [
     ("Um repositório",
@@ -857,7 +895,7 @@ cartoes(s, y + 0.1, 2.5, [
 bloco(s, 5.9, "Rode o 99-limpar de cada noite e refaça sozinho. É aí que "
                "assenta.", h=0.7, tam=16)
 
-# ── 43 · o que estudar depois ─────────────────────────────────────────
+# ── 45 · o que estudar depois ─────────────────────────────────────────
 s, y = cabecalho("Se você quer continuar", "Por onde seguir")
 faixas(s, y + 0.05, [
     ("Refazer as quatro noites sozinho", "os scripts 99-limpar devolvem o ambiente ao estado anterior"),
@@ -868,7 +906,22 @@ faixas(s, y + 0.05, [
 bloco(s, 6.2, "O último item é o projeto ficando mais inteligente sozinho — "
                "porque o ciclo fechou.", h=0.66, tam=15.5)
 
-# ── 44 · a frase da noite ─────────────────────────────────────────────
+# ── 46 · a documentação, para depois da aula ──────────────────────────
+s, y = cabecalho("Para ler com calma amanhã", "A documentação do que a gente usou",
+                 "Tudo desta noite está documentado. Estes são os pontos de "
+                 "partida — o resto se acha a partir deles.")
+faixas(s, y + 0.05, [
+    ("Databricks Apps", "docs.databricks.com/dev-tools/databricks-apps · o que é, frameworks e deploy"),
+    ("Apps · conceitos e permissões", ".../databricks-apps/key-concepts · o service principal e o modelo de acesso", "destaque"),
+    ("Apps · boas práticas", ".../databricks-apps/best-practices"),
+    ("AI/BI Genie", "docs.databricks.com/genie · a experiência de perguntar em português"),
+    ("Genie Agents · afinar", "docs.databricks.com/genie-agents/tune-quality · instruções e qualidade da resposta"),
+    ("Unity Catalog · privilégios", "docs.databricks.com/data-governance/unity-catalog/manage-privileges · o GRANT"),
+], alt=0.6, larg_esq=4.6, cabecalho_=("O ASSUNTO", "ONDE LER"))
+nota(s, "Links conferidos contra o índice oficial (docs.databricks.com/llms.txt) "
+        "no dia da aula.")
+
+# ── 47 · a frase da noite ─────────────────────────────────────────────
 impacto("Segunda, uma query quebrou.\n"
         "Hoje, um clique virou uma linha na gold.\n\n"
         "E vocês construíram junto. Não assistiram.")

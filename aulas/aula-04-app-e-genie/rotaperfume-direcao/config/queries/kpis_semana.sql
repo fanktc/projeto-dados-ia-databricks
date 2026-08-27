@@ -1,4 +1,3 @@
--- @param recarga INT = 0
 -- Os quatro números que o diretor olha antes de qualquer tabela.
 -- A fila da semana, a métrica do modelo que a gerou e o retorno já registrado.
 WITH fila AS (
@@ -30,4 +29,3 @@ SELECT fila.contatos,
        retorno.ligacoes_registradas,
        retorno.vendas
 FROM fila, modelo, retorno
-WHERE :recarga >= 0

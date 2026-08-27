@@ -14,6 +14,11 @@ const RetornoSchema = z.object({
 await createApp({
   plugins: [analytics({}), genie(), server()],
 
+  // Sem cache de leitura. Toda tela daqui lê a fila da semana e o retorno que
+  // o time acabou de registrar: servir resposta guardada é mostrar número
+  // velho para quem acabou de clicar. São 200 linhas — o warehouse aguenta.
+  cache: { enabled: false },
+
   async onPluginsReady(appkit) {
     appkit.server.extend((app) => {
       // Quem está logado. O app roda como service principal, mas o retorno é

@@ -21,12 +21,6 @@ Empresa fictícia, dado gerado com seed fixa, sujeira proposital.
 Cada pasta é autocontida: tem o próprio README, os exemplos numerados e o que
 for preciso rodar.
 
-> **A noite 4 não é "deploy".** Deploy não é etapa de fim de projeto: é o que
-> acontece toda vez que você termina alguma coisa — por isso ele acontece
-> **seis vezes dentro da noite 2**. A quinta-feira é sobre outra coisa: **quem
-> consegue usar o que a gente construiu.** Até quarta, a resposta era "quem
-> escreve SQL".
-
 ### O arco das quatro noites
 
 ```

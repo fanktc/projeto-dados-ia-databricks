@@ -36,6 +36,28 @@ for preciso rodar.
 
 ---
 
+## 🧾 Os 12 prompts, na ordem
+
+O projeto inteiro — do CSV cru ao app que escreve de volta na gold — sai de
+**doze prompts colados em sequência no Claude Code**. Cada um termina com um
+deploy.
+
+**➡️ [`PROMPTS.md`](PROMPTS.md) — a sequência completa, com o texto de cada
+prompt pronto para copiar.**
+
+| Prompts | Noite | O que existe no fim |
+|---|---|---|
+| 1 a 6 | [engenharia](aulas/aula-02-engenharia-de-dados) | catálogo, pipeline de 12 tarefas, dashboard e Genie |
+| 7 a 9 | [ciência de dados](aulas/aula-03-ciencia-de-dados) | modelo no Unity Catalog e a fila dos 200 · 15 tarefas |
+| 10 a 12 | [apps e agentes](aulas/aula-04-app-e-genie) | Genie da direção, o app e o retorno da ligação · 16 tarefas |
+
+O texto dos prompts no `PROMPTS.md` é **extraído dos arquivos de cada noite**,
+não copiado à mão — os dois nunca divergem. O que fica só nos arquivos de cada
+noite é o resto: o que mostrar antes de colar, o que falar enquanto o Claude
+Code trabalha, e a tabela "se der errado".
+
+---
+
 ## 🚀 Comece por aqui
 
 ```bash

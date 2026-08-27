@@ -108,6 +108,20 @@ bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil>            # sim
 bash aulas/aula-02-engenharia-de-dados/prd/00-reset.sh <perfil> --apagar   # apaga
 ```
 
+### Os 12 prompts (`PROMPTS.md`)
+
+`PROMPTS.md` na raiz junta os doze prompts das noites 2, 3 e 4 em sequência. O
+texto **não é copiado à mão**: sai da seção `## O prompt` de cada arquivo em
+`aulas/*/prd/`. Depois de editar qualquer prompt, regere:
+
+```bash
+python3 scripts/gerar_prompts.py
+```
+
+As partes fixas (cabeçalho, os dois intervalos entre noites e o rodapé) ficam
+em `scripts/prompts-*.md` — edite lá, nunca direto no `PROMPTS.md`, que é
+gerado.
+
 ### Slides
 
 ```bash

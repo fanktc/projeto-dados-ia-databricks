@@ -27,7 +27,12 @@ O texto completo de cada prompt, com o que falar e as armadilhas, está em
       para acordar:
       `databricks warehouses start 666be37e3fededf2 --profile <perfil>`
 
-- [ ] **Limpe a noite 4**, se você já ensaiou:
+- [ ] **Zere os retornos** — é o mais comum entre um ensaio e outro. A fila
+      dos 200 continua a mesma; some só o que foi clicado no app:
+      `bash ../prd/99-limpar-retornos.sh <perfil> --apagar`
+
+- [ ] **Limpe a noite 4 inteira** (app, Genie e tabela), se quiser refazer os
+      três prompts do zero:
       `bash ../prd/99-limpar-aula-04.sh <perfil> --apagar`
 
 - [ ] **Confira que a noite 3 está de pé** — é de onde tudo parte:

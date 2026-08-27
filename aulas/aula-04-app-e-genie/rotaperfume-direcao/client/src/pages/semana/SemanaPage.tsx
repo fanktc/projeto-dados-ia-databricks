@@ -27,29 +27,9 @@ import {
   TableRow,
 } from '@databricks/appkit-ui/react';
 import { sql } from '@databricks/appkit-ui/js';
+import { num, reais, pct, sementeDeCache, STATUS, rotuloStatus } from '../../lib/dados';
 
 const TODOS = 'Todos';
-
-const STATUS = [
-  { valor: 'vendeu', rotulo: 'Vendeu' },
-  { valor: 'vai_pensar', rotulo: 'Vai pensar' },
-  { valor: 'sem_interesse', rotulo: 'Sem interesse' },
-  { valor: 'nao_atendeu', rotulo: 'Não atendeu' },
-];
-
-// O warehouse devolve todo número como STRING no JSON. Sem passar por Number()
-// antes, toLocaleString devolve a string intacta — e a tela mostra
-// 582799.4988012867 em vez de R$ 582.800.
-const num = (v: number | string) => Number(v);
-
-const reais = (v: number | string) =>
-  num(v).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  });
-
-const pct = (v: number | string) => `${Math.round(num(v) * 100)}%`;
 
 function Kpi({
   titulo,
@@ -84,9 +64,9 @@ export function SemanaPage() {
   const [comentarios, setComentarios] = useState<Record<number, string>>({});
   const [gravando, setGravando] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  // Sobe a cada retorno gravado. Muda os parâmetros das queries, e é assim que a
-  // tela volta a perguntar ao warehouse em vez de servir o cache.
-  const [recarga, setRecarga] = useState(0);
+  // Muda a cada montagem da tela E a cada retorno gravado. É o que faz a
+  // consulta ir ao warehouse em vez de servir o cache da visita anterior.
+  const [recarga, setRecarga] = useState(sementeDeCache);
 
   const parametrosKpis = useMemo(() => ({ recarga: sql.number(recarga) }), [recarga]);
   const kpis = useAnalyticsQuery('kpis_semana', parametrosKpis);
@@ -261,8 +241,7 @@ export function SemanaPage() {
                         {linha.retorno_status ? (
                           <div className="space-y-1">
                             <Badge variant={linha.retorno_status === 'vendeu' ? 'default' : 'secondary'}>
-                              {STATUS.find((s) => s.valor === linha.retorno_status)?.rotulo ??
-                                linha.retorno_status}
+                              {rotuloStatus(linha.retorno_status)}
                             </Badge>
                             {linha.retorno_comentario && (
                               <p className="text-xs text-muted-foreground">{linha.retorno_comentario}</p>

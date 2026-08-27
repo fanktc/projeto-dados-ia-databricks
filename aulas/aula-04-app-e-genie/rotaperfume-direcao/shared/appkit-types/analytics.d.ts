@@ -7,7 +7,10 @@ declare module "@databricks/appkit-ui/react" {
   interface QueryRegistry {
     acompanhamento: {
         name: "acompanhamento";
-        parameters: Record<string, never>;
+        parameters: {
+          /** INT - use sql.int() */
+          recarga: SQLNumberMarker;
+        };
         result: Array<{
           /** Nome do vendedor dono da carteira. Só vendedor ativo entra na fila. */
           vendedor: string;

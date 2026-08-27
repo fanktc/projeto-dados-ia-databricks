@@ -1,5 +1,10 @@
+-- @param recarga INT = 0
 -- O que a semana virou. Sem retorno registrado, tudo aqui volta zerado —
 -- e isso é a resposta certa, não um bug.
+--
+-- :recarga não filtra nada. Existe porque o resultado desta query é cacheado
+-- pela chave dos parâmetros: sem ela, quem grava um retorno e abre esta aba
+-- continua vendo o número de antes.
 WITH base AS (
   SELECT f.vendedor,
          f.cliente_id,
@@ -19,5 +24,6 @@ SELECT   vendedor,
          COUNT_IF(status = 'sem_interesse')    AS sem_interesse,
          COUNT_IF(status = 'nao_atendeu')      AS nao_atendeu
 FROM     base
+WHERE    :recarga >= 0
 GROUP BY vendedor
 ORDER BY trabalhados DESC, na_fila DESC, vendedor

@@ -154,6 +154,30 @@ databricks apps deploy -t default --profile <perfil>
 > **`bundle deploy` não sobe app.** Ele cria o app parado, com `no_compute` e
 > sem URL. Para app, o comando é `apps deploy`.
 
+### Como voltar ao estado de início de aula
+
+Depois de clicar nos botões durante um ensaio, a tabela de retorno fica suja —
+e o momento do prompt 3 depende dela estar vazia (o Genie tem que responder
+*"ninguém registrou ainda"*).
+
+```bash
+# zera só os retornos. A fila dos 200 e o modelo continuam intactos
+bash prd/99-limpar-retornos.sh <perfil>            # simula
+bash prd/99-limpar-retornos.sh <perfil> --apagar   # apaga
+
+# apaga a noite 4 inteira: app, Genie da direção e a tabela
+bash prd/99-limpar-aula-04.sh <perfil> --apagar
+```
+
+> **A fila não precisa ser recalculada.** Ela é determinística: `seed 42`,
+> corte fixo, sem `current_date()`. Rodar `ml_fila` de novo devolve exatamente
+> os mesmos 200 contatos — dá para conferir pelo `versao`, que sobe, com todo
+> o resto igual.
+
+No app, depois de limpar, clique em **Atualizar** na aba *Acompanhamento* ou
+recarregue a página: a leitura é cacheada e a tela pode mostrar o número
+antigo por alguns segundos.
+
 ### E o gabarito?
 
 As noites 2 e 3 têm pasta `gabarito/` porque o código delas nasce vazio na

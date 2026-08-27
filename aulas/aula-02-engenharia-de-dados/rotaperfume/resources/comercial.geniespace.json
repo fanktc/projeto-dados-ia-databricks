@@ -173,6 +173,31 @@
         ]
       },
       {
+        "identifier": "lakehouse_rotaperfume.gold.fila_semanal",
+        "column_configs": [
+          {
+            "column_name": "cidade",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "faixa",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "razao_social",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "vendedor",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
         "identifier": "lakehouse_rotaperfume.gold.margem_por_categoria",
         "column_configs": [
           {
@@ -200,6 +225,16 @@
         "column_configs": [
           {
             "column_name": "marca",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.score_propensao",
+        "column_configs": [
+          {
+            "column_name": "faixa",
             "enable_format_assistance": true,
             "enable_entity_matching": true
           }
@@ -302,7 +337,22 @@
           "* ruptura_por_marca     — quais marcas mais faltam no estoque\n",
           "\n",
           "Use gold.fato_vendas quando a pergunta cruzar dimensões que as views não têm.\n",
-          "NUNCA use as tabelas do schema bronze: elas são texto puro e sujas de propósito.\n"
+          "NUNCA use as tabelas do schema bronze: elas são texto puro e sujas de propósito.\n",
+          "\n",
+          "# A fila da semana\n",
+          "\n",
+          "gold.fila_semanal tem os 200 clientes que o time deve contatar nesta\n",
+          "semana: os de maior propensão da base inteira, já divididos pela carteira\n",
+          "de cada vendedor. `ordem` é a sequência de ligação e `motivo` explica em\n",
+          "português por que o cliente está na lista.\n",
+          "\n",
+          "gold.score_propensao tem a nota de TODOS os clientes, não só dos 200.\n",
+          "\n",
+          "## Regra do sistema\n",
+          "\n",
+          "Use SEMPRE as tabelas e funções deste espaço. NUNCA invente número, nome\n",
+          "de cliente ou quantidade de estoque. Se a resposta não estiver nos dados,\n",
+          "diga que não está.\n"
         ],
         "id": "762d5c05f31695bb9c5e1b1f4dfec7c9"
       }

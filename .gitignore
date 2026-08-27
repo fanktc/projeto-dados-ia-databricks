@@ -10,3 +10,6 @@ __pycache__/
 # O código da noite 3 NÃO é versionado dentro do bundle: ele nasce dos três
 # prompts, ao vivo. O resultado esperado fica em aulas/aula-03-.../gabarito/.
 aulas/aula-02-engenharia-de-dados/rotaperfume/src/ml/
+
+# Exceção: os favicons do app da noite 4 são ativos do projeto, não print de aula.
+!aulas/aula-04-app-e-genie/rotaperfume-direcao/client/public/*.png

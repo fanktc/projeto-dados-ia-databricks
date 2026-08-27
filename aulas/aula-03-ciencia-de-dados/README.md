@@ -390,3 +390,12 @@ Edition**. Estão documentadas dentro do prompt onde aparecem.
 > *Dashboard descreve o passado. Modelo prevê o futuro. Agente diz o que fazer.*
 >
 > *E vocês construíram junto. Não assistiram."*
+
+---
+
+## ➡️ O que a noite 3 deixa aberto
+
+A fila dos 200 está pronta, correta e **só abre no SQL Editor**. Amanhã ela
+ganha uma URL: [`aula-04-app-e-genie`](../aula-04-app-e-genie) entrega o Genie
+da direção, o app com a fila na tela e — o que fecha o ciclo — o retorno da
+ligação voltando para a gold como dado de treino da próxima semana.

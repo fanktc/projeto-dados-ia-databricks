@@ -1,0 +1,23 @@
+# O segundo Genie space — e a razão de existir um segundo é o argumento da noite.
+#
+# O `genie_comercial` é do vendedor: ele tem as seis views de negócio, o fato,
+# as dimensões. Doze fontes. Serve para perguntar qualquer coisa sobre a
+# operação.
+#
+# Este é do diretor. Sete fontes, todas ligadas a uma decisão só: quem ligar,
+# quanto isso vale, o que aconteceu depois. Genie não é um por empresa — é um
+# por audiência, porque o que muda entre eles não é o dado, é o recorte e a
+# instrução.
+#
+# É também o mesmo espaço que o app embute na aba "Perguntar". Uma definição,
+# duas portas.
+
+resources:
+  genie_spaces:
+    genie_direcao:
+      title: Rota do Perfume · Direção
+      description: >-
+        A fila dos 200 desta semana, o que ela vale e o que aconteceu depois da
+        ligação. Fala em ligações e em reais, nunca em AUC.
+      file_path: ../resources/direcao.geniespace.json
+      warehouse_id: ${var.warehouse_id}

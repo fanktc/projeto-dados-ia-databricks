@@ -1,0 +1,269 @@
+{
+  "version": 2,
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "lakehouse_rotaperfume.gold.clientes_em_risco",
+        "column_configs": [
+          {
+            "column_name": "cidade",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "razao_social",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "uf",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.fila_semanal",
+        "column_configs": [
+          {
+            "column_name": "cidade",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "faixa",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "razao_social",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "uf",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "vendedor",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.modelo_metricas",
+        "column_configs": []
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.ranking_marcas",
+        "column_configs": [
+          {
+            "column_name": "marca",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.receita_mensal",
+        "column_configs": []
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.retorno_ligacao",
+        "column_configs": [
+          {
+            "column_name": "status",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          },
+          {
+            "column_name": "vendedor",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      },
+      {
+        "identifier": "lakehouse_rotaperfume.gold.score_propensao",
+        "column_configs": [
+          {
+            "column_name": "faixa",
+            "enable_format_assistance": true,
+            "enable_entity_matching": true
+          }
+        ]
+      }
+    ]
+  },
+  "config": {
+    "sample_questions": [
+      {
+        "question": [
+          "Quem eu ligo essa semana?"
+        ],
+        "id": "1a3f9bf60a2fbc33ab9a2189ea0dd74f"
+      },
+      {
+        "question": [
+          "Quanto vale a fila desta semana?"
+        ],
+        "id": "468cfaa1ce3eab8a34f2e42001433bd3"
+      },
+      {
+        "question": [
+          "Quantas ligações já foram registradas e quantas viraram pedido?"
+        ],
+        "id": "9a3918d09c2203b4e18d36116699f236"
+      },
+      {
+        "question": [
+          "Quantas vezes a fila do modelo converte mais que ligar às cegas?"
+        ],
+        "id": "b4bdb8bb80801e22e2148d390c6ae74f"
+      },
+      {
+        "question": [
+          "Quantos contatos cada vendedor tem na fila?"
+        ],
+        "id": "f5a95ba8ae72bd36b1f4962482444404"
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "content": [
+          "# Quem pergunta aqui\n",
+          "\n",
+          "A direção comercial da Rota do Perfume, distribuidora B2B de perfumaria árabe\n",
+          "que vende para o varejo. Quem pergunta não escreve SQL e não quer ver tabela:\n",
+          "quer saber quem ligar, quanto isso vale e o que aconteceu depois.\n",
+          "\n",
+          "Responda em português, com número redondo e uma frase de contexto. Nunca\n",
+          "devolva coluna técnica sem explicar o que ela significa.\n",
+          "\n",
+          "# A fila da semana é o assunto principal\n",
+          "\n",
+          "gold.fila_semanal tem os 200 clientes que o time deve contatar nesta semana.\n",
+          "São os 200 maiores scores da base inteira, já divididos pela carteira de cada\n",
+          "vendedor — não é cota igual por vendedor, é capacidade por pessoa sobre uma\n",
+          "fila global. Quem tem carteira quente recebe mais contatos, e isso está certo.\n",
+          "\n",
+          "  ordem        sequência de ligação dentro da carteira do vendedor\n",
+          "  score        probabilidade de o cliente comprar nos próximos 7 dias, de 0 a 1\n",
+          "  faixa        o score em quartis: Fria, Morna, Quente, Muito quente\n",
+          "  motivo       por que o cliente está na lista, escrito para o vendedor ler\n",
+          "  sugestao     o SKU da marca preferida que ele parou de comprar\n",
+          "  ticket_medio quanto o cliente gasta por pedido, em média\n",
+          "\n",
+          "gold.score_propensao tem a nota de TODOS os clientes, não só dos 200. Use-a\n",
+          "quando a pergunta for sobre um cliente específico que não está na fila.\n",
+          "\n",
+          "# O que aconteceu depois da ligação\n",
+          "\n",
+          "gold.retorno_ligacao é escrita pelo app da direção, uma linha por ligação\n",
+          "registrada. status assume quatro valores: vendeu, vai_pensar, sem_interesse,\n",
+          "nao_atendeu. Um mesmo cliente pode ter mais de um retorno — para o estado\n",
+          "atual, use o mais recente por registrado_em.\n",
+          "\n",
+          "A tabela começa a semana VAZIA. Se a resposta for zero, diga que ninguém\n",
+          "registrou retorno ainda; não invente número e não use a fila como se fosse\n",
+          "retorno.\n",
+          "\n",
+          "# Como falar do modelo\n",
+          "\n",
+          "gold.modelo_metricas guarda uma linha por treino. A métrica que a direção usa\n",
+          "é lift_top200: quantas vezes a fila do modelo converte mais que ligar às cegas.\n",
+          "acertos_top200 é quantos dos 200 compraram na semana medida, e taxa_base é a\n",
+          "proporção que compraria sem modelo nenhum.\n",
+          "\n",
+          "NUNCA cite AUC para responder uma pergunta de negócio. AUC é métrica de quem\n",
+          "treina. Quem pergunta aqui quer saber quantas ligações viram pedido.\n",
+          "\n",
+          "# Regras que valem para toda resposta\n",
+          "\n",
+          "Receita esperada da fila é SUM(score * ticket_medio) — é uma estimativa, e\n",
+          "deve ser apresentada como tal, nunca como receita realizada.\n",
+          "\n",
+          "A sazonalidade da distribuidora é INVERTIDA: o pico é o mês ANTERIOR à data\n",
+          "comemorativa, porque o varejo compra antes. Abril, junho e outubro são picos;\n",
+          "dezembro e janeiro são vale, e isso é saudável, não é queda.\n",
+          "\n",
+          "Devolução entra com valor negativo. Para o bruto vendido, filtre\n",
+          "devolucao = false.\n",
+          "\n",
+          "Nunca use as tabelas do schema bronze: elas são texto puro e sujas de propósito.\n"
+        ],
+        "id": "8ce34603c11c295a8530240b3210dc15"
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "question": [
+          "Quanto vale a fila desta semana?"
+        ],
+        "sql": [
+          "SELECT COUNT(*)                                  AS contatos,\n",
+          "       ROUND(SUM(score * ticket_medio), 2)       AS receita_esperada,\n",
+          "       ROUND(AVG(score), 4)                      AS chance_media\n",
+          "FROM   lakehouse_rotaperfume.gold.fila_semanal\n"
+        ],
+        "id": "5610a91a6ea84150a445b78d94d687c7"
+      },
+      {
+        "question": [
+          "Quantas ligações já foram registradas e quantas viraram pedido?"
+        ],
+        "sql": [
+          "SELECT COUNT(*)                        AS ligacoes,\n",
+          "       COUNT_IF(status = 'vendeu')     AS vendeu,\n",
+          "       COUNT_IF(status = 'nao_atendeu') AS nao_atendeu\n",
+          "FROM   lakehouse_rotaperfume.gold.retorno_ligacao\n"
+        ],
+        "id": "5975b05671f64482e40cdc05d4b41f23"
+      },
+      {
+        "question": [
+          "Quem eu ligo essa semana?"
+        ],
+        "sql": [
+          "SELECT vendedor, ordem, razao_social, cidade, uf,\n",
+          "       ROUND(score, 2) AS chance, motivo, sugestao\n",
+          "FROM   lakehouse_rotaperfume.gold.fila_semanal\n",
+          "ORDER  BY score DESC\n",
+          "LIMIT  20\n"
+        ],
+        "id": "b7687afff6c07cca5d91d829d5149af0"
+      },
+      {
+        "question": [
+          "Quantas vezes a fila do modelo converte mais que ligar às cegas?"
+        ],
+        "sql": [
+          "SELECT versao,\n",
+          "       acertos_top200,\n",
+          "       ROUND(taxa_base * 200, 0)   AS acertos_ligando_as_cegas,\n",
+          "       ROUND(lift_top200, 2)       AS quantas_vezes_melhor\n",
+          "FROM   lakehouse_rotaperfume.gold.modelo_metricas\n",
+          "ORDER  BY versao DESC\n",
+          "LIMIT  1\n"
+        ],
+        "id": "d86417ca681dc0c32338b1246e014e85"
+      },
+      {
+        "question": [
+          "Quantos contatos cada vendedor tem na fila?"
+        ],
+        "sql": [
+          "SELECT   vendedor, COUNT(*) AS contatos\n",
+          "FROM     lakehouse_rotaperfume.gold.fila_semanal\n",
+          "GROUP BY vendedor\n",
+          "ORDER BY contatos DESC\n"
+        ],
+        "id": "e87d454eaf9e6d135b5ffcf3890568fc"
+      }
+    ]
+  }
+}

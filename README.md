@@ -16,13 +16,29 @@ Empresa fictícia, dado gerado com seed fixa, sujeira proposital.
 | **1** | seg 24/08 | Objetivo e a primeira análise | [`aulas/aula-01-databricks-sql`](aulas/aula-01-databricks-sql) · [📺 gravação](https://youtube.com/live/plG6mF-ib_w) |
 | **2** | ter 25/08 | Engenharia de dados: o projeto roda sozinho | [`aulas/aula-02-engenharia-de-dados`](aulas/aula-02-engenharia-de-dados) · [📺 gravação](https://www.youtube.com/watch?v=0KRcn4ZIDPg) |
 | **3** | qua 26/08 | Ciência de dados: o dado vira decisão | [`aulas/aula-03-ciencia-de-dados`](aulas/aula-03-ciencia-de-dados) |
+| **4** | qui 27/08 | Apps e agentes: o projeto ganha uma URL | [`aulas/aula-04-app-e-genie`](aulas/aula-04-app-e-genie) |
 
 Cada pasta é autocontida: tem o próprio README, os exemplos numerados e o que
 for preciso rodar.
 
-> **A noite 4 saiu do calendário — e por um bom motivo.** Deploy não é etapa de
-> fim de projeto: é o que acontece toda vez que você termina alguma coisa. Por
-> isso ele acontece **seis vezes dentro da noite 2**, uma por prompt.
+> **A noite 4 não é "deploy".** Deploy não é etapa de fim de projeto: é o que
+> acontece toda vez que você termina alguma coisa — por isso ele acontece
+> **seis vezes dentro da noite 2**. A quinta-feira é sobre outra coisa: **quem
+> consegue usar o que a gente construiu.** Até quarta, a resposta era "quem
+> escreve SQL".
+
+### O arco das quatro noites
+
+```
+  noite 1           noite 2            noite 3            noite 4
+  ───────           ───────            ───────            ───────
+  a query        →  vira camada     →  vira decisão   →   vira produto
+  quebra no         que roda           modelo e fila      app, Genie e o
+  dado sujo         sozinha            dos 200            retorno da ligação
+
+  "qual foi        "como não          "para quem eu      "e quem não
+   a receita?"      repetir isso?"     ligo segunda?"     escreve SQL?"
+```
 
 ---
 
@@ -101,10 +117,17 @@ ativa. Limpar isso é o conteúdo da noite 2 — não conserte o gerador.
 ```
 aulas/
 ├── aula-01-databricks-sql/          tudo pela interface: catálogo, bronze, 6 exemplos
-└── aula-02-engenharia-de-dados/
-    ├── prd/                         os 6 prompts (+ o reset 00) e o roteiro da noite
-    ├── rotaperfume/                 o bundle DABs: raw → bronze → silver → gold → BI → Genie
-    └── slides/                      gerar_slides.py — os slides como código
+├── aula-02-engenharia-de-dados/
+│   ├── prd/                         os 6 prompts (+ o reset 00) e o roteiro da noite
+│   ├── rotaperfume/                 o bundle DABs: raw → bronze → silver → gold → BI → Genie
+│   └── slides/                      gerar_slides.py — os slides como código
+├── aula-03-ciencia-de-dados/        3 prompts: features, modelo no UC e a fila dos 200
+│   ├── prd/                         os 3 prompts, o roteiro e o 99-limpar
+│   ├── gabarito/                    src/ml/ pronto, para conferir depois
+│   └── notebooks/                   conferência do resultado e a demo de vazamento
+└── aula-04-app-e-genie/             3 prompts: o Genie da direção, o app e o retorno
+    ├── prd/                         os 3 prompts, o roteiro e o 99-limpar
+    └── rotaperfume-direcao/         o Databricks App (AppKit), bundle próprio
 material/      PRD da imersão, gerador do dataset, slides
 scripts/       run_sql.py — roda um .sql no warehouse
 dados/         dataset gerado (não versionado — reproduza com o comando acima)
@@ -116,3 +139,5 @@ dados/         dataset gerado (não versionado — reproduza com o comando acima
 - Tabelas e colunas em snake_case e português, iguais às do CSV.
 - A bronze guarda o dado como veio, **com a sujeira**.
 - Sempre passe `--profile` nos comandos do Databricks.
+- Bundle: `databricks bundle deploy`. **App: `databricks apps deploy`** — um
+  `bundle deploy` cria o app parado, sem URL.

@@ -21,17 +21,27 @@ quando faz sentido e exemplos numerados em progressão.
 | `aulas/aula-03-ciencia-de-dados/` | Noite 3 (**"Quais 200?"**): **3 prompts, 3 deploys**. O mesmo bundle da noite 2 ganha `src/ml/` e o job vai de 12 para 15 tarefas |
 | `aulas/aula-03-ciencia-de-dados/prd/` | Os 3 prompts da noite 3, o roteiro e o `99-limpar-aula-03` (apaga só a noite 3) |
 | `aulas/aula-03-ciencia-de-dados/notebooks/` | Notebooks de conferência do resultado (leitura), incluindo a demonstração de vazamento de dado |
+| `aulas/aula-04-app-e-genie/` | Noite 4 (**"E quem não escreve SQL?"**): **3 prompts, 3 deploys**. O Genie da direção, o Databricks App com a fila dos 200 e o retorno da ligação voltando para a gold |
+| `aulas/aula-04-app-e-genie/prd/` | Os 3 prompts da noite 4, o roteiro e o `99-limpar-aula-04` |
+| `aulas/aula-04-app-e-genie/rotaperfume-direcao/` | O Databricks App (AppKit — Node/TypeScript/React), com **bundle próprio** e target `default` |
 | `material/` | PRD (a especificação canônica das 4 noites), gerador do dataset, zip de referência, slides antigos |
 | `scripts/run_sql.py` | Executa um `.sql` no warehouse, statement por statement |
 | `dados/` | Dataset gerado, **não versionado**. `python3 material/gerar_dataset.py --saida ./dados --seed 42` |
 
-**A aula 04 foi removida por desenho:** deploy não é etapa de fim de projeto, é
-o que acontece toda vez que você termina algo — por isso a noite 2 faz seis. A
+**A aula 04 não é "deploy":** deploy não é etapa de fim de projeto, é o que
+acontece toda vez que você termina algo — por isso a noite 2 faz seis. A
 **aula 03 foi reescrita** em torno de uma pergunta só — *"tenho 3.000
 clientes e 200 ligações por semana; quais 200?"* — e feita até o fim em três
 prompts: features, modelo/MLflow, fila e agente. O código dela vive dentro do
 bundle da noite 2 (`rotaperfume/src/ml/`): ML é mais uma camada do mesmo
 pipeline, não um projeto à parte.
+
+A **aula 04** responde o que as três anteriores deixam aberto: *"tudo isso só
+abre no SQL Editor — e quem não escreve SQL?"*. Ela não cria dado de análise
+novo; consome `gold.fila_semanal` e entrega duas portas (um Genie curado por
+audiência e um Databricks App) mais o **caminho de volta**:
+`gold.retorno_ligacao`, escrita pelo app, que é o rótulo de treino da semana
+seguinte.
 
 Ao criar exemplos novos para a aula 01, siga o padrão: `exemplo-NN-tema.sql`,
 com cabeçalho declarando conceito, pergunta de negócio e conexão com a aula
@@ -197,3 +207,27 @@ A noite 3 cria seis tabelas na gold — `features_treino`, `features_cliente`,
 `score_propensao`, `modelo_metricas`, `calibragem_holdout` e `fila_semanal` —
 mais o modelo `gold.propensao_compra` no UC e quatro funções-ferramenta. A
 métrica que vai para a reunião é **`lift_top200`**, não o AUC.
+
+## Databricks Apps (noite 4) — o que foi medido
+
+Apps **funciona** na Free Edition. Medido contra o workspace em 27/08:
+
+- `databricks apps init` (scaffold AppKit + npm install): **~60s**.
+- **Primeiro** `apps deploy` (cria o compute): **3m44s**. Redeploy: **1m04s**.
+- **`bundle deploy` NÃO sobe app** — cria com `no_compute` e deixa parado, sem
+  URL. Para app é `databricks apps deploy`, e o target do bundle gerado pelo
+  `apps init` chama-se **`default`**, não `dev`.
+- **O app é um usuário do Unity Catalog.** `permission: CAN_USE` no warehouse
+  dá acesso ao compute, não ao dado: sem `GRANT USE CATALOG` + `USE SCHEMA` +
+  `SELECT` para o service principal, toda tela carrega vazia. O SP muda a cada
+  app criado — leia com `databricks apps get`, nunca copie.
+- Escrita é `GRANT MODIFY` **numa tabela só** (`gold.retorno_ligacao`), via
+  `getExecutionContext().client.statementExecution.executeStatement`.
+- `npm run typegen` **exige o warehouse ligado**; parado, degrada para
+  `OFFLINE` e gera `{}` como tipo, quebrando o `tsc` longe da causa real.
+- `useAnalyticsQuery` **não tem `refetch`**: para recarregar depois de escrever,
+  use um parâmetro que não filtra nada (`recarga`) e mude o valor.
+- `Unexpectedly failed to update app's compute size` é transitório no Free
+  Edition — rode o `apps deploy` de novo.
+- **Lakebase não está disponível** (`postgres list-projects` volta vazio). Por
+  isso a escrita vai para tabela Delta via SQL warehouse.
